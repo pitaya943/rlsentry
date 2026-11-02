@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 5/18 · 進行中 0 · blocked 0
+自動產生，請勿手改 · 完成 6/18 · 進行中 0 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -11,7 +11,7 @@
 - [x] T-010 合約：§6 資料模型與 rule catalog（architect，done，1 次）
 - [x] T-011 合約：expected policy 與 rlsentry.yaml（architect，done，1 次）
 - [x] T-012 合約：ground truth 格式與 benchmark 輸出（architect，done，1 次）
-- [ ] T-013 合約：模組介面與相依套件（architect，todo，0 次） ← 依賴 T-010✓ T-011✓
+- [x] T-013 合約：模組介面與相依套件（architect，done，1 次）
 - [ ] T-014 可見測試：policy 解析三函式（architect，todo，0 次） ← 依賴 T-011✓
 - [ ] T-015 Ground truth：L01–L03（architect，todo，0 次） ← 依賴 T-012✓
 - [ ] T-016 Ground truth：L04–L06（architect，todo，0 次） ← 依賴 T-012✓
@@ -23,7 +23,7 @@
 - [ ] T-022 policy/visibility.py：row_permitted（probe-dev，todo，0 次） ← 依賴 T-014…
 - [ ] T-023 policy/load.py：load_config（probe-dev，todo，0 次） ← 依賴 T-014…
 - [ ] T-024 Ground truth 與預期 policy 一致性測試（architect，todo，0 次） ← 依賴 T-015… T-016… T-017… T-018… T-019… T-020… T-021… T-022…
-- [ ] T-025 MS1–MS7 ticket 計畫（architect，todo，0 次） ← 依賴 T-013…
+- [ ] T-025 MS1–MS7 ticket 計畫（architect，todo，0 次） ← 依賴 T-013✓
 
 ## [ ] MS1 Lab benchmark + Safety（鎖定）
 

@@ -378,3 +378,5 @@
 {"ts": "2026-11-02T16:33:11", "kind": "ticket_accepted", "ticket": "T-011", "commit": "d3aec63a53aa5a18caf92f78aa0469171757c870", "files": ["rlsentry/contracts/policy.py", "rlsentry/policy/__init__.py", "tests/contracts/test_policy_contract.py"]}
 {"ts": "2026-11-02T16:33:17", "kind": "ticket_start", "ticket": "T-012", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-02T16:33:19", "kind": "ticket_accepted", "ticket": "T-012", "commit": "bfd030d0e2b496511944f8989acd0359e9bf4b87", "files": ["rlsentry/contracts/ground_truth.py", "tests/ground_truth/__init__.py", "tests/ground_truth/test_gt_format.py"]}
+{"ts": "2026-11-02T16:33:31", "kind": "ticket_start", "ticket": "T-013", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:33:33", "kind": "ticket_accepted", "ticket": "T-013", "commit": "f2405b319bf3150610514cfb057e3707770c0bea", "files": ["pyproject.toml", "rlsentry/contracts/interfaces.py"]}
