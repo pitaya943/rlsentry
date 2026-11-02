@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 18/18 · 進行中 0 · blocked 0
+自動產生，請勿手改 · 完成 19/25 · 進行中 0 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -24,6 +24,13 @@
 - [x] T-023 policy/load.py：load_config（probe-dev，done，1 次）
 - [x] T-024 Ground truth 與預期 policy 一致性測試（architect，done，1 次）
 - [x] T-025 MS1–MS7 ticket 計畫（architect，done，1 次）
+- [x] T-026 稽核修正：ProbeResult 已知列語意、Finding.rule 檢查（architect，done，2 次）
+- [ ] T-027 稽核修正：TablePolicy.primary_key、寫入閘門與 profile 規則（architect，todo，0 次） ← 依賴 T-026✓
+- [ ] T-028 稽核修正：計分定義、lab 慣例、ground truth 隔離（architect，todo，0 次） ← 依賴 T-026✓
+- [ ] T-029 稽核修正：ground truth L05、L07、L09（architect，todo，0 次） ← 依賴 T-027… T-028…
+- [ ] T-030 稽核修正：ground truth L01、L11、L12（architect，todo，0 次） ← 依賴 T-027… T-028…
+- [ ] T-031 可見測試：設定檔 YAML 錯誤不得回顯內容（architect，todo，0 次） ← 依賴 T-027…
+- [ ] T-032 policy/load.py：YAML 錯誤只回報位置與種類（probe-dev，todo，0 次） ← 依賴 T-031…
 
 ## [ ] MS1 Lab benchmark + Safety（鎖定）
 

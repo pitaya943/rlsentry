@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a787dc1b8675022b2",
+  "description": "Audit MS0",
+  "resolvedModel": "claude-opus-5-5",
+  "prompt": "Review: MS0\nBase: 3a3c611\nFocus: contracts (rlsentry/contracts/), ground truth lab/**/expected.yaml vs SPEC §6/§8/§9, ADR-005..013 in docs/DECISIONS.md, rlsentry/policy/. Look especially for ground-truth cases that would be wrong on a real Supabase/PostgREST lab (e.g. grants, RETURNING behaviour, knowability of rows) and contract choices that would make later milestones impossible.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/8b6e369f-dea8-5619-9558-ef4c87c9b008/tasks/a787dc1b8675022b2.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

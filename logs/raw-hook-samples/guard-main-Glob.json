@@ -1,0 +1,20 @@
+{
+  "session_id": "8b6e369f-dea8-5619-9558-ef4c87c9b008",
+  "transcript_path": "/root/.claude/projects/-home-user-rlsentry/8b6e369f-dea8-5619-9558-ef4c87c9b008.jsonl",
+  "cwd": "/home/user/rlsentry",
+  "scratchpad_dir": "/tmp/claude-0/-home-user-rlsentry/8b6e369f-dea8-5619-9558-ef4c87c9b008/scratchpad",
+  "prompt_id": "f07c295e-a897-49f4-a284-f25fa0e95298",
+  "permission_mode": "auto",
+  "agent_id": "a787dc1b8675022b2",
+  "agent_type": "auditor",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Glob",
+  "tool_input": {
+    "pattern": "lab/**/*",
+    "path": "/home/user/rlsentry"
+  },
+  "tool_use_id": "toolu_01JFgFbBtzDTCGDs8hjXhG9b"
+}
