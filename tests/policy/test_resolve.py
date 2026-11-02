@@ -1,10 +1,10 @@
 """resolve_expected (T-021). SPEC §6 expected policy + defaults; contract: rlsentry/contracts/policy.py."""
 import pytest
 import yaml
-from rlsentry.policy.resolve import resolve_expected
 
 from rlsentry.contracts.models import Op, Role
 from rlsentry.contracts.policy import ExpectedPolicy, RowScope
+from rlsentry.policy.resolve import resolve_expected
 
 POLICY = ExpectedPolicy.model_validate(yaml.safe_load("""
 tables:

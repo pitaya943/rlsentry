@@ -1,9 +1,9 @@
 """load_config (T-023). SPEC §6 rlsentry.yaml; contract: rlsentry/contracts/policy.py."""
 import pytest
-from rlsentry.policy.load import load_config
 
 from rlsentry.contracts.models import Profile
 from rlsentry.contracts.policy import ConfigError, RowScope, ScanConfig
+from rlsentry.policy.load import load_config
 
 GOOD = """
 target: http://localhost:54321

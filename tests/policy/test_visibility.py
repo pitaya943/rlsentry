@@ -1,8 +1,8 @@
 """row_permitted (T-022). SPEC §6 row scopes; contract: rlsentry/contracts/policy.py."""
 import pytest
-from rlsentry.policy.visibility import row_permitted
 
 from rlsentry.contracts.policy import RowScope
+from rlsentry.policy.visibility import row_permitted
 
 A, B = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 

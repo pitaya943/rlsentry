@@ -9,7 +9,7 @@ dependencies = [
 ]                          # more are added by the milestone that first needs them (ADR-012)
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pyyaml>=6", "ruff", "mypy", "mutmut"]
+dev = ["pytest>=8", "pyyaml>=6", "ruff", "mypy", "mutmut", "types-PyYAML"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -21,6 +21,10 @@ markers = [
 [tool.ruff]
 line-length = 110
 extend-exclude = ["harness", "host", ".claude", "cloud"]   # frozen harness is not product code
+
+[tool.ruff.lint.isort]
+# Same import order in the main checkout and in subagent worktrees (.claude/worktrees/…).
+known-first-party = ["rlsentry"]
 
 [tool.mypy]
 python_version = "3.12"
