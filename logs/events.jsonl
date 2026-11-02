@@ -440,3 +440,5 @@
 {"ts": "2026-11-02T16:49:13", "kind": "subagent_stop", "id": "a6c9b809", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-02T16:49:15", "kind": "report", "id": "1f016442", "agent": "probe-dev", "ticket": "T-032", "review": null, "body": "logs/messages/1f016442-report.json"}
 {"ts": "2026-11-02T16:49:26", "kind": "ticket_accepted", "ticket": "T-032", "commit": "c01d68c611a21587cc6b2057f8c150832d14e969", "files": ["rlsentry/policy/load.py"]}
+{"ts": "2026-11-02T16:49:31", "kind": "ticket_start", "ticket": "T-029", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:49:35", "kind": "ticket_accepted", "ticket": "T-029", "commit": "e37743920a8a8c2e956eea808b097950e1a9efee", "files": ["lab/L05_cross_tenant_write/expected.yaml", "lab/L07_security_definer_rpc/expected.yaml", "lab/L09_insert_permissive/expected.yaml"]}
