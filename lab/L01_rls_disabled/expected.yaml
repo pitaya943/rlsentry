@@ -20,7 +20,7 @@ policy:
 vulnerable_cases:
   # customers 含 email（敏感欄位）→ anon 讀取升為 critical（SPEC §5 M5）
   - {id: L01-V1, target: customers, op: select, role: anon, rows: [c_a1, c_b1], expect: allowed, rule: ANON_READ_OWNER_SCOPED, severity: critical}
-  - {id: L01-V2, target: customers, op: insert, role: anon, expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
+  - {id: L01-V2, target: customers, op: insert, role: anon, new_owner: user_a, expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
   - {id: L01-V3, target: customers, op: update, role: anon, rows: [c_a1], expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
   - {id: L01-V4, target: customers, op: delete, role: anon, rows: [c_a1], expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
   - {id: L01-V5, target: customers, op: select, role: user_a, rows: [c_b1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}

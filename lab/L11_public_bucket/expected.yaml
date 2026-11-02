@@ -6,7 +6,8 @@ plant: |
   Storage bucket private-docs 設為 public=true，內含 user_a/contract.pdf（user_a 的私人檔案），
   任何人以 /storage/v1/object/public/private-docs/<path> 即可取得。
   對照 bucket private-ok 為 public=false，storage.objects 的 SELECT policy 為
-  TO authenticated USING (bucket_id = 'private-ok' AND owner = auth.uid())，內含 user_b/notes.pdf。
+  TO authenticated USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text)，內含
+  user_b/notes.pdf；兩個物件都以 SQL 植入並設定 owner_id 為各自擁有者的 id（auditor G5）。
   探測只用 HEAD，不下載檔案內容（NFR-03）。
 schema:
   private-docs: {kind: bucket, rls: n/a}
