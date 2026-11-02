@@ -89,3 +89,10 @@ def test_only_confirmed_rules_are_vulnerabilities() -> None:
     assert RULES["SECURITY_DEFINER_EXECUTABLE"].evidence is Evidence.CONFIG_WARNING
     assert RULES["UNVERIFIED_KEY"].evidence is Evidence.CONFIG_WARNING
     assert RULES["INCONCLUSIVE_CELL"].evidence is Evidence.SUSPECTED
+
+
+def test_finding_rule_must_be_in_catalog() -> None:
+    ok = {"id": "x", "rule": "ANON_WRITE", "evidence": "confirmed", "severity": "critical"}
+    Finding.model_validate(ok)
+    with pytest.raises(ValidationError):
+        Finding.model_validate({**ok, "rule": "ANON_WRTIE"})
