@@ -414,3 +414,5 @@
 {"ts": "2026-11-02T16:35:38", "kind": "ticket_accepted", "ticket": "T-020", "commit": "43ba7b00519abf15192b2905afef091c34056322", "files": ["lab/C03_empty_table/expected.yaml", "lab/C04_user_without_data/expected.yaml"]}
 {"ts": "2026-11-02T16:35:43", "kind": "ticket_start", "ticket": "T-024", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-02T16:35:46", "kind": "ticket_accepted", "ticket": "T-024", "commit": "cd028f5ff3d1c98e4cb8f8ff560b7aaef95926ab", "files": ["tests/ground_truth/test_gt_complete.py", "tests/ground_truth/test_gt_consistency.py"]}
+{"ts": "2026-11-02T16:36:16", "kind": "ticket_start", "ticket": "T-025", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:36:19", "kind": "ticket_accepted", "ticket": "T-025", "commit": "a59ff5b53401f0caf572356e9c6b69b4637a5f10", "files": ["docs/PLAN.md"]}

@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 17/18 · 進行中 0 · blocked 0
+自動產生，請勿手改 · 完成 18/18 · 進行中 0 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -23,7 +23,7 @@
 - [x] T-022 policy/visibility.py：row_permitted（probe-dev，done，1 次）
 - [x] T-023 policy/load.py：load_config（probe-dev，done，1 次）
 - [x] T-024 Ground truth 與預期 policy 一致性測試（architect，done，1 次）
-- [ ] T-025 MS1–MS7 ticket 計畫（architect，todo，0 次） ← 依賴 T-013✓
+- [x] T-025 MS1–MS7 ticket 計畫（architect，done，1 次）
 
 ## [ ] MS1 Lab benchmark + Safety（鎖定）
 
