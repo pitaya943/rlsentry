@@ -1,0 +1,8 @@
+milestone: STAGE0
+checklist: docs\verification\STAGE0-v2.md
+checklist_sha256: dc090454507890471d43e6f4b46bad029dee1b2e5d6de1211a8f2a6797e9b2ef
+decision: approve
+reviewer: Kuei
+date: 2026-11-02 23:23
+notes: |
+  接受canary1-5未經實測風險(ADR003/004)
