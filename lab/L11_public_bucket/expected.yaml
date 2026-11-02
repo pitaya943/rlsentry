@@ -1,0 +1,24 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L11
+title: 公開 Storage bucket
+priority: P2            # SPEC §8：P2，列入報告但不計入 §9 指標（ADR-011）
+plant: |
+  Storage bucket private-docs 設為 public=true，內含 user_a/contract.pdf（user_a 的私人檔案），
+  任何人以 /storage/v1/object/public/private-docs/<path> 即可取得。
+  對照 bucket private-ok 為 public=false，storage.objects 的 SELECT policy 為
+  TO authenticated USING (bucket_id = 'private-ok' AND owner = auth.uid())，內含 user_b/notes.pdf。
+  探測只用 HEAD，不下載檔案內容（NFR-03）。
+schema:
+  private-docs: {kind: bucket, rls: n/a}
+  private-ok: {kind: bucket, rls: n/a}
+rows:
+  obj_a1: {target: private-docs, pk: user_a/contract.pdf, owner: user_a}
+  obj_b1: {target: private-ok, pk: user_b/notes.pdf, owner: user_b}
+policy: {}              # expected policy 格式只涵蓋表；Storage 的預期權限寫在本檔 cases
+vulnerable_cases:
+  - {id: L11-V1, kind: storage, target: private-docs, op: select, role: anon, rows: [obj_a1], expect: allowed, rule: PUBLIC_BUCKET_PRIVATE_OBJECT, severity: high}
+  - {id: L11-V2, kind: storage, target: private-docs, op: select, role: user_b, rows: [obj_a1], expect: allowed, rule: PUBLIC_BUCKET_PRIVATE_OBJECT, severity: high}
+safe_cases:
+  - {id: L11-S1, kind: storage, target: private-ok, op: select, role: anon, rows: [obj_b1], expect: denied}
+  - {id: L11-S2, kind: storage, target: private-ok, op: select, role: user_a, rows: [obj_b1], expect: denied}
+splinter_expected: measure
