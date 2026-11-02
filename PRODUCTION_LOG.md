@@ -30,3 +30,13 @@
 
 ### 指標
 - harness-test 29 passed；acceptance ALL PASSED（tests 1、holdout 2）；subagent tokens 約 14k
+
+## MS0（基礎：合約、expected policy 格式、ground truth）
+
+### Holdout hashes（派工前記錄）
+| 檔案 | sha256 |
+| --- | --- |
+| MS0/test_holdout_policy.py | `d347875d5857eb9fb02883ad466f936f574a6a566c67407366c5a8e02b7eb0ba` |
+| MS0/__pycache__/test_holdout_policy.cpython-313-pytest-9.2.0.pyc | `bfb8d974ce37b7e805cb2ff06b09a4fb535a9f530b79dd19b347928ae7628409`（誤帶入的位元組碼，pytest 不會收集；來自 architect 以 scratchpad 參考實作確認測試可滿足） |
+
+內容：resolve_expected、row_permitted、load_config 的不同輸入（部分 op／role 覆寫、未列出表的欄位推斷順序、anon 簡化、錯誤鍵路徑）。
