@@ -50,6 +50,12 @@ class RoleScopes(_Strict):
 
 
 class TablePolicy(_Strict):
+    """One table, view or RPC (ADR-007). `primary_key` is an addition (ADR-014): it tells the
+    scanner which column identifies rows when OpenAPI is unavailable (L12) or does not describe
+    the target (RPC results). Without it and without OpenAPI, cells are inconclusive; the
+    scanner never guesses a column name."""
+
+    primary_key: list[str] | None = None
     owner_column: str | None = None
     public_column: str | None = None
     select: RoleScopes | None = None
@@ -120,8 +126,9 @@ class ScanConfig(ExpectedPolicy):
 
 
 class ConfigError(ValueError):
-    """Raised by load_config with a message naming the offending key; never contains values
-    of secrets (there are none in the file by design)."""
+    """Raised by load_config. The message names the offending key path, or for YAML syntax
+    errors the line and column and the kind of error; it never quotes file content, because
+    a user may have pasted a secret into the file by mistake (NFR-03, auditor F5)."""
 
 
 class ExpectedAccess(_Strict):
@@ -183,6 +190,8 @@ def load_config(text: str) -> ScanConfig:
 
     Parse rlsentry.yaml text with yaml.safe_load and validate it as ScanConfig. Every failure
     (YAML syntax, not a mapping, validation) raises ConfigError whose message names the
-    offending key path (e.g. "tables.posts.select.anon"). Environment variables are NOT read.
+    offending key path (e.g. "tables.posts.select.anon") or, for YAML syntax errors, the
+    line/column ("line 3, column 5") and the problem kind; never a snippet of the input.
+    Environment variables are NOT read.
     """
     raise NotImplementedError
