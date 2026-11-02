@@ -1,0 +1,26 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L08
+title: service_role 進 bundle
+plant: |
+  前端有兩個 client：src/admin.ts 以 service_role key（本機 Supabase CLI 的預設 demo key，JWT
+  role=service_role）呼叫 createClient；src/client.ts 以 anon key（JWT role=anon）呼叫 createClient。
+  兩者都被打包進 bundle。public.orders 的 RLS 正確（四種操作 owner_id = auth.uid()）。
+  RLSentry 絕不可使用找到的 service_role key 發出請求（只回報，不利用）。
+schema:
+  orders: {kind: table, columns: [id, owner_id, item], primary_key: [id]}
+rows:
+  o_a1: {target: orders, pk: 5ce01008-0000-4000-8000-000000000001, owner: user_a}
+  o_b1: {target: orders, pk: 5ce01008-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    orders:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+vulnerable_cases:
+  - {id: L08-V1, kind: key, target: "jwt:service_role", key_kind: secret, rule: SECRET_KEY_IN_BUNDLE, severity: critical}
+safe_cases:
+  # anon key 出現在前端是正常設計（FR-03），不得產生漏洞 finding
+  - {id: L08-S1, kind: key, target: "jwt:anon", key_kind: publishable}
+  - {id: L08-S2, target: orders, op: select, role: anon, rows: [o_a1, o_b1], expect: denied}
+  - {id: L08-S3, target: orders, op: select, role: user_b, rows: [o_a1], expect: denied}
+splinter_expected: measure
