@@ -3,7 +3,10 @@ name = "rlsentry"
 version = "0.0.0"
 description = "Attacker-perspective authorization verification for Supabase applications"
 requires-python = ">=3.12"
-dependencies = []          # the architect adds product dependencies in MS0
+dependencies = [
+  "pydantic>=2.6,<3",
+  "pyyaml>=6",
+]                          # more are added by the milestone that first needs them (ADR-012)
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pyyaml>=6", "ruff", "mypy", "mutmut"]
@@ -18,3 +21,9 @@ markers = [
 [tool.ruff]
 line-length = 110
 extend-exclude = ["harness", "host", ".claude", "cloud"]   # frozen harness is not product code
+
+[tool.mypy]
+python_version = "3.12"
+# Use the interpreter on PATH so mypy sees the project's dependencies even when mypy itself
+# is installed in an isolated tool environment (uv/pipx). See ADR-012.
+python_executable = "python3"
