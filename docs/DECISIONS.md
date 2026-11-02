@@ -122,3 +122,21 @@ D2–D4 由 architect 決定並記錄於此。
 - 決定：不在本版本延伸到 Firebase。合約（RowScope、PostgREST 探測方式、ground truth）全部以 Supabase／PostgREST 為前提。
 - 理由：Firebase 的授權模型（Security Rules、文件路徑）與列層級 RLS 差異大，需要獨立的 lab 與 ground truth；在 Supabase 指標達標前分散範圍不划算。
 - 後果與風險：D2（Playwright）仍待 MS5 決定。
+
+## ADR-014：依 MS0 auditor 審查修正合約與 ground truth
+- 日期：2026-11-02 · Milestone：MS0 · 相關：NFR-01、NFR-03、FR-07、FR-08、§8、§9；auditor 報告（PRODUCTION_LOG 事件）
+- 背景：auditor 指出合約與 ground truth 在真實 Postgres／PostgREST 上會出錯或讓後續 milestone 無法完成。
+- 決定：
+  1. **登入允許清單**（F1）：`POST /auth/v1/token?grant_type=password` 是任何 profile 都允許的唯一非 GET 請求，完全比對；audit 拒絕其餘所有寫入。否則 audit 無法取得 user_a／user_b 的 JWT，FR-08 不可能完成。
+  2. **NFR-01 的資料庫 log 判準**（F2）：登入會讓 GoTrue 寫入 `auth.*`。MS1 的 lab 驗證只計算由 PostgREST 角色（anon、authenticated、authenticator）執行的寫入，必須為 0；GoTrue（supabase_auth_admin）的寫入另列，不計入。此判準在 MS1 寫成測試前由人類確認（驗證清單第 3 段）。
+  3. **RPC 只用 GET／HEAD 呼叫**（F3、G3）：任何 profile 都不 POST 到 RPC；拒絕 GET 的函式為 inconclusive。lab 的 RPC 一律宣告 STABLE。
+  4. **寫入只限 localhost**（F4）：暫採保守解讀；SPEC §2 的 ci（preview DB）是否允許遠端寫入，交由人類在 MS3 前決定。CLI `--profile` 與設定檔 `profile` 取較嚴者（audit > ci > dev）。
+  5. **ConfigError 不引用檔案內容**（F5）：YAML 語法錯誤只回報行列與錯誤種類（T-031、T-032）。
+  6. **TablePolicy.primary_key**（K1、K2）：expected policy 可指定主鍵欄位；沒有 OpenAPI 也沒有指定時，該格為 inconclusive，掃描器不猜 `id`。L07 的 RPC 與 L12 的表都已列出。
+  7. **計分**（O4、O5）：BenchReport 加 `fp_safe` 與 `safe_decided_ratio`，FPR = fp_safe/(fp_safe+tn) 可由原始數量重現；「全部回報 inconclusive」不會被誤認為完美；key 案例以標籤與 rule 比對（修正 docstring 與 ADR-011 的矛盾）。
+  8. **Lab 慣例**（G2、G4）：所有表、view 明確 GRANT 給 anon、authenticated，RPC 明確 GRANT EXECUTE；寫入探測用 `Prefer: return=minimal`，由應看得到最終狀態的身分讀回；anon 新增時把擁有者欄位設為測試帳號以便讀回（L01-V2、L09-V1）。
+  9. **Ground truth 修正**：L05 加 `created_by` 並讓 SELECT policy 允許建立者讀取，否則轉移會被 Postgres 以 42501 擋下、漏洞不存在（G1）；L11 物件以 SQL 設定 `owner_id`（G5）；L12 寫明關閉 OpenAPI 的方法（G7）。
+  10. **ground truth 隔離**（O2）：產品程式中只有 `bench/` 可以匯入 `rlsentry.contracts.ground_truth`（測試把關）。
+  11. **已知列語意**（G6）：被拒絕的 INSERT 以「看得到的讀者確認 canary 不存在」算 1 個已知列。
+- 未採納或延後：K3（每格只有一個 outcome，混合範圍的格子語意）、K4（UPDATE 新舊列都要允許的規則目前只在測試中）延到 MS2 設計 probe 時以 ADR 決定；O1（所有 lab 表都是 uuid `id`）與 O3（L01 佔 32 個漏洞案例中的 12 個）列為已知限制；F6（Probe 介面缺 refresh token 與 DB 連線）延到 MS3。
+- 補記：ADR-009 也把 SPEC §8 範例的 case 鍵 `table:` 改名為 `target:`（因為也涵蓋 view、RPC、bucket）（G8）。
