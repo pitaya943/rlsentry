@@ -9,7 +9,7 @@
 
 ## 3. 請你親手驗證（逐項打勾，含第一項最多 16 項）
 - [ ] 在你自己的機器（或一個全新的雲端 session）執行
-      `git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud`
+      `git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud .gitattributes`
       然後 `make verify-milestone MS=MSx`
       預期：diff 為空；最後一行為 ALL PASSED
 - [ ] （指令）

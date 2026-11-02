@@ -11,7 +11,7 @@ The private key never leaves your machine, so no agent can produce a valid appro
 
 Usage:
   git fetch && git switch <the session's branch> && git pull
-  git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud
+  git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud .gitattributes
   python3 host/approve.py --ms MS3 --key ~/.ssh/id_ed25519
 Only the Python standard library, git and ssh-keygen are needed.
 """
@@ -27,7 +27,7 @@ import tempfile
 import time
 from pathlib import Path
 
-FROZEN_PATHS = ["harness", ".claude", "CLAUDE.md", "Makefile", "docs/SPEC.md", "host", "tests/toy", "cloud"]
+FROZEN_PATHS = ["harness", ".claude", "CLAUDE.md", "Makefile", "docs/SPEC.md", "host", "tests/toy", "cloud", ".gitattributes"]
 BRANCH = "rlsentry-approvals"
 NAMESPACE = "rlsentry-approval"
 
@@ -100,7 +100,14 @@ def main() -> int:
         print(f"No checklist docs/verification/{a.ms}-vN.md on this branch.")
         return 1
     version, path = found
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    # Hash the committed blob, not the working-tree file: on Windows the working copy may have
+    # CRLF line endings, while the cloud harness hashes the LF content stored in git.
+    rel = path.relative_to(repo).as_posix()
+    blob = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=repo, capture_output=True, check=False)
+    if blob.returncode != 0:
+        print(f"{rel} is not committed on this branch; pull the session branch first.")
+        return 1
+    digest = hashlib.sha256(blob.stdout).hexdigest()
     print(f"Reviewing {path.relative_to(repo)} (v{version}) sha256 {digest}")
     if not a.yes and input(f"Did you run `make verify-milestone MS={a.ms}` yourself and see ALL PASSED? [y/N] "
                            ).strip().lower() != "y":

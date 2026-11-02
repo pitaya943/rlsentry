@@ -1,0 +1,4 @@
+# Force LF everywhere: checklist hashes and bash scripts must be byte-identical on every OS.
+* text=auto eol=lf
+*.png binary
+*.jpg binary

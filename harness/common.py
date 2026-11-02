@@ -88,10 +88,11 @@ def holdout_dir() -> Path:
 # Nobody (architect included) may modify these through Claude Code tools.
 # In the cloud these are only protected by hooks; the human detects tampering with
 # `git diff harness-frozen -- <FROZEN_PATHS>` on their own machine before every approval.
-FROZEN_PATHS = ["harness", ".claude", "CLAUDE.md", "Makefile", "docs/SPEC.md", "host", "tests/toy", "cloud"]
+FROZEN_PATHS = ["harness", ".claude", "CLAUDE.md", "Makefile", "docs/SPEC.md", "host", "tests/toy", "cloud",
+                ".gitattributes"]
 HARNESS_PROTECTED = [
     "harness/**", ".claude/settings.json", ".claude/agents/**", "CLAUDE.md",
-    "Makefile", "docs/SPEC.md", "logs/**", "host/**", "tests/toy/**", "cloud/**",
+    "Makefile", "docs/SPEC.md", "logs/**", "host/**", "tests/toy/**", "cloud/**", ".gitattributes",
 ]
 
 # Subagents additionally may not touch the architect's artefacts.

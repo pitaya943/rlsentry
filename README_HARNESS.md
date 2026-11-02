@@ -61,7 +61,7 @@ Stage 0 結束後，在你的電腦上：
 
 ```bash
 git fetch && git switch <session 的分支> && git pull
-git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud   # 必須為空
+git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud .gitattributes   # 必須為空
 ```
 
 然後逐項確認：

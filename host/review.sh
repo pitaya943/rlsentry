@@ -11,7 +11,7 @@ MS="${1:?usage: review.sh <MS> <session-branch>}"
 BRANCH="${2:?usage: review.sh <MS> <session-branch>}"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KEY="${RLSENTRY_KEY:-$HOME/.ssh/rlsentry_approval_ed25519}"
-FROZEN=(harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud)
+FROZEN=(harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud .gitattributes)
 
 pick_python() {
   for c in python3 python "py -3"; do
