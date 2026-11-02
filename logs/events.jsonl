@@ -336,3 +336,5 @@
 {"ts": "2026-11-02T15:45:49", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
 {"ts": "2026-11-02T15:45:49", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
 {"ts": "2026-11-02T15:58:49", "kind": "stop_blocked", "attempt": 1, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T15:59:18", "kind": "stop_blocked", "attempt": 2, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:00:35", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "shell command appears to modify protected path cloud/setup.sh"}
