@@ -359,3 +359,12 @@
 {"ts": "2026-11-02T16:07:26", "kind": "stop_blocked", "attempt": 20, "state": "active", "milestone": "MS0"}
 {"ts": "2026-11-02T16:07:32", "kind": "stop_blocked", "attempt": 21, "state": "active", "milestone": "MS0"}
 {"ts": "2026-11-02T16:07:33", "kind": "subagent_stop", "id": "7fca75f5", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-02T16:10:10", "kind": "stop_blocked", "attempt": 22, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:16", "kind": "stop_blocked", "attempt": 23, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:21", "kind": "stop_blocked", "attempt": 24, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:26", "kind": "stop_blocked", "attempt": 25, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:30", "kind": "stop_blocked", "attempt": 26, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:35", "kind": "stop_blocked", "attempt": 27, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:40", "kind": "stop_blocked", "attempt": 28, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:46", "kind": "stop_blocked", "attempt": 29, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:10:52", "kind": "stop_blocked", "attempt": 30, "state": "active", "milestone": "MS0"}
