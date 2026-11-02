@@ -7,7 +7,7 @@
 - [x] T-001 Stage 0 canary 重跑（人類授權）（recon-dev，done，1 次）
 - 驗證清單：docs/verification/STAGE0-v2.md（v2）
 
-## [ ] MS0 基礎：合約、expected policy 格式、ground truth（進行中）
+## [ ] MS0 基礎：合約、expected policy 格式、ground truth（等待你審查）
 - [x] T-010 合約：§6 資料模型與 rule catalog（architect，done，1 次）
 - [x] T-011 合約：expected policy 與 rlsentry.yaml（architect，done，1 次）
 - [x] T-012 合約：ground truth 格式與 benchmark 輸出（architect，done，1 次）
@@ -31,6 +31,7 @@
 - [x] T-030 稽核修正：ground truth L01、L11、L12（architect，done，1 次）
 - [x] T-031 可見測試：設定檔 YAML 錯誤不得回顯內容（architect，done，1 次）
 - [x] T-032 policy/load.py：YAML 錯誤只回報位置與種類（probe-dev，done，1 次）
+- 驗證清單：docs/verification/MS0-v1.md（v1）
 
 ## [ ] MS1 Lab benchmark + Safety（鎖定）
 

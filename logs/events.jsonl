@@ -444,3 +444,5 @@
 {"ts": "2026-11-02T16:49:35", "kind": "ticket_accepted", "ticket": "T-029", "commit": "e37743920a8a8c2e956eea808b097950e1a9efee", "files": ["lab/L05_cross_tenant_write/expected.yaml", "lab/L07_security_definer_rpc/expected.yaml", "lab/L09_insert_permissive/expected.yaml"]}
 {"ts": "2026-11-02T16:49:41", "kind": "ticket_start", "ticket": "T-030", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-02T16:49:45", "kind": "ticket_accepted", "ticket": "T-030", "commit": "4ecbe30bea5d8f57be128f7b34dc4f9ef9ab16bb", "files": ["lab/L01_rls_disabled/expected.yaml", "lab/L11_public_bucket/expected.yaml", "lab/L12_openapi_restricted/expected.yaml"]}
+{"ts": "2026-11-02T16:49:58", "kind": "acceptance_run", "scope": "MS0", "failed": []}
+{"ts": "2026-11-02T16:51:49", "kind": "acceptance_run", "scope": "MS0", "failed": []}
