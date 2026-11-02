@@ -1,0 +1,36 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L02
+title: Policy 恆真
+plant: |
+  public.messages 啟用 RLS。SELECT policy 為 USING (true)（未指定 TO，適用所有角色）。
+  INSERT：TO authenticated WITH CHECK (owner_id = auth.uid())；UPDATE：TO authenticated
+  USING (owner_id = auth.uid()) WITH CHECK (owner_id = auth.uid())；DELETE：TO authenticated
+  USING (owner_id = auth.uid())。只有讀取是錯的。
+schema:
+  messages: {kind: table, columns: [id, owner_id, body], primary_key: [id]}
+rows:
+  m_a1: {target: messages, pk: 5ce01002-0000-4000-8000-000000000001, owner: user_a}
+  m_b1: {target: messages, pk: 5ce01002-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    messages:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: own_rows_only}
+      delete: {anon: deny, user: own_rows_only}
+vulnerable_cases:
+  - {id: L02-V1, target: messages, op: select, role: anon, rows: [m_a1, m_b1], expect: allowed, rule: ANON_READ_OWNER_SCOPED, severity: high}
+  - {id: L02-V2, target: messages, op: select, role: user_a, rows: [m_b1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+  - {id: L02-V3, target: messages, op: select, role: user_b, rows: [m_a1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+safe_cases:
+  - {id: L02-S1, target: messages, op: insert, role: anon, expect: denied, profiles: [dev, ci]}
+  - {id: L02-S2, target: messages, op: update, role: anon, rows: [m_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L02-S3, target: messages, op: delete, role: anon, rows: [m_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L02-S4, target: messages, op: insert, role: user_a, new_owner: user_b, expect: denied, profiles: [dev, ci]}
+  - {id: L02-S5, target: messages, op: insert, role: user_b, new_owner: user_a, expect: denied, profiles: [dev, ci]}
+  - {id: L02-S6, target: messages, op: update, role: user_a, rows: [m_b1], expect: denied, profiles: [dev, ci]}
+  - {id: L02-S7, target: messages, op: update, role: user_b, rows: [m_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L02-S8, target: messages, op: delete, role: user_a, rows: [m_b1], expect: denied, profiles: [dev, ci]}
+  - {id: L02-S9, target: messages, op: delete, role: user_b, rows: [m_a1], expect: denied, profiles: [dev, ci]}
+splinter_expected: measure

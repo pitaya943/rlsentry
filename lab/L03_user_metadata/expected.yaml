@@ -1,0 +1,29 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L03
+title: 依 user_metadata 授權
+plant: |
+  public.reports 啟用 RLS。SELECT policy：TO authenticated USING (owner_id = auth.uid()
+  OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin')。user_metadata 可由使用者以
+  PUT /auth/v1/user 自行修改，所以任何使用者把自己的 metadata 設成 role=admin 後即可讀所有列。
+  INSERT／UPDATE／DELETE 沒有 policy（只有後端寫入）。
+schema:
+  reports: {kind: table, columns: [id, owner_id, title], primary_key: [id]}
+rows:
+  r_a1: {target: reports, pk: 5ce01003-0000-4000-8000-000000000001, owner: user_a}
+  r_b1: {target: reports, pk: 5ce01003-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    reports:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}   # 管理員權限應來自 app_metadata，不在本 policy 範圍
+      insert: {anon: deny, user: deny}
+      update: {anon: deny, user: deny}
+      delete: {anon: deny, user: deny}
+vulnerable_cases:
+  # 前置條件需要修改測試帳號的 user_metadata（對 Auth 的寫入），所以只在 dev／ci
+  - {id: L03-V1, target: reports, op: select, role: user_a, rows: [r_b1], expect: allowed, precondition: user_metadata.role=admin, rule: USER_METADATA_ESCALATION, severity: high, profiles: [dev, ci]}
+  - {id: L03-V2, target: reports, op: select, role: user_b, rows: [r_a1], expect: allowed, precondition: user_metadata.role=admin, rule: USER_METADATA_ESCALATION, severity: high, profiles: [dev, ci]}
+safe_cases:
+  - {id: L03-S1, target: reports, op: select, role: anon, rows: [r_a1, r_b1], expect: denied}
+  - {id: L03-S2, target: reports, op: insert, role: user_a, new_owner: user_a, expect: denied, profiles: [dev, ci]}
+splinter_expected: measure

@@ -1,0 +1,35 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L01
+title: RLS 未啟用
+plant: |
+  public.customers 建表後不執行 ENABLE ROW LEVEL SECURITY；保留 Supabase 預設的
+  anon、authenticated 表權限（GRANT ALL）。因此任何身分都能讀寫所有列。
+schema:
+  customers: {kind: table, columns: [id, owner_id, name, email], primary_key: [id], rls: disabled}
+rows:
+  c_a1: {target: customers, pk: 5ce01001-0000-4000-8000-000000000001, owner: user_a}
+  c_b1: {target: customers, pk: 5ce01001-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    customers:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: own_rows_only}
+      delete: {anon: deny, user: own_rows_only}
+vulnerable_cases:
+  # customers 含 email（敏感欄位）→ anon 讀取升為 critical（SPEC §5 M5）
+  - {id: L01-V1, target: customers, op: select, role: anon, rows: [c_a1, c_b1], expect: allowed, rule: ANON_READ_OWNER_SCOPED, severity: critical}
+  - {id: L01-V2, target: customers, op: insert, role: anon, expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
+  - {id: L01-V3, target: customers, op: update, role: anon, rows: [c_a1], expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
+  - {id: L01-V4, target: customers, op: delete, role: anon, rows: [c_a1], expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
+  - {id: L01-V5, target: customers, op: select, role: user_a, rows: [c_b1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+  - {id: L01-V6, target: customers, op: select, role: user_b, rows: [c_a1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+  - {id: L01-V7, target: customers, op: insert, role: user_a, new_owner: user_b, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+  - {id: L01-V8, target: customers, op: insert, role: user_b, new_owner: user_a, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+  - {id: L01-V9, target: customers, op: update, role: user_a, rows: [c_b1], expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+  - {id: L01-V10, target: customers, op: update, role: user_b, rows: [c_a1], expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+  - {id: L01-V11, target: customers, op: delete, role: user_a, rows: [c_b1], expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+  - {id: L01-V12, target: customers, op: delete, role: user_b, rows: [c_a1], expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+safe_cases: []          # 12 個格子全部是漏洞
+splinter_expected: measure
