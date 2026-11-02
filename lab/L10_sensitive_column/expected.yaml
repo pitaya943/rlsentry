@@ -1,0 +1,31 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L10
+title: 敏感欄位外洩
+plant: |
+  public.public_profiles 啟用 RLS，列層級正確：SELECT USING (is_public OR user_id = auth.uid())
+  （適用 anon 與 authenticated）；INSERT／UPDATE／DELETE：TO authenticated 比對 user_id = auth.uid()。
+  但表中含 email 欄位，公開列的 email 因此對 anon 可見。沒有列層級漏洞，只應產生敏感欄位提示。
+schema:
+  public_profiles: {kind: table, columns: [id, user_id, display_name, email, is_public], primary_key: [id]}
+rows:
+  pp_a1: {target: public_profiles, pk: 5ce01010-0000-4000-8000-000000000001, owner: user_a, public: true}
+  pp_b1: {target: public_profiles, pk: 5ce01010-0000-4000-8000-000000000002, owner: user_b, public: false}
+policy:
+  tables:
+    public_profiles:
+      owner_column: user_id
+      public_column: is_public
+      select: {anon: public_rows_only, user: public_or_own_rows}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: own_rows_only}
+      delete: {anon: deny, user: own_rows_only}
+vulnerable_cases: []
+safe_cases:
+  - {id: L10-S1, target: public_profiles, op: select, role: anon, rows: [pp_b1], expect: denied}
+  - {id: L10-S2, target: public_profiles, op: select, role: user_a, rows: [pp_b1], expect: denied}
+  - {id: L10-S3, target: public_profiles, op: select, role: user_b, rows: [pp_a1], expect: allowed}
+  - {id: L10-S4, target: public_profiles, op: update, role: anon, rows: [pp_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L10-S5, target: public_profiles, op: update, role: user_b, rows: [pp_a1], expect: denied, profiles: [dev, ci]}
+warning_cases:
+  - {id: L10-W1, target: public_profiles, op: select, role: anon, rows: [pp_a1], expect: allowed, rule: SENSITIVE_COLUMN_PUBLIC, evidence: config_warning, severity: review}
+splinter_expected: measure

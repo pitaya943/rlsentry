@@ -1,0 +1,36 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L12
+title: OpenAPI 被限制
+openapi: false
+plant: |
+  關閉 anon 對 OpenAPI 的存取（PostgREST openapi-mode = disabled），GET /rest/v1/ 不再列出 schema。
+  public.diary_entries 啟用 RLS，SELECT 有兩條 policy：TO authenticated USING (owner_id = auth.uid())
+  （正確）與 TO anon USING (true)  ← 漏洞。前端以 supabase.from('diary_entries') 讀取。
+  public.audit_log 啟用 RLS、沒有任何 policy，前端也不引用；它只出現在 expected policy 中。
+schema:
+  diary_entries: {kind: table, columns: [id, owner_id, body], primary_key: [id], in_openapi: false, in_bundle: true}
+  audit_log: {kind: table, columns: [id, actor_id, action], primary_key: [id], in_openapi: false, in_bundle: false}
+rows:
+  d_a1: {target: diary_entries, pk: 5ce01012-0000-4000-8000-000000000001, owner: user_a}
+  d_b1: {target: diary_entries, pk: 5ce01012-0000-4000-8000-000000000002, owner: user_b}
+  al_1: {target: audit_log, pk: 5ce01012-0000-4000-8000-000000000003}
+policy:
+  tables:
+    diary_entries:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+    audit_log:
+      select: {anon: deny, user: deny}
+discovery_cases:
+  - {target: diary_entries, discovered_by: bundle, confidence: inferred}
+  - {target: audit_log, discovered_by: policy, confidence: unknown}
+vulnerable_cases:
+  - {id: L12-V1, target: diary_entries, op: select, role: anon, rows: [d_a1, d_b1], expect: allowed, rule: ANON_READ_OWNER_SCOPED, severity: high}
+safe_cases:
+  - {id: L12-S1, target: diary_entries, op: select, role: user_a, rows: [d_b1], expect: denied}
+  - {id: L12-S2, target: diary_entries, op: select, role: user_b, rows: [d_a1], expect: denied}
+inconclusive_cases:
+  # al_1 存在但沒有任何身分看得到，也無法植入：不可回報為 denied
+  - {id: L12-I1, target: audit_log, op: select, role: anon, expect: inconclusive}
+  - {id: L12-I2, target: audit_log, op: select, role: user_a, expect: inconclusive}
+splinter_expected: measure
