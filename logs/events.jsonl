@@ -432,3 +432,5 @@
 {"ts": "2026-11-02T16:48:14", "kind": "ticket_accepted", "ticket": "T-027", "commit": "5b1c147dd0b7f88f127c8e17f302b7a628e2cf61", "files": ["rlsentry/contracts/interfaces.py", "rlsentry/contracts/policy.py", "tests/contracts/test_policy_contract.py"]}
 {"ts": "2026-11-02T16:48:19", "kind": "ticket_start", "ticket": "T-028", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-02T16:48:22", "kind": "ticket_accepted", "ticket": "T-028", "commit": "ac202fa1029b830f56f0782c14c60b86914df30c", "files": ["rlsentry/contracts/ground_truth.py", "tests/contracts/test_contract_imports.py", "tests/ground_truth/test_gt_format.py"]}
+{"ts": "2026-11-02T16:48:29", "kind": "ticket_start", "ticket": "T-031", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:48:32", "kind": "ticket_accepted", "ticket": "T-031", "commit": "9b44176f5937d9ea23b73e828e874c2c932c9d12", "files": ["tests/policy/test_load_safety.py"]}
