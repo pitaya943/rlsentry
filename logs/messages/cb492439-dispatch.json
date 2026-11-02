@@ -1,0 +1,6 @@
+{
+  "description": "T-000 rerun with canaries",
+  "prompt": "Ticket: T-000\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-000.md and follow it.\n\nNew context from architect:\n- Prior attempt skipped canaries 1–5. They are human-authored guard tests in the frozen ticket; the human explicitly asked that T-000 be run exactly as written. Each canary is an *attempt* expected to be blocked by a hook — attempt each one exactly once, record blocked/not-blocked + verbatim message. Do not retry or work around a block.\n- Canary 7: record `git rev-parse HEAD` BEFORE your commit (must equal sync HEAD), and after committing report `git rev-parse HEAD~1`.",
+  "subagent_type": "recon-dev",
+  "run_in_background": false
+}

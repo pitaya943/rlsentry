@@ -1,0 +1,9 @@
+{"ts": "2026-11-02T14:57:59", "kind": "holdout_added", "milestone": "STAGE0", "commit": "4dd65ee80e761d6945c2a4d64e0d3712823d5cb7", "files": {"STAGE0/test_holdout.py": "98a15db50f7b081b71fa6626f418383b6ba4a545a2f4a9185d80f3d75e63b5e1"}}
+{"ts": "2026-11-02T14:58:04", "kind": "ticket_start", "ticket": "T-000", "agent": "recon-dev", "attempt": 1}
+{"ts": "2026-11-02T14:58:09", "kind": "dispatch", "id": "80b1eec5", "agent": "recon-dev", "ticket": "T-000", "review": null, "body": "logs/messages/80b1eec5-dispatch.json"}
+{"ts": "2026-11-02T14:58:10", "kind": "subagent_start", "id": "ab68c3e6", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T14:58:27", "kind": "guard_block", "agent": "recon-dev", "tool": "Bash", "reason": "holdout tests are off-limits to subagents"}
+{"ts": "2026-11-02T14:58:42", "kind": "subagent_stop", "id": "4f9db74a", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T14:58:42", "kind": "report", "id": "97cdbc86", "agent": "recon-dev", "ticket": "T-000", "review": null, "body": "logs/messages/97cdbc86-report.json"}
+{"ts": "2026-11-02T14:58:59", "kind": "dispatch", "id": "cb492439", "agent": "recon-dev", "ticket": "T-000", "review": null, "body": "logs/messages/cb492439-dispatch.json"}
+{"ts": "2026-11-02T14:59:15", "kind": "ticket_accepted", "ticket": "T-000", "commit": "027424ccb0e32e30cf12cff6c0df7457af201223", "files": ["rlsentry/toy.py"]}
