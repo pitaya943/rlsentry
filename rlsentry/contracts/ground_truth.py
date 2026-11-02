@@ -8,16 +8,33 @@ keys), `policy` (the intended access policy fed to the scanner), `warning_cases`
 
 Scoring (ADR-011), per scenario and summed over all P0 scenarios:
 - a *cell* is (kind, target, op, role); a vulnerable case matches a Finding when evidence is
-  confirmed and target, op, role and rule are all equal (key cases: rule only);
+  confirmed and target, op, role and rule are all equal (key cases: target label and rule,
+  see KEY_TARGET_RE);
 - TP = vulnerable cases with ≥1 matching finding; FN = the rest;
 - FP = confirmed findings with `RULES[rule].vulnerability` that match no vulnerable case
   (this includes every confirmed finding on a safe cell, and findings the ground truth does
   not foresee — those are reported for human review, never silently dropped);
-- TN = safe cases whose cell has no confirmed finding; FPR = (#safe cases hit)/(#safe cases);
+- TN = safe cases whose cell has no confirmed finding; fp_safe = safe cases whose cell has one;
+  FPR = fp_safe / (fp_safe + TN) (SPEC §9 formula over safe cases; ADR-011);
+- safe_decided_ratio = `denied` safe cases the scanner reported as denied / all `denied`
+  safe cases, so that "inconclusive everywhere" cannot pass as a perfect FPR (ADR-014);
 - inconclusive cases pass iff the reported cell outcome is inconclusive and the cell has no
   confirmed finding (an inconclusive cell reported as denied is a violation, SPEC §8 C03/C04);
 - cases are scored only in the profiles they list; bench runs `dev` for scoring and `audit`
   for the read-only and inconclusive checks.
+
+Lab conventions every `plant` assumes unless it says otherwise (ADR-014):
+- every table and view in `schema` is explicitly granted SELECT, INSERT, UPDATE, DELETE to
+  anon and authenticated, and every RPC EXECUTE to anon and authenticated, so results never
+  depend on Supabase's default grants; RLS policies alone decide access;
+- RPCs are declared STABLE (PostgREST refuses GET/HEAD on VOLATILE functions) and take no
+  arguments; the scanner calls them with GET/HEAD only;
+- write probes use `Prefer: return=minimal` and read back with the identity that should see
+  the final row (the owner); an insert by anon sets the owner column to a test user so the
+  owner can read it back.
+
+Only bench/ and tests may import this module: the scanner must never see ground truth
+(tests/contracts/test_contract_imports.py).
 """
 from __future__ import annotations
 
@@ -247,10 +264,12 @@ class BenchReport(_Strict):
     fp: int
     fn: int
     tn: int
+    fp_safe: int                       # safe cases hit; fpr = fp_safe / (fp_safe + tn)
     recall: float
     precision: float
     fpr: float
     coverage: float                    # tested cells / cells that should be tested
     inconclusive_ratio: float
+    safe_decided_ratio: float          # see module docstring (ADR-014)
     runtime: dict[str, float]          # "5", "20", "50" tables → seconds
     scenarios: list[ScenarioResult]
