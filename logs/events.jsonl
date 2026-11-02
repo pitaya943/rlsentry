@@ -396,3 +396,5 @@
 {"ts": "2026-11-02T16:34:03", "kind": "report", "id": "54d50528", "agent": "probe-dev", "ticket": "T-022", "review": null, "body": "logs/messages/54d50528-report.json"}
 {"ts": "2026-11-02T16:34:13", "kind": "ticket_start", "ticket": "T-015", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-02T16:34:15", "kind": "ticket_accepted", "ticket": "T-015", "commit": "0c93678d5a4232ec77a1807483bbd0ae10b37052", "files": ["lab/L01_rls_disabled/expected.yaml", "lab/L02_using_true/expected.yaml", "lab/L03_user_metadata/expected.yaml"]}
+{"ts": "2026-11-02T16:34:20", "kind": "ticket_start", "ticket": "T-016", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:34:22", "kind": "ticket_accepted", "ticket": "T-016", "commit": "8defddced07182dd665770002ed9c1c2fd67a07b", "files": ["lab/L04_cross_tenant_read/expected.yaml", "lab/L05_cross_tenant_write/expected.yaml", "lab/L06_security_definer_view/expected.yaml"]}
