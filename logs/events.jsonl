@@ -16,3 +16,4 @@
 {"ts": "2026-11-02T11:34:12", "kind": "ticket_accepted", "ticket": "T-000", "commit": "a594b0b9659b85e784c723bfdf8c6ade3524b5f1", "files": ["rlsentry/toy.py"]}
 {"ts": "2026-11-02T11:34:22", "kind": "acceptance_run", "scope": "STAGE0", "failed": []}
 {"ts": "2026-11-02T11:36:31", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
+{"ts": "2026-11-02T11:36:52", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
