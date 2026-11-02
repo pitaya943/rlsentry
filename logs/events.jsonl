@@ -446,3 +446,4 @@
 {"ts": "2026-11-02T16:49:45", "kind": "ticket_accepted", "ticket": "T-030", "commit": "4ecbe30bea5d8f57be128f7b34dc4f9ef9ab16bb", "files": ["lab/L01_rls_disabled/expected.yaml", "lab/L11_public_bucket/expected.yaml", "lab/L12_openapi_restricted/expected.yaml"]}
 {"ts": "2026-11-02T16:49:58", "kind": "acceptance_run", "scope": "MS0", "failed": []}
 {"ts": "2026-11-02T16:51:49", "kind": "acceptance_run", "scope": "MS0", "failed": []}
+{"ts": "2026-11-02T16:52:32", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
