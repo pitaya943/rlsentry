@@ -1,0 +1,13 @@
+# Milestone order is fixed by SPEC §11 (v1.0) and is part of the frozen harness.
+# Each milestone must be approved by the human before the next one unlocks.
+order: [STAGE0, MS0, MS1, MS2, MS3, MS4, MS5, MS6, MS7]
+milestones:
+  STAGE0: {title: 護欄測試（玩具 ticket）, focus: "hook 有記錄、路徑守衛會擋、worktree 隔離、Stop hook 會暫停"}
+  MS0: {title: 基礎：合約、expected policy 格式、ground truth, focus: "合約、expected policy 格式與 ground truth 是否忠於 SPEC"}
+  MS1: {title: Lab benchmark + Safety, focus: "情境真的埋了漏洞、對照組安全、植入資料完整；唯讀與授權閘門擋得住"}
+  MS2: {title: M2 Discovery + M3 讀取, focus: "inconclusive 沒被當成安全；沒有下載資料；expected policy 差分正確"}
+  MS3: {title: M3 寫入, focus: "寫入只在 disposable DB；讀回驗證最終狀態；清理完整"}
+  MS4: {title: M4 Whitebox, focus: "probe-only 案例真實；SECURITY DEFINER 只在取得資料時算漏洞"}
+  MS5: {title: M1 Recon, focus: "service_role 偵測；anon key 沒被誤報"}
+  MS6: {title: M5 Report + 介面 + profiles, focus: "audit 無法寫入；報告分證據等級；CI 只在 Confirmed 時失敗"}
+  MS7: {title: 整合與交付, focus: "照 USAGE.md 親手跑一次；五項指標達標並附原始數量"}
