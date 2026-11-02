@@ -10,3 +10,4 @@
 {"ts": "2026-11-02T14:59:23", "kind": "acceptance_run", "scope": "STAGE0", "failed": []}
 {"ts": "2026-11-02T14:59:30", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "shell command appears to modify protected path logs/raw-hook-samples/"}
 {"ts": "2026-11-02T15:00:37", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
+{"ts": "2026-11-02T15:01:04", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
