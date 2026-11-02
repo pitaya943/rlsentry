@@ -144,3 +144,36 @@
 {"ts": "2026-11-02T15:36:29", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
 {"ts": "2026-11-02T15:36:29", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
 {"ts": "2026-11-02T15:36:29", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
+{"ts": "2026-11-02T15:36:32", "kind": "subagent_stop", "id": "11614cb9", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:36:32", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:55", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:55", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:55", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:55", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "approval_rejected", "milestone": "STAGE0", "reason": "bad or missing signature"}
+{"ts": "2026-11-02T15:42:56", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
