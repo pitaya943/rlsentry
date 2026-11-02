@@ -408,3 +408,5 @@
 {"ts": "2026-11-02T16:35:05", "kind": "ticket_accepted", "ticket": "T-021", "commit": "3c20e505ad9633f9514ec61ace8096febda92319", "files": ["rlsentry/policy/resolve.py"]}
 {"ts": "2026-11-02T16:35:12", "kind": "ticket_accepted", "ticket": "T-022", "commit": "f1da434a7467db63ccc9fabd88faff157742fd8c", "files": ["rlsentry/policy/visibility.py"]}
 {"ts": "2026-11-02T16:35:19", "kind": "ticket_accepted", "ticket": "T-023", "commit": "75f25da3c1c823067b297879c7eb2a27124113c8", "files": ["rlsentry/policy/load.py"]}
+{"ts": "2026-11-02T16:35:28", "kind": "ticket_start", "ticket": "T-019", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:35:31", "kind": "ticket_accepted", "ticket": "T-019", "commit": "6cab53b3de1a72da460d0bc394c237fd70479578", "files": ["lab/C01_owner_scoped_ok/expected.yaml", "lab/C02_public_table_ok/expected.yaml"]}
