@@ -1,0 +1,30 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L06
+title: SECURITY DEFINER view
+plant: |
+  public.invoices 啟用 RLS，四種操作的 policy 都正確比對 owner_id = auth.uid()（TO authenticated）。
+  public.invoice_summary 是 SELECT id, owner_id, amount FROM invoices 的 view，以 postgres 建立、
+  未設定 security_invoker（預設以建立者權限執行，繞過 RLS），並 GRANT SELECT 給 anon、authenticated。
+schema:
+  invoices: {kind: table, columns: [id, owner_id, amount], primary_key: [id]}
+  invoice_summary: {kind: view, columns: [id, owner_id, amount], primary_key: [id], rls: n/a, base: invoices, security_definer: true}
+rows:
+  inv_a1: {target: invoices, pk: 5ce01006-0000-4000-8000-000000000001, owner: user_a}
+  inv_b1: {target: invoices, pk: 5ce01006-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    invoices:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+    invoice_summary:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+vulnerable_cases:
+  - {id: L06-V1, target: invoice_summary, op: select, role: anon, rows: [inv_a1, inv_b1], expect: allowed, rule: ANON_READ_OWNER_SCOPED, severity: high}
+  - {id: L06-V2, target: invoice_summary, op: select, role: user_a, rows: [inv_b1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+  - {id: L06-V3, target: invoice_summary, op: select, role: user_b, rows: [inv_a1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+safe_cases:
+  - {id: L06-S1, target: invoices, op: select, role: anon, rows: [inv_a1, inv_b1], expect: denied}
+  - {id: L06-S2, target: invoices, op: select, role: user_a, rows: [inv_b1], expect: denied}
+  - {id: L06-S3, target: invoices, op: select, role: user_b, rows: [inv_a1], expect: denied}
+splinter_expected: measure

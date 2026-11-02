@@ -1,0 +1,32 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L04
+title: 跨租戶讀取
+plant: |
+  public.notes 啟用 RLS。SELECT policy：TO authenticated USING (auth.uid() IS NOT NULL)，
+  只檢查已登入、未比對擁有者。INSERT／UPDATE／DELETE 的 policy 正確比對 owner_id = auth.uid()
+  （UPDATE 同時有 USING 與 WITH CHECK）。anon 沒有任何 policy。
+  注意：SPEC §8 範例中的 safe case「user_a 讀 note_b1 為 denied」與此 policy 矛盾（該 policy
+  對 A、B 對稱），本檔改列為漏洞（ADR-011）。
+schema:
+  notes: {kind: table, columns: [id, owner_id, body], primary_key: [id]}
+rows:
+  note_a1: {target: notes, pk: 5ce01004-0000-4000-8000-000000000001, owner: user_a}
+  note_b1: {target: notes, pk: 5ce01004-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    notes:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: own_rows_only}
+      delete: {anon: deny, user: own_rows_only}
+vulnerable_cases:
+  - {id: L04-V1, target: notes, op: select, role: user_b, rows: [note_a1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+  - {id: L04-V2, target: notes, op: select, role: user_a, rows: [note_b1], expect: allowed, rule: CROSS_TENANT_READ, severity: medium}
+safe_cases:
+  - {id: L04-S1, target: notes, op: select, role: anon, rows: [note_a1, note_b1], expect: denied}
+  - {id: L04-S2, target: notes, op: update, role: user_b, rows: [note_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L04-S3, target: notes, op: delete, role: user_a, rows: [note_b1], expect: denied, profiles: [dev, ci]}
+  - {id: L04-S4, target: notes, op: insert, role: anon, expect: denied, profiles: [dev, ci]}
+  - {id: L04-S5, target: notes, op: insert, role: user_b, new_owner: user_a, expect: denied, profiles: [dev, ci]}
+splinter_expected: measure
