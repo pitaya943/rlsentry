@@ -40,7 +40,12 @@ class Authorize(Protocol):
 
 class RequireWriteAllowed(Protocol):
     """safety/mode.py. Every non-HEAD/GET request goes through this (SPEC §5 Safety).
-    audit always refuses; the target host must be localhost for lab-mode writes."""
+
+    ADR-014: (1) the only non-GET request allowed in every profile is the test-user login
+    `POST /auth/v1/token?grant_type=password` (FR-07), matched exactly; (2) audit refuses
+    everything else; (3) dev/ci writes are allowed only to localhost until the human decides
+    otherwise (SPEC §2 ci preview DB is an open question); (4) RPCs are never POSTed: they are
+    called with GET/HEAD only, in every profile."""
 
     def __call__(self, profile: Profile, method: str, url: str) -> None: ...
 
@@ -81,4 +86,7 @@ class Whitebox(Protocol):
 class RunScan(Protocol):
     """pipeline.run_scan (FR-16): the single entry point shared by CLI, API and Action."""
 
-    async def __call__(self, config: ScanConfig, *, cli_confirmed: bool = False) -> ScanReport: ...
+    async def __call__(self, config: ScanConfig, *, cli_confirmed: bool = False,
+                       cli_profile: Profile | None = None) -> ScanReport: ...
+    # ADR-014: effective profile = the stricter of config.profile and cli_profile
+    # (audit > ci > dev); audit can never be relaxed by either source.

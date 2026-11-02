@@ -93,3 +93,11 @@ def test_expected_access_review_flag() -> None:
     e = ExpectedAccess(target="t", op=Op.SELECT, role=Role.USER_A, scope=RowScope.OWN_ROWS_ONLY)
     assert not e.is_review
     assert e.model_copy(update={"review_reason": "no owner column"}).is_review
+
+
+def test_table_primary_key_is_optional_and_typed() -> None:
+    c = _cfg("target: http://x\ntables: {diary: {primary_key: [id], owner_column: owner_id}}\n")
+    assert c.tables["diary"].primary_key == ["id"]
+    assert _cfg("target: http://x\ntables: {t: {}}\n").tables["t"].primary_key is None
+    with pytest.raises(ValidationError):
+        _cfg("target: http://x\ntables: {t: {primary_key: id}}\n")
