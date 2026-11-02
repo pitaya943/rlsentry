@@ -1,8 +1,8 @@
 milestone: STAGE0
-checklist: docs\verification\STAGE0-v2.md
+checklist: docs/verification/STAGE0-v2.md
 checklist_sha256: dc090454507890471d43e6f4b46bad029dee1b2e5d6de1211a8f2a6797e9b2ef
 decision: approve
 reviewer: Kuei
-date: 2026-11-02 23:23
+date: 2026-11-02 23:55
 notes: |
-  接受canary1-5未經實測風險(ADR003/004)
+  接受 canary 1–5 未實測的風險。PR 政策：(1) 每個 milestone 開 PR（session 分支 → main），核准後由我 merge；(2) 高風險 ticket（判定規則見 architect 提案）各開一個僅供審查的 PR，附 file:line 逐段說明、驗證指令與預期輸出；(3) PR 與清單加「阻擋與困難」一節；(4) 把此政策寫成 ADR。
