@@ -3,7 +3,8 @@ scenario: L12
 title: OpenAPI 被限制
 openapi: false
 plant: |
-  關閉 anon 對 OpenAPI 的存取（PostgREST openapi-mode = disabled），GET /rest/v1/ 不再列出 schema。
+  關閉 OpenAPI：ALTER ROLE authenticator SET pgrst.openapi_mode = 'disabled'; 然後
+  NOTIFY pgrst, 'reload config'（auditor G7），GET /rest/v1/ 不再列出 schema。
   public.diary_entries 啟用 RLS，SELECT 有兩條 policy：TO authenticated USING (owner_id = auth.uid())
   （正確）與 TO anon USING (true)  ← 漏洞。前端以 supabase.from('diary_entries') 讀取。
   public.audit_log 啟用 RLS、沒有任何 policy，前端也不引用；它只出現在 expected policy 中。
@@ -17,9 +18,11 @@ rows:
 policy:
   tables:
     diary_entries:
+      primary_key: [id]          # OpenAPI 關閉時唯一的主鍵來源（ADR-014）
       owner_column: owner_id
       select: {anon: deny, user: own_rows_only}
     audit_log:
+      primary_key: [id]
       select: {anon: deny, user: deny}
 discovery_cases:
   - {target: diary_entries, discovered_by: bundle, confidence: inferred}
