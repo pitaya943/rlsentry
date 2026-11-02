@@ -5,7 +5,8 @@ plant: |
   public.feedback 啟用 RLS；owner_id 可為 NULL。SELECT：TO authenticated USING (owner_id = auth.uid())
   （正確）；INSERT：TO anon, authenticated WITH CHECK (true)  ← 漏洞；沒有 UPDATE／DELETE policy
   （本表設計為只可新增）。
-  讀回注意：anon 新增的列 anon 自己讀不到，須以 DB 連線（lab）或 owner_id 指定的擁有者讀回。
+  探測：INSERT 必須用 Prefer: return=minimal（否則新列要過 SELECT policy，會以 42501 失敗）；
+  anon 新增時把 owner_id 設為 user_a，再由 user_a 讀回（auditor G2、ADR-014）。
 schema:
   feedback: {kind: table, columns: [id, owner_id, body], primary_key: [id]}
 rows:
@@ -20,7 +21,7 @@ policy:
       update: {anon: deny, user: deny}
       delete: {anon: deny, user: deny}
 vulnerable_cases:
-  - {id: L09-V1, target: feedback, op: insert, role: anon, expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
+  - {id: L09-V1, target: feedback, op: insert, role: anon, new_owner: user_a, expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
   - {id: L09-V2, target: feedback, op: insert, role: user_a, new_owner: user_b, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
   - {id: L09-V3, target: feedback, op: insert, role: user_b, new_owner: user_a, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
 safe_cases:

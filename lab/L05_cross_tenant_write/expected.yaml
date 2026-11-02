@@ -2,14 +2,18 @@
 scenario: L05
 title: 跨租戶修改（擁有者轉移）
 plant: |
-  public.projects 啟用 RLS。SELECT：TO authenticated USING (owner_id = auth.uid())；
-  INSERT：TO authenticated WITH CHECK (owner_id = auth.uid())；
+  public.projects 啟用 RLS；created_by 由 seed 設為與 owner_id 相同的使用者。
+  SELECT：TO authenticated USING (owner_id = auth.uid() OR created_by = auth.uid())（建立者與
+  擁有者都看得到；種子資料兩者相同，所以讀取沒有漏洞）；
+  INSERT：TO authenticated WITH CHECK (owner_id = auth.uid() AND created_by = auth.uid())；
   UPDATE：TO authenticated USING (owner_id = auth.uid()) WITH CHECK (true)  ← 漏洞；
   DELETE：TO authenticated USING (owner_id = auth.uid())。
   使用者可把自己的列的 owner_id 改成別人，等於把資料塞進他人帳號。
-  讀回注意：轉移後原擁有者看不到該列，RETURNING 會被 SELECT policy 擋下，須以新擁有者讀回。
+  為什麼要 created_by：PostgREST 的 UPDATE 帶 WHERE，Postgres 會對新列套用 SELECT policy；
+  若 SELECT 只看 owner_id，轉移會以 42501 失敗，漏洞就不存在（auditor G1）。
+  讀回：以 return=minimal 更新，再以新擁有者讀回 owner_id。
 schema:
-  projects: {kind: table, columns: [id, owner_id, name], primary_key: [id]}
+  projects: {kind: table, columns: [id, owner_id, created_by, name], primary_key: [id]}
 rows:
   p_a1: {target: projects, pk: 5ce01005-0000-4000-8000-000000000001, owner: user_a}
   p_b1: {target: projects, pk: 5ce01005-0000-4000-8000-000000000002, owner: user_b}
