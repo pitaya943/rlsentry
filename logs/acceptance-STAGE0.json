@@ -1,0 +1,47 @@
+[
+  {
+    "check": "tickets & checklist",
+    "ok": true,
+    "detail": "tickets valid, checklist consistent"
+  },
+  {
+    "check": "provenance",
+    "ok": true,
+    "detail": "every product-code commit is a genuine accept merge (scope and cheat checks recomputed)"
+  },
+  {
+    "check": "ruff",
+    "ok": true,
+    "detail": "All checks passed!\n"
+  },
+  {
+    "check": "mypy",
+    "ok": true,
+    "detail": "Success: no issues found in 3 source files\n"
+  },
+  {
+    "check": "tests",
+    "ok": true,
+    "detail": ".                                                                        [100%]\n1 passed in 0.01s\n"
+  },
+  {
+    "check": "holdout",
+    "ok": true,
+    "detail": "no holdout tests for this scope"
+  },
+  {
+    "check": "safety invariants",
+    "ok": true,
+    "detail": "no safety-marked tests among accepted tickets yet"
+  },
+  {
+    "check": "mutation",
+    "ok": true,
+    "detail": "mutation testing skipped (set MUTATION=1 to run)"
+  },
+  {
+    "check": "checklist sync",
+    "ok": true,
+    "detail": "CHECKLIST.md up to date"
+  }
+]
