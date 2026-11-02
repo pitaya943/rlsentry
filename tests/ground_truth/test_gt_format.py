@@ -81,3 +81,10 @@ def test_lab_expected_yaml_is_valid(path: Path) -> None:
     assert path.parent.name.startswith(gt.scenario + "_")
     pks = [r.pk for r in gt.rows.values()]
     assert len(pks) == len(set(pks))
+
+
+def test_bench_report_has_spec_section_9_keys() -> None:
+    from rlsentry.contracts.ground_truth import BenchReport
+    keys = set(BenchReport.model_fields)
+    assert {"tp", "fp", "fn", "tn", "recall", "precision", "fpr", "coverage", "runtime", "scenarios"} <= keys
+    assert {"fp_safe", "safe_decided_ratio", "inconclusive_ratio"} <= keys
