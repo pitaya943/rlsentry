@@ -17,4 +17,5 @@ markers = [
 
 [tool.ruff]
 line-length = 110
-extend-exclude = ["harness/tests"]
+# Frozen harness/host code and subagent worktrees are not lintable from this session (ADR-002).
+extend-exclude = ["harness", "host", ".claude"]
