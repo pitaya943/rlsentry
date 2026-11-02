@@ -401,3 +401,7 @@
 {"ts": "2026-11-02T16:34:24", "kind": "subagent_stop", "id": "ad3271da", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-02T16:34:28", "kind": "ticket_start", "ticket": "T-017", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-02T16:34:31", "kind": "ticket_accepted", "ticket": "T-017", "commit": "e6271aa7af315c59613ec0a25e762ae0f4e6cdc5", "files": ["lab/L07_security_definer_rpc/expected.yaml", "lab/L08_service_role_bundle/expected.yaml", "lab/L09_insert_permissive/expected.yaml"]}
+{"ts": "2026-11-02T16:34:36", "kind": "ticket_start", "ticket": "T-018", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:34:37", "kind": "subagent_stop", "id": "8b5ea65d", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T16:34:38", "kind": "ticket_accepted", "ticket": "T-018", "commit": "c93d33b310ed218590fb53203ee4a4586c97e21c", "files": ["lab/L10_sensitive_column/expected.yaml", "lab/L11_public_bucket/expected.yaml", "lab/L12_openapi_restricted/expected.yaml"]}
+{"ts": "2026-11-02T16:34:38", "kind": "subagent_stop", "id": "b97a9394", "agent": "probe-dev", "ticket": null, "review": null}
