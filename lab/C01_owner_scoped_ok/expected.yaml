@@ -1,0 +1,35 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: C01
+title: 安全對照：正確的 owner-scoped policy
+plant: |
+  public.todos 啟用 RLS，四種操作都只允許 TO authenticated 且 owner_id = auth.uid()
+  （INSERT 用 WITH CHECK；UPDATE 同時有 USING 與 WITH CHECK；DELETE 用 USING）。anon 沒有 policy。
+  不應產生任何漏洞 finding。
+schema:
+  todos: {kind: table, columns: [id, owner_id, title], primary_key: [id]}
+rows:
+  t_a1: {target: todos, pk: 5ce0c001-0000-4000-8000-000000000001, owner: user_a}
+  t_b1: {target: todos, pk: 5ce0c001-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    todos:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: own_rows_only}
+      delete: {anon: deny, user: own_rows_only}
+vulnerable_cases: []
+safe_cases:
+  - {id: C01-S1, target: todos, op: select, role: anon, rows: [t_a1, t_b1], expect: denied}
+  - {id: C01-S2, target: todos, op: select, role: user_a, rows: [t_b1], expect: denied}
+  - {id: C01-S3, target: todos, op: select, role: user_b, rows: [t_a1], expect: denied}
+  - {id: C01-S4, target: todos, op: insert, role: anon, expect: denied, profiles: [dev, ci]}
+  - {id: C01-S5, target: todos, op: insert, role: user_a, new_owner: user_b, expect: denied, profiles: [dev, ci]}
+  - {id: C01-S6, target: todos, op: insert, role: user_b, new_owner: user_a, expect: denied, profiles: [dev, ci]}
+  - {id: C01-S7, target: todos, op: update, role: anon, rows: [t_a1], expect: denied, profiles: [dev, ci]}
+  - {id: C01-S8, target: todos, op: update, role: user_a, rows: [t_b1], expect: denied, profiles: [dev, ci]}
+  - {id: C01-S9, target: todos, op: update, role: user_b, rows: [t_a1], expect: denied, profiles: [dev, ci]}
+  - {id: C01-S10, target: todos, op: delete, role: anon, rows: [t_a1], expect: denied, profiles: [dev, ci]}
+  - {id: C01-S11, target: todos, op: delete, role: user_a, rows: [t_b1], expect: denied, profiles: [dev, ci]}
+  - {id: C01-S12, target: todos, op: delete, role: user_b, rows: [t_a1], expect: denied, profiles: [dev, ci]}
+splinter_expected: measure
