@@ -369,3 +369,8 @@
 {"ts": "2026-11-02T16:10:46", "kind": "stop_blocked", "attempt": 29, "state": "active", "milestone": "MS0"}
 {"ts": "2026-11-02T16:10:52", "kind": "stop_blocked", "attempt": 30, "state": "active", "milestone": "MS0"}
 {"ts": "2026-11-02T16:11:12", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 31}
+{"ts": "2026-11-02T16:30:50", "kind": "holdout_added", "milestone": "MS0", "commit": "0f23f01fe39e940bfe6746c98a12dd67192a9d37", "files": {"MS0/__pycache__/test_holdout_policy.cpython-313-pytest-9.2.0.pyc": "bfb8d974ce37b7e805cb2ff06b09a4fb535a9f530b79dd19b347928ae7628409", "MS0/test_holdout_policy.py": "d347875d5857eb9fb02883ad466f936f574a6a566c67407366c5a8e02b7eb0ba"}}
+{"ts": "2026-11-02T16:32:41", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "copying files between branches bypasses the acceptance gate"}
+{"ts": "2026-11-02T16:32:46", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "copying files between branches bypasses the acceptance gate"}
+{"ts": "2026-11-02T16:32:58", "kind": "ticket_start", "ticket": "T-010", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-02T16:33:00", "kind": "ticket_accepted", "ticket": "T-010", "commit": "49ab8c417d38fe9e645fc031d047722538aec74d", "files": ["rlsentry/contracts/models.py", "rlsentry/contracts/rules.py", "tests/contracts/__init__.py", "tests/contracts/test_models.py"]}

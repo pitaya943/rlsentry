@@ -1,0 +1,21 @@
+{
+  "session_id": "8b6e369f-dea8-5619-9558-ef4c87c9b008",
+  "transcript_path": "/root/.claude/projects/-home-user-rlsentry/8b6e369f-dea8-5619-9558-ef4c87c9b008.jsonl",
+  "cwd": "/home/user/rlsentry",
+  "scratchpad_dir": "/tmp/claude-0/-home-user-rlsentry/8b6e369f-dea8-5619-9558-ef4c87c9b008/scratchpad",
+  "prompt_id": "f07c295e-a897-49f4-a284-f25fa0e95298",
+  "permission_mode": "auto",
+  "agent_type": "architect",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/home/user/rlsentry/rlsentry/contracts/models.py",
+    "old_string": "        # not_tested is also allowed: the cell was never probed (e.g. writes in audit).\n        if self.known_rows_checked == 0 and self.outcome in (Outcome.ALLOWED, Outcome.DENIED) \\\n                and self.op is Op.SELECT:\n            raise ValueError(\"a SELECT verdict needs at least one known row; use inconclusive\")\n        return self",
+    "new_string": "        # not_tested is also allowed: the cell was never probed (e.g. writes in audit).\n        # For writes the known row is the seeded row or the inserted canary that was read back;\n        # an RPC that is callable but returns no known row is inconclusive, not allowed.\n        if self.known_rows_checked == 0 and self.outcome in (Outcome.ALLOWED, Outcome.DENIED):\n            raise ValueError(\"a verdict needs at least one known row; use inconclusive\")\n        return self",
+    "replace_all": false
+  },
+  "tool_use_id": "toolu_01Gffbv5nhPwkY97354xJryy"
+}
