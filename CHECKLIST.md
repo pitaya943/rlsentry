@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 15/18 · 進行中 0 · blocked 0
+自動產生，請勿手改 · 完成 16/18 · 進行中 0 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -18,11 +18,11 @@
 - [x] T-017 Ground truth：L07–L09（architect，done，1 次）
 - [x] T-018 Ground truth：L10–L12（architect，done，1 次）
 - [x] T-019 Ground truth：C01–C02（architect，done，1 次）
-- [ ] T-020 Ground truth：C03–C04（architect，todo，0 次） ← 依賴 T-012✓
+- [x] T-020 Ground truth：C03–C04（architect，done，1 次）
 - [x] T-021 policy/resolve.py：resolve_expected（probe-dev，done，1 次）
 - [x] T-022 policy/visibility.py：row_permitted（probe-dev，done，1 次）
 - [x] T-023 policy/load.py：load_config（probe-dev，done，1 次）
-- [ ] T-024 Ground truth 與預期 policy 一致性測試（architect，todo，0 次） ← 依賴 T-015✓ T-016✓ T-017✓ T-018✓ T-019✓ T-020… T-021✓ T-022✓
+- [ ] T-024 Ground truth 與預期 policy 一致性測試（architect，todo，0 次） ← 依賴 T-015✓ T-016✓ T-017✓ T-018✓ T-019✓ T-020✓ T-021✓ T-022✓
 - [ ] T-025 MS1–MS7 ticket 計畫（architect，todo，0 次） ← 依賴 T-013✓
 
 ## [ ] MS1 Lab benchmark + Safety（鎖定）
