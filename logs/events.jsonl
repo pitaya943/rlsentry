@@ -434,3 +434,9 @@
 {"ts": "2026-11-02T16:48:22", "kind": "ticket_accepted", "ticket": "T-028", "commit": "ac202fa1029b830f56f0782c14c60b86914df30c", "files": ["rlsentry/contracts/ground_truth.py", "tests/contracts/test_contract_imports.py", "tests/ground_truth/test_gt_format.py"]}
 {"ts": "2026-11-02T16:48:29", "kind": "ticket_start", "ticket": "T-031", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-02T16:48:32", "kind": "ticket_accepted", "ticket": "T-031", "commit": "9b44176f5937d9ea23b73e828e874c2c932c9d12", "files": ["tests/policy/test_load_safety.py"]}
+{"ts": "2026-11-02T16:48:44", "kind": "ticket_start", "ticket": "T-032", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-02T16:48:45", "kind": "dispatch", "id": "317507e6", "agent": "probe-dev", "ticket": "T-032", "review": null, "body": "logs/messages/317507e6-dispatch.json"}
+{"ts": "2026-11-02T16:48:46", "kind": "subagent_start", "id": "7791b36f", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T16:49:13", "kind": "subagent_stop", "id": "a6c9b809", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T16:49:15", "kind": "report", "id": "1f016442", "agent": "probe-dev", "ticket": "T-032", "review": null, "body": "logs/messages/1f016442-report.json"}
+{"ts": "2026-11-02T16:49:26", "kind": "ticket_accepted", "ticket": "T-032", "commit": "c01d68c611a21587cc6b2057f8c150832d14e969", "files": ["rlsentry/policy/load.py"]}
