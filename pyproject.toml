@@ -17,4 +17,4 @@ markers = [
 
 [tool.ruff]
 line-length = 110
-extend-exclude = ["harness/tests"]
+extend-exclude = ["harness", "host", ".claude", "cloud"]   # frozen harness is not product code

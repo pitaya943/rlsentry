@@ -76,9 +76,30 @@ APPROVAL_NAMESPACE = "rlsentry-approval"
 TRAILER = "RLSentry-Accepted"
 
 
+HOLDOUT_BRANCH = "rlsentry-holdout"
+
+
 def holdout_dir() -> Path:
+    """Legacy on-disk location; holdout tests now live only on the HOLDOUT_BRANCH branch."""
     p = Path(os.environ.get("RLSENTRY_HOLDOUT", ".holdout"))
     return p if p.is_absolute() else root() / p
+
+
+def in_linked_worktree(cwd: str | os.PathLike[str] | None) -> bool:
+    """True when `cwd` is inside a *linked* git worktree (where subagents work).
+
+    In a linked worktree `--git-dir` (…/.git/worktrees/<name>) differs from
+    `--git-common-dir` (…/.git); in the main checkout they are the same. This identifies
+    subagents without relying on hook payload fields or per-agent hooks.
+    """
+    if not cwd or not Path(cwd).exists():
+        return False
+    r = subprocess.run(["git", "-C", str(cwd), "rev-parse", "--path-format=absolute", "--git-dir",
+                        "--git-common-dir"], capture_output=True, text=True)
+    if r.returncode != 0:
+        return False
+    parts = r.stdout.split()
+    return len(parts) == 2 and Path(parts[0]).resolve() != Path(parts[1]).resolve()
 
 
 # ---------------------------------------------------------------------------
@@ -107,7 +128,7 @@ SUBAGENT_PROTECTED = [
 ARCHITECT_PATHS = [
     "rlsentry/contracts/**", "**/__init__.py", "tests/**", "docs/**",
     "lab/**/expected.yaml", "USAGE.md", "PRODUCTION_LOG.md", "BENCHMARK_REPORT.md",
-    "CHECKLIST.md", "pyproject.toml", ".gitignore", ".holdout/**",
+    "CHECKLIST.md", "pyproject.toml", ".gitignore",
 ]
 
 IMPLEMENTERS = {"recon-dev", "probe-dev", "whitebox-dev", "lab-dev"}

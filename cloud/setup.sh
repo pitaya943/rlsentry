@@ -11,5 +11,10 @@ if ! command -v supabase >/dev/null; then
     | sudo tar -xz -C /usr/local/bin supabase
 fi
 supabase --version
-# Pre-pull the lab images so sessions start fast (cached when the script finishes in ~5 min).
-docker info >/dev/null 2>&1 && (cd /tmp && supabase init --force >/dev/null 2>&1 || true)
+# Docker: the daemon is not started automatically in cloud containers (Stage 0 finding).
+if ! docker info >/dev/null 2>&1; then
+  (sudo -n dockerd >/tmp/dockerd.log 2>&1 &) || true
+  for _ in $(seq 1 20); do docker info >/dev/null 2>&1 && break; sleep 1; done
+fi
+if docker info >/dev/null 2>&1; then echo "docker: running"; else echo "docker: NOT running (see /tmp/dockerd.log)"; fi
+exit 0   # never fail the environment because of optional warm-up steps

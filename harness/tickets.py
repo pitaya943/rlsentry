@@ -457,6 +457,19 @@ def _run_checks(t: Ticket) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, shell=True, cwd=C.root(), capture_output=True, text=True, env=env)
 
 
+def compact_failure(output: str, limit: int = 1500) -> str:
+    """Keep only what a fix needs: failing test ids, assertion/error lines, lint codes.
+
+    Full output is written to logs/ for the human; agents get the compact form, which keeps the
+    architect's context (re-read every turn) small and the resume message to a subagent short.
+    """
+    keep = [ln for ln in output.splitlines()
+            if ln.startswith(("FAILED", "ERROR", "E ", "E\t")) or re.match(r"^\S+:\d+:\d+: [A-Z]+\d+", ln)
+            or "Error:" in ln or "error:" in ln]
+    text = "\n".join(dict.fromkeys(keep)) or output[-limit:]
+    return text[:limit] + ("\n… (truncated; full output in logs/)" if len(text) > limit else "")
+
+
 def accept(tid: str, branch: str) -> tuple[bool, str]:
     """Merge a ticket branch into main only if every gate passes; otherwise abort and count a failure.
 
@@ -491,7 +504,9 @@ def accept(tid: str, branch: str) -> tuple[bool, str]:
     res = _run_checks(t)
     if res.returncode != 0:
         C.git("merge", "--abort")
-        reason = "checks failed:\n" + (res.stdout + res.stderr)[-4000:]
+        full = res.stdout + res.stderr
+        (C.logs_dir() / f"check-{tid}-attempt{t.attempts}.log").write_text(full, encoding="utf-8")
+        reason = "checks failed:\n" + compact_failure(full)
         return False, fail(tid, reason) + "\n" + reason
     tip = C.git("rev-parse", branch).stdout.strip()
     C.git("commit", "-q", "-m", f"accept {tid}: {t.title}\n\n{C.TRAILER}: {tid}\nRLSentry-Branch-Tip: {tip}",

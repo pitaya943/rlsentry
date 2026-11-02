@@ -21,6 +21,29 @@ an architect agent and implementer subagents, with one human approving each mile
 - docs/tickets/        ticket files                   docs/verification/  milestone checklists
 - docs/DECISIONS.md    ADRs                           logs/  harness-written logs (read-only)
 
+## Token rules (every agent)
+Most of this project's cost is agents talking to each other and re-reading context. These rules
+cut that cost WITHOUT lowering quality. If a rule ever conflicts with correctness, a required
+check, or a document the human must review, correctness wins.
+
+1. **One language, no repetition.** Human-facing documents (checklists, ADRs, PRODUCTION_LOG,
+   USAGE) are written once, in Traditional Chinese with English technical terms. Never bilingual.
+   Agent-to-agent messages are terse bullet points. Never restate what a file already says.
+2. **Reference, don't paste.** Point to `path:line-range`, ticket ids, commit shas, and
+   logs/events.jsonl event ids. Never paste whole files, diffs or full test output into messages.
+3. **Read only what you need.** SPEC: `python3 harness/spec.py "<section>"` or
+   `python3 harness/spec.py FR-08`, never the whole file. Grep before Read; Read with a line
+   range; do not re-read a file that is already in your context unchanged.
+4. **Quiet tools.** `pytest -q`, run only the ticket's tests plus the regression set; on failure
+   use the compact summary the harness prints (full output is in logs/).
+5. **Edit, don't rewrite.** Change files with targeted edits, not full rewrites.
+6. **Never trade checks for tokens.** Tests, holdout, auditor review, acceptance, ADRs and the
+   verification checklist keep their full required content.
+
+## Environment
+- Docker may not be running in a fresh cloud VM. Before anything that needs the Supabase lab:
+  `docker info >/dev/null 2>&1 || (sudo dockerd >/tmp/dockerd.log 2>&1 &); sleep 5; docker info`
+
 ## Commands
 - `python3 harness/tickets.py status|ready|start|accept|validate|vc-check`
 - `make check TESTS="tests/x.py"`  lint + the ticket's tests + full test suite

@@ -596,6 +596,21 @@ tests/                  # 可見測試（architect）
 
 人看的文件一律使用繁體中文。
 
+### Token 使用原則
+
+開發期間大部分成本來自代理之間的溝通與反覆讀取上下文。以下原則用來降低成本，但**不得降低品質**：測試、holdout、auditor、驗收閘門、ADR 與驗證清單的必要內容一律不變；兩者衝突時以正確性為準。
+
+| 原則 | 做法 | 強制方式 |
+| --- | --- | --- |
+| 每個 milestone 開新 session | 核准後由專案負責人開新 session；architect 從檔案重建狀態 | 流程規定（README） |
+| 派工只引用，不貼上 | 派工訊息只寫 `Ticket: T-xxx` 與必要的新資訊，subagent 自己讀 ticket 檔 | 派工 hook 拒絕超過 2000 字元的訊息 |
+| 回報固定格式 | subagent 回報最多 15 行：分支、commit、檔案、測試數量、模糊處 | agent 定義 |
+| 只讀需要的規格 | 以 `harness/spec.py` 讀取指定章節或需求列，不讀整份 SPEC | CLAUDE.md |
+| 失敗只傳摘要 | 驗收失敗時只回傳失敗的測試與錯誤行，完整輸出存在 logs/ | harness 自動壓縮 |
+| 單一語言 | 人看的文件只用繁體中文（專業術語保留英文），絕不雙語 | CLAUDE.md |
+| auditor 只看本 milestone | 審查範圍限定為本 milestone 的 diff | 派工時提供 Base commit |
+| 重複失敗就改 ticket | 同一原因失敗兩次，改寫 ticket 而不是繼續重派 | architect 規則 |
+
 ### 開發期間的安全邊界
 
 - 雲端 environment 的網路白名單只允許套件來源與 GitHub；RLSentry 在開發中只對 localhost 的 lab 發出請求。

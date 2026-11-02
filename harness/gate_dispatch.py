@@ -19,11 +19,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common as C  # noqa: E402
 import tickets as T  # noqa: E402
 
+# Token rule: the subagent reads the ticket file itself, so the dispatch only names it and adds
+# what the ticket cannot know (e.g. the failure summary when resuming). Long prompts are refused.
+MAX_DISPATCH_CHARS = 2000
+
 
 def check(event: dict) -> str | None:
     ti = event.get("tool_input") or {}
     agent = ti.get("subagent_type") or ""
     prompt = ti.get("prompt") or ti.get("description") or ""
+    if len(prompt) > MAX_DISPATCH_CHARS:
+        return (f"dispatch is {len(prompt)} characters (limit {MAX_DISPATCH_CHARS}). Do not paste the ticket: "
+                "write `Ticket: T-xxx` and let the subagent read docs/tickets/T-xxx.md; add only new context.")
     if agent in C.REVIEWERS:
         return None if re.search(r"^Review:\s*\S+", prompt, flags=re.M) else \
             "auditor dispatches must contain a line `Review: <milestone>`"

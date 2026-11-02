@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Callable
 
@@ -63,12 +64,17 @@ def check_tests() -> tuple[bool, str]:
 
 
 def check_holdout(ms: str | None) -> tuple[bool, str]:
-    base = C.holdout_dir()
-    dirs = sorted(base.glob(f"{ms}*")) if ms else sorted(p for p in base.glob("*") if p.is_dir())
-    dirs = [d for d in dirs if any(d.rglob("test_*.py"))]
-    if not dirs:
-        return True, "no holdout tests for this scope"
-    return _sh(f"{sys.executable} -m pytest -q " + " ".join(str(d) for d in dirs))
+    """Run holdout tests from the rlsentry-holdout branch (they are never in the working tree)."""
+    import holdout as H
+    with tempfile.TemporaryDirectory() as tmp:
+        dirs = H.materialize(ms, Path(tmp))
+        if not dirs:
+            return True, "no holdout tests for this scope"
+        env = {**os.environ, "PYTHONPATH": str(C.root()) + os.pathsep + os.environ.get("PYTHONPATH", "")}
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                            "--rootdir", str(C.root()), *map(str, dirs)],
+                           cwd=C.root(), capture_output=True, text=True, env=env, timeout=1800)
+        return r.returncode == 0, (r.stdout + r.stderr)[-1500:]
 
 
 def check_safety() -> tuple[bool, str]:

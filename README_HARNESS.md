@@ -83,7 +83,15 @@ bash host/review.sh MS3 <session 的分支>
 ```
 
 腳本會：同步分支 → 比對 `harness-frozen`（有差異就拒絕繼續）→ 執行或指引獨立驗證 → 列出清單 →
-最後由你輸入決定、意見與金鑰密碼，簽章並推送到 `rlsentry-approvals` 分支。完成後回到雲端 session 送出「繼續」。
+最後由你輸入決定、意見與金鑰密碼，簽章並推送到 `rlsentry-approvals` 分支。
+
+核准後**開一個新的雲端 session**（最省 token：上下文從零開始），起始分支選上一個 session 的分支，送出：
+
+```text
+請完全依照 .claude/agents/architect.md 行事。繼續：從 harness 狀態恢復，執行目前解鎖的 milestone，完成後產出驗證清單並暫停。
+```
+
+architect 會從 ticket 檔、git 歷史與 `origin/rlsentry-approvals` 上的核准與意見重建狀態。若介面無法選擇起始分支，也可以在原本的 session 送出「繼續」，只是上下文較大、較耗 token。
 
 ### 在哪裡跑驗證
 
@@ -105,12 +113,12 @@ bash host/review.sh MS3 <session 的分支>
 
 - **VM 會在閒置後被回收**：harness 在每次驗收與暫停時都會 commit 並推送狀態；未推送的工作會遺失。
 - **用量**：雲端 session 與你其他的 Claude 用量共用額度，並行 subagent 越多消耗越快。
-- **holdout 測試**放在 repo 的 `.holdout/`，subagent 讀取只靠 hook 阻擋（較弱）；你的獨立驗證才是保證。
+- **holdout 測試**存在獨立的 `rlsentry-holdout` 分支，不在任何工作目錄中；subagent 的 worktree 從 main 分出，看不到它們。
 
 ## 尚未驗證的假設（Stage 0 要確認）
 
-1. hook 輸入的欄位名稱；subagent 的工具呼叫是否帶 `agent_type`
-2. `isolation: worktree` 在雲端的行為，以及 subagent 分支能被主 checkout 看到
+1. 子代理身分以「是否在 linked worktree 中」判斷（Stage 0 第 1 輪發現 frontmatter hook 不觸發後改用）：canary 4 驗證
+2. `isolation: worktree` 在雲端的行為（第 1 輪已確認可用）
 3. settings 的 `"agent": "architect"` 是否生效
-4. 雲端 Docker 可以啟動 Supabase lab，且映像能在網路白名單下拉取
+4. 雲端 Docker：daemon 需手動啟動（第 1 輪已確認可拉取 public.ecr.aws 映像）；完整 `supabase start` 於 MS1 驗證
 5. `git push` 在雲端 session 中可以推送到工作分支

@@ -53,7 +53,12 @@ def _repo_rel(path_str: str, cwd: str) -> str:
     return str(p)
 
 
-def _is_holdout(path_str: str) -> bool:
+def _is_holdout(path_str: str, cwd: str = "") -> bool:
+    """Any path that names holdout material, in any checkout or as a git ref."""
+    if not path_str:
+        return False
+    if "holdout" in path_str.lower():
+        return True
     try:
         return Path(path_str).resolve().is_relative_to(C.holdout_dir().resolve())
     except (OSError, ValueError):
@@ -88,7 +93,10 @@ def check(event: dict, mode: str, agent: str | None) -> str | None:
     cwd = event.get("cwd", "")
     # If the hook payload identifies a subagent, apply subagent rules even from settings.json.
     agent = agent or event.get("agent_type") or event.get("subagent_type")
-    is_sub = mode == "subagent" or (agent in C.IMPLEMENTERS | C.REVIEWERS)
+    # Identity: per-agent frontmatter hooks did not fire in cloud sessions (Stage 0), so the
+    # global hook decides. Implementers always work in a linked worktree; the architect never does.
+    is_sub = (mode == "subagent" or agent in C.IMPLEMENTERS | C.REVIEWERS
+              or C.in_linked_worktree(cwd))
 
     protected = list(C.HARNESS_PROTECTED)
     if is_sub:
@@ -98,7 +106,7 @@ def check(event: dict, mode: str, agent: str | None) -> str | None:
         if agent in C.REVIEWERS:
             return "auditor is read-only"
         target = ti.get("file_path") or ti.get("notebook_path") or ""
-        if _is_holdout(target) and is_sub:
+        if _is_holdout(target, cwd) and is_sub:
             return "holdout tests are off-limits to subagents"
         rel = _repo_rel(target, cwd)
         if C.path_matches(rel, protected):
@@ -107,9 +115,9 @@ def check(event: dict, mode: str, agent: str | None) -> str | None:
             return "approvals are written by the human on the host only"
 
     if tool in READ_TOOLS and is_sub:
-        target = ti.get("file_path") or ti.get("path") or ""
-        if target and _is_holdout(target):
-            return "holdout tests are off-limits to subagents"
+        for key in ("file_path", "path", "pattern", "glob"):
+            if _is_holdout(str(ti.get(key) or ""), cwd):
+                return "holdout tests are off-limits to subagents"
 
     if tool == "Bash":
         cmd = ti.get("command", "")
@@ -119,7 +127,7 @@ def check(event: dict, mode: str, agent: str | None) -> str | None:
                     "--branch <branch>` to merge work.")
         if BASH_GIT_RESTORE.search(cmd) and not is_sub:
             return "copying files between branches bypasses the acceptance gate"
-        if is_sub and (str(C.holdout_dir()) in cmd or ".holdout" in cmd):
+        if is_sub and ("holdout" in cmd.lower() or str(C.holdout_dir()) in cmd):
             return "holdout tests are off-limits to subagents"
         if agent in C.REVIEWERS and ANY_WRITE.search(cmd):
             return "auditor is read-only"
@@ -127,6 +135,19 @@ def check(event: dict, mode: str, agent: str | None) -> str | None:
         if hit:
             return f"shell command appears to modify protected path {hit}"
     return None
+
+
+def _save_sample(event: dict) -> None:
+    """Keep the first raw payload per (role, tool) so Stage 0 can confirm what hooks receive."""
+    try:
+        role = "sub" if C.in_linked_worktree(event.get("cwd", "")) else "main"
+        d = C.logs_dir() / "raw-hook-samples"
+        d.mkdir(exist_ok=True)
+        p = d / f"guard-{role}-{event.get('tool_name', 'unknown')}.json"
+        if not p.exists():
+            p.write_text(json.dumps(event, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def main() -> int:
@@ -137,6 +158,7 @@ def main() -> int:
         event = json.loads(raw or "{}")
     except json.JSONDecodeError:
         return 0
+    _save_sample(event)
     reason = check(event, mode, agent)
     if reason:
         C.log_event("guard_block", agent=agent or event.get("agent_type"), tool=event.get("tool_name"),

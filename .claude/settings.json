@@ -12,13 +12,12 @@
   },
   "env": {
     "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "1",
-    "RLSENTRY_HOLDOUT": ".holdout",
     "RLSENTRY_APPROVALS_REF": "origin/rlsentry-approvals"
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|Read|Grep|Glob",
         "hooks": [
           {
             "type": "command",

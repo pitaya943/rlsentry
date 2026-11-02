@@ -437,3 +437,108 @@ def test_stage0_toy_ticket_with_real_make_check(repo, monkeypatch):
     ok, msg = T.accept("T-000", "toy-good")
     assert ok, msg
     assert T.regression_tests() == ["tests/toy/test_add.py"]
+
+
+# --- Stage 0 findings: identity via linked worktree, holdout on a separate branch -----------
+
+def test_global_guard_identifies_subagents_by_worktree(repo, tmp_path):
+    r, _, _ = repo
+    import guard_paths as G
+    importlib.reload(G)
+    wt = tmp_path / "wt"
+    sh(f"git worktree add -q -b sub-work {wt}", r)
+    def W(path, cwd):
+        return {"tool_name": "Write", "tool_input": {"file_path": str(Path(cwd) / path)}, "cwd": str(cwd)}
+    # same file, same global hook: allowed for the architect (main checkout), blocked in a worktree
+    assert G.check(W("docs/canary.md", r), "global", None) is None
+    assert G.check(W("docs/canary.md", wt), "global", None)
+    assert G.check(W("tests/test_x.py", wt), "global", None)
+    assert G.check(W("rlsentry/core/x.py", wt), "global", None) is None
+    # holdout material by any route
+    assert G.check({"tool_name": "Read", "tool_input": {"file_path": str(wt / ".holdout/STAGE0/t.py")},
+                    "cwd": str(wt)}, "global", None)
+    assert G.check({"tool_name": "Glob", "tool_input": {"pattern": "**/*holdout*"}, "cwd": str(wt)},
+                   "global", None)
+    assert G.check({"tool_name": "Bash", "tool_input": {"command": "git show rlsentry-holdout:STAGE0/t.py"},
+                    "cwd": str(wt)}, "global", None)
+    assert G.check({"tool_name": "Bash", "tool_input": {"command": "pytest -q"}, "cwd": str(wt)},
+                   "global", None) is None
+
+
+def test_holdout_branch_never_touches_worktrees(repo, tmp_path):
+    r, _, T = repo
+    import holdout as H
+    import acceptance as A
+    importlib.reload(H)
+    importlib.reload(A)
+    src = tmp_path / "holdout-src"
+    src.mkdir()
+    (src / "test_holdout.py").write_text("def test_ok():\n    assert 1 + 1 == 2\n")
+    hashes = H.add("STAGE0", src)
+    assert not src.exists()                                       # scratch copy removed
+    assert hashes and hashes[0][0] == "STAGE0/test_holdout.py"
+    assert sh("git status --porcelain", r).strip() == ""           # main working tree untouched
+    assert not (r / ".holdout").exists()
+    wt = tmp_path / "wt2"
+    sh(f"git worktree add -q -b sub2 {wt} main", r)
+    assert not list(wt.rglob("*holdout*"))                         # absent from subagent worktrees
+    ok, detail = A.check_holdout("STAGE0")
+    assert ok, detail
+    bad = tmp_path / "bad"
+    bad.mkdir()
+    (bad / "test_bad.py").write_text("def test_no():\n    assert False\n")
+    H.add("MS0", bad)
+    assert not A.check_holdout("MS0")[0]                           # failing holdout fails the check
+    assert A.check_holdout("STAGE0")[0]                            # milestones are isolated
+
+
+# --- token rules: enforced parts ----------------------------------------------------------
+
+def test_dispatch_length_cap(repo):
+    r, _, T = repo
+    import gate_dispatch as G
+    importlib.reload(G)
+    write_ticket(r, "T-001")
+    T.start("T-001")
+    ev = lambda p: {"tool_input": {"subagent_type": "recon-dev", "prompt": p}}  # noqa: E731
+    assert G.check(ev("Ticket: T-001\nRun sync, read docs/tickets/T-001.md")) is None
+    assert "limit" in G.check(ev("Ticket: T-001\n" + "pasted ticket text " * 200))
+
+
+def test_compact_failure_keeps_only_actionable_lines(repo):
+    _, _, T = repo
+    noisy = "\n".join(["collected 40 items", "." * 80] * 50 +
+                      ["FAILED tests/m3/test_read.py::test_denied - assert 1 == 0",
+                       "E       assert 1 == 0", "rlsentry/probe/read.py:12:5: F401 unused import"])
+    out = T.compact_failure(noisy)
+    assert "FAILED tests/m3/test_read.py::test_denied" in out and "F401" in out
+    assert "collected 40 items" not in out and len(out) < 400
+
+
+def test_spec_tool_returns_only_requested_parts(repo):
+    r, _, _ = repo
+    import spec as S
+    importlib.reload(S)
+    (r / "docs" / "SPEC.md").write_text(
+        "# T\n## 3. 需求\n| 編號 | x |\n| FR-08 | cross tenant |\n| FR-09 | writes |\n"
+        "## 5. 模組設計\n### M3 Probe\nprobe text\n### M4 Whitebox\nwb text\n## 8. Lab\nlab text\n")
+    m3 = S.section("M3 Probe")
+    assert "probe text" in m3 and "wb text" not in m3
+    assert "lab text" in S.section("§8") and "probe text" not in S.section("§8")
+    assert S.requirement_rows(["FR-08"]).count("\n") == 0 and "cross tenant" in S.requirement_rows(["FR-08"])
+
+
+def test_sync_worktree_brings_subagent_to_architect_head(repo, tmp_path):
+    r, _, _ = repo
+    wt = tmp_path / "wt-sync"
+    sh(f"git worktree add -q -b sub-sync {wt} main", r)
+    (r / "rlsentry" / "contracts").mkdir(exist_ok=True)
+    (r / "rlsentry" / "contracts" / "api.py").write_text("X = 1\n")
+    sh("git add -A && git commit -qm 'architect contract'", r)   # architect moves ahead after the worktree exists
+    head = sh("git rev-parse HEAD", r).strip()
+    res = subprocess.run([sys.executable, str(HARNESS / "sync_worktree.py")], cwd=wt, capture_output=True, text=True)
+    assert res.returncode == 0, res.stderr
+    assert sh("git rev-parse HEAD", wt).strip() == head
+    assert (wt / "rlsentry" / "contracts" / "api.py").exists()
+    res = subprocess.run([sys.executable, str(HARNESS / "sync_worktree.py")], cwd=r, capture_output=True, text=True)
+    assert "main checkout" in res.stdout                            # no-op outside worktrees
