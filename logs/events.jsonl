@@ -349,3 +349,13 @@
 {"ts": "2026-11-02T16:03:49", "kind": "stop_blocked", "attempt": 11, "state": "active", "milestone": "MS0"}
 {"ts": "2026-11-02T16:03:50", "kind": "subagent_stop", "id": "cd4fb89a", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-02T16:06:35", "kind": "stop_blocked", "attempt": 12, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:06:46", "kind": "stop_blocked", "attempt": 13, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:06:53", "kind": "stop_blocked", "attempt": 14, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:06:58", "kind": "stop_blocked", "attempt": 15, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:07:04", "kind": "stop_blocked", "attempt": 16, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:07:09", "kind": "stop_blocked", "attempt": 17, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:07:15", "kind": "stop_blocked", "attempt": 18, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:07:20", "kind": "stop_blocked", "attempt": 19, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:07:26", "kind": "stop_blocked", "attempt": 20, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:07:32", "kind": "stop_blocked", "attempt": 21, "state": "active", "milestone": "MS0"}
+{"ts": "2026-11-02T16:07:33", "kind": "subagent_stop", "id": "7fca75f5", "agent": "architect", "ticket": null, "review": null}

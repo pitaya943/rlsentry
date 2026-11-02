@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>RLSentry 審查 SOP（專案負責人）</title>
+<style>
+  body { font-family: system-ui, "Noto Sans TC", sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; line-height: 1.65; color: #1f2328; }
+  h1 { border-bottom: 3px solid #0969da; padding-bottom: .3rem; }
+  h2 { margin-top: 2.5rem; border-bottom: 1px solid #d0d7de; padding-bottom: .2rem; }
+  h3 { margin-top: 1.6rem; }
+  code, pre { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  pre { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: .7rem 1rem; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0; font-size: .93em; }
+  th, td { border: 1px solid #d0d7de; padding: .4rem .6rem; vertical-align: top; text-align: left; }
+  th { background: #f6f8fa; }
+  .step { border-left: 4px solid #0969da; background: #f6faff; padding: .6rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+  .red { border-left: 4px solid #cf222e; background: #fff5f5; padding: .6rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+  .note { border-left: 4px solid #9a6700; background: #fff8e5; padding: .6rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+  .tag { display: inline-block; font-size: .8em; padding: 0 .45rem; border-radius: 10px; background: #ddf4ff; color: #0969da; margin-right: .3rem; }
+  nav ol { columns: 2; }
+</style>
+</head>
+<body>
+
+<h1>RLSentry 審查 SOP（專案負責人）</h1>
+<p>適用對象：唯一的人工審查者。目的：在任何時間點回到專案時，都能依固定順序重建「做了什麼、為什麼這樣做、證據在哪裡、哪裡可能出錯」，而不是只相信代理的摘要。</p>
+
+<nav>
+<ol>
+  <li><a href="#role">你的角色</a></li>
+  <li><a href="#principles">審查原則</a></li>
+  <li><a href="#map">足跡地圖</a></li>
+  <li><a href="#when">三種時機</a></li>
+  <li><a href="#gate">關卡審查 SOP（10 步）</a></li>
+  <li><a href="#changes">要求修改之後</a></li>
+  <li><a href="#red">紅旗清單</a></li>
+  <li><a href="#cheat">指令速查</a></li>
+</ol>
+</nav>
+
+<!-- ============================================================ -->
+<h2 id="role">1. 你的角色</h2>
+<table>
+  <tr><th>你負責</th><th>你不負責（由 harness 或代理負責）</th></tr>
+  <tr>
+    <td>
+      <ul>
+        <li>守住信任基礎：確認 harness 沒被改過（只有你有 <code>harness-frozen</code> 標籤）</li>
+        <li>獨立重跑驗證：<code>make verify-milestone</code> 必須在代理碰不到的環境跑</li>
+        <li>判斷<strong>決策</strong>是否合理：ADR、SPEC 模糊處、偏差、已知限制</li>
+        <li>review 高風險程式碼（合約、安全層、判定邏輯、ground truth）</li>
+        <li>簽章核准或要求修改；你的意見就是下一個 session 的指令</li>
+      </ul>
+    </td>
+    <td>
+      <ul>
+        <li>逐行讀每一張 ticket 的程式碼（驗收閘門已跑 lint、測試、範圍與作弊檢查）</li>
+        <li>撰寫或修改程式（你不寫產品碼；要改就寫在核准意見裡）</li>
+        <li>修正 CHECKLIST.md（由 harness 自動產生）</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+<div class="note">核心觀念：代理寫的文字（報告、清單、ADR）都是<strong>主張</strong>；git 歷史、harness 寫的 log、你自己重跑的指令才是<strong>證據</strong>。審查就是拿證據核對主張。</div>
+
+<!-- ============================================================ -->
+<h2 id="principles">2. 審查原則</h2>
+<ol>
+  <li><strong>先驗信任基礎，再看內容。</strong>harness 若被改過，後面所有綠燈都不可信。</li>
+  <li><strong>自己跑，不讀結果。</strong>清單第 2 段的「自動驗收結果」只供參考；以你自己執行的輸出為準。</li>
+  <li><strong>從風險最高處開始看。</strong>合約與 ground truth 的錯會傳到所有下游；安全層的錯有法律風險。</li>
+  <li><strong>每個決策問四個問題</strong>：做什麼／為什麼這樣做而不是別的／什麼條件下會壞／學到什麼。答不出來的 ADR 就是要求修改的理由。</li>
+  <li><strong>阻擋不是失敗，隱藏阻擋才是。</strong>被 guard 擋下的次數與原因必須出現在清單或 PRODUCTION_LOG。</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="map">3. 足跡地圖：每種紀錄在哪、誰寫、能證明什麼</h2>
+<table>
+  <tr><th>紀錄</th><th>誰寫</th><th>內容</th><th>能證明</th><th>不能證明</th></tr>
+  <tr><td><code>logs/events.jsonl</code></td><td>hook（自動）</td><td>每行一個事件：派工、回報、阻擋、驗收、停止</td><td>發生過哪些動作、順序與時間</td><td>動作的品質；hook 漏掉的事件</td></tr>
+  <tr><td><code>logs/messages/&lt;id&gt;-*.json</code></td><td>hook（自動）</td><td>派工訊息與 subagent 回報全文（以事件 id 對應）</td><td>代理實際收到與回報的文字</td><td>回報內容是否屬實</td></tr>
+  <tr><td><code>logs/raw-hook-samples/</code></td><td>hook（自動）</td><td>原始 hook 輸入樣本</td><td>身分欄位（<code>agent_type</code>、<code>cwd</code>）是否正確</td><td>—</td></tr>
+  <tr><td><code>logs/check-T-xxx-attemptN.log</code></td><td>harness</td><td>驗收失敗時的完整輸出</td><td>ticket 為何被退件</td><td>—</td></tr>
+  <tr><td><code>logs/acceptance-&lt;MS&gt;.json</code></td><td>harness</td><td>milestone 驗收各項結果</td><td>代理執行時的結果</td><td>你重跑時的結果（要自己跑）</td></tr>
+  <tr><td>git 歷史（<code>RLSentry-Accepted</code> trailer）</td><td>harness <code>accept</code></td><td>每張 ticket 一個 merge commit</td><td>產品碼經過閘門；<code>verify-milestone</code> 會重算</td><td>—</td></tr>
+  <tr><td><code>docs/tickets/T-xxx.md</code></td><td>architect（狀態欄由 harness）</td><td>工作範圍、允許路徑、測試、嘗試次數</td><td>交辦了什麼、範圍多窄</td><td>做得對不對</td></tr>
+  <tr><td><code>CHECKLIST.md</code></td><td>harness（自動）</td><td>各 milestone 與 ticket 進度</td><td>目前狀態</td><td>—</td></tr>
+  <tr><td><code>docs/DECISIONS.md</code></td><td>architect</td><td>ADR：背景、選項、決定、理由、風險</td><td>architect 的推理（主張）</td><td>推理正確（要你判斷）</td></tr>
+  <tr><td><code>PRODUCTION_LOG.md</code></td><td>architect</td><td>每個 milestone 的 ticket 表、失敗與修正、holdout 雜湊、指標</td><td>摘要（應附事件 id 可追溯）</td><td>未附事件 id 的敘述</td></tr>
+  <tr><td><code>docs/verification/&lt;MS&gt;-vN.md</code></td><td>architect</td><td>你的驗證清單：自動結果、手驗項目、偏差、限制</td><td>architect 認為該被檢查的事</td><td>它沒列出的事（看紅旗清單）</td></tr>
+  <tr><td><code>docs/verification/traceability.md</code></td><td>auditor</td><td>SPEC 需求 ↔ 測試 ↔ 程式的對照表</td><td>覆蓋了哪些 FR/NFR</td><td>測試本身是否夠強</td></tr>
+  <tr><td><code>rlsentry-holdout</code> 分支</td><td>architect（經 <code>holdout.py</code>）</td><td>subagent 看不到的測試</td><td>實作不是只針對可見測試</td><td>holdout 夠不夠難</td></tr>
+  <tr><td><code>rlsentry-approvals</code> 分支</td><td>你（SSH 簽章）</td><td>每個 milestone 的決定與意見</td><td>你核准過哪個版本的清單（綁定 sha256）</td><td>—</td></tr>
+  <tr><td><code>docs/pr/*.md</code>（自 MS0 起）</td><td>architect</td><td>PR 說明：逐段說明、驗證指令、預期輸出</td><td>architect 對程式運作的說明（主張）</td><td>程式真的這樣運作（要你跑指令）</td></tr>
+</table>
+
+<h3>events.jsonl 事件類型速查</h3>
+<table>
+  <tr><th>kind</th><th>意義</th><th>審查時要問</th></tr>
+  <tr><td><code>dispatch</code> / <code>report</code></td><td>派工與回報（有 <code>ticket</code>、<code>body</code> 指向全文）</td><td>每個 dispatch 都有對應 report 嗎？派工內容有沒有洩漏 holdout？</td></tr>
+  <tr><td><code>subagent_start</code> / <code>subagent_stop</code></td><td>subagent 實際啟動／結束</td><td>dispatch 沒有對應 start，表示派工被擋或被拒</td></tr>
+  <tr><td><code>dispatch_blocked</code></td><td>派工閘門擋下</td><td>原因是否合理？architect 有沒有改寫後重派？</td></tr>
+  <tr><td><code>guard_block</code></td><td>路徑守衛擋下某個工具呼叫</td><td>誰被擋（<code>agent</code>）、擋了什麼？subagent 反覆被擋同一件事是紅旗</td></tr>
+  <tr><td><code>ticket_start</code> / <code>ticket_fail</code> / <code>ticket_blocked</code> / <code>ticket_accepted</code></td><td>ticket 生命週期</td><td>失敗幾次、原因是否同一個？同因失敗兩次後 ticket 有沒有被改寫？</td></tr>
+  <tr><td><code>holdout_added</code></td><td>holdout 測試加入</td><td>時間必須早於該 milestone 第一個 <code>dispatch</code></td></tr>
+  <tr><td><code>acceptance_run</code></td><td>milestone 驗收</td><td>最後一次是否全過？</td></tr>
+  <tr><td><code>stop_allowed</code> / <code>stop_blocked</code></td><td>Stop hook 放行／阻擋</td><td><code>reason</code> 應為 <code>awaiting_human</code>；<code>budget_exhausted</code> 表示未完成</td></tr>
+  <tr><td><code>approval_rejected</code></td><td>你的簽章驗證失敗</td><td>重簽（見 ADR 與 STAGE0 的 CRLF 事件）</td></tr>
+  <tr><td><code>push_failed</code> / <code>sync_failed</code> / <code>holdout_push_failed</code></td><td>狀態沒推上 GitHub</td><td>VM 回收後可能遺失；確認遠端是否完整</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="when">4. 三種時機各看什麼</h2>
+
+<h3><span class="tag">A</span>執行中（可選，5 分鐘）</h3>
+<p>目的：及早發現卡關，不是審查品質。</p>
+<ul>
+  <li>GitHub 上看 session 分支的 <code>CHECKLIST.md</code>：進度是否在動。</li>
+  <li><code>logs/events.jsonl</code> 最後 30 行：有沒有連續的 <code>guard_block</code>、<code>ticket_fail</code>、<code>stop_blocked</code>。</li>
+  <li>發現異常就在 session 中直接說「先暫停」，並說明原因。</li>
+</ul>
+<pre>git fetch -q origin &lt;session 分支&gt;
+git show origin/&lt;session 分支&gt;:logs/events.jsonl | tail -30</pre>
+
+<h3><span class="tag">B</span>暫停等你審查（必做，完整 SOP）</h3>
+<p>判斷方式：<code>events.jsonl</code> 最後有 <code>stop_allowed</code> 且 <code>reason</code> 為 <code>awaiting_human</code>。依第 5 節逐步執行。</p>
+
+<h3><span class="tag">C</span>你要求修改之後</h3>
+<p>新清單 <code>&lt;MS&gt;-v(N+1).md</code> 第一段必須是「與 vN 的差異」。依第 6 節只審差異，再重跑第 5 節的步驟 1–2。</p>
+
+<!-- ============================================================ -->
+<h2 id="gate">5. 關卡審查 SOP（時機 B，10 步）</h2>
+<p>建議時間：MS0 約 60–90 分鐘（合約與 ground truth 是全專案的基礎），其他 milestone 約 30–60 分鐘。每一步做完再往下；任何一步出現紅旗就停下，寫進意見並要求修改。</p>
+
+<div class="step">
+<h3>步驟 1：同步並檢查信任基礎（必做，5 分鐘）</h3>
+<pre>cd &lt;你的 rlsentry repo&gt;
+git fetch origin
+git switch &lt;session 分支&gt; &amp;&amp; git pull --no-rebase
+git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud .gitattributes</pre>
+<p><strong>預期</strong>：diff 為空。<strong>不為空就停止審查</strong>：代理改了護欄。</p>
+<p>註：若你自己在本機修過 harness（例如 STAGE0 的 <code>host/approve.py</code>），修完要重新 <code>git tag -f harness-frozen</code>。</p>
+</div>
+
+<div class="step">
+<h3>步驟 2：獨立重跑驗收（必做，5–15 分鐘）</h3>
+<pre>make verify-milestone MS=&lt;MS&gt;</pre>
+<p>在你的電腦或<strong>全新</strong>的雲端 session 跑（只送「只執行 <code>make verify-milestone MS=&lt;MS&gt;</code>，不要修改任何檔案，回報完整輸出」）。</p>
+<p><strong>預期</strong>：最後一行 <code>ALL PASSED</code>；<code>provenance</code> 一項確認每個產品碼 commit 都來自驗收閘門。</p>
+</div>
+
+<div class="step">
+<h3>步驟 3：讀驗證清單的第 4、5 段（10 分鐘）</h3>
+<p>開 <code>docs/verification/&lt;MS&gt;-vN.md</code>，<strong>先讀第 4 段（偏差）與第 5 段（限制）</strong>，再讀第 1–2 段。原因：偏差與限制是 architect 主動揭露的風險，最需要你判斷。</p>
+<ul>
+  <li>每一條偏差都有對應 ADR 嗎？</li>
+  <li>每一個 blocked ticket 都有原因嗎？</li>
+  <li>有沒有「應該是偏差卻寫成限制」或反過來？</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>步驟 4：逐條審查本 milestone 的 ADR（15–30 分鐘）</h3>
+<pre>grep -n '^## ADR' docs/DECISIONS.md
+git log --oneline -p &lt;上一個 milestone 最後 accept&gt;..HEAD -- docs/DECISIONS.md</pre>
+<p>對每條新 ADR 用四個問題審查，並寫下你的答案：</p>
+<table>
+  <tr><th>問題</th><th>在 ADR 中找</th><th>紅旗</th></tr>
+  <tr><td>Q1 做什麼、為什麼</td><td>「背景」</td><td>背景只描述做法、沒說要解決什麼問題</td></tr>
+  <tr><td>Q2 為什麼這樣做</td><td>「考慮過的選項」</td><td>只有一個選項；或缺點欄空白</td></tr>
+  <tr><td>Q3 何時會壞</td><td>「後果與風險」</td><td>寫「無」；或風險沒有對應的測試或限制條目</td></tr>
+  <tr><td>Q4 學到什麼</td><td>你自己寫</td><td>你看不懂為什麼選這個，就是要求說明的理由</td></tr>
+</table>
+<p>特別注意：改動 <code>rlsentry/contracts/models.py</code> 欄位的 ADR（SPEC §6 規定必須有），以及解釋 SPEC 模糊處的 ADR。</p>
+</div>
+
+<div class="step">
+<h3>步驟 5：審查高風險 PR（時間依數量，每個 10–20 分鐘）</h3>
+<p>依 ADR-005（PR 政策），高風險 ticket 都有一份 <code>docs/pr/T-xxx.md</code>，milestone 有 <code>docs/pr/&lt;MS&gt;.md</code>，內附 GitHub compare 連結。</p>
+<ol>
+  <li>先讀說明中的「逐段說明」，對照 compare 連結的 diff，確認說明與程式一致。</li>
+  <li><strong>親手執行</strong>說明中的驗證指令，比對預期輸出。</li>
+  <li>找一個說明沒提到的輸入，自己想：程式會怎樣？（這是你最能發現問題的地方）</li>
+</ol>
+<p>高風險判定（任一即是）：<code>rlsentry/contracts/**</code>、<code>rlsentry/safety/**</code>、任何對目標的寫入或網路目標判定、存取矩陣三態判定與差分、嚴重度與證據等級規則、CLI profile 預設值、<code>lab/**/expected.yaml</code>。</p>
+<p>檢查分類有沒有漏：</p>
+<pre>git diff --stat &lt;上一個 milestone 最後 accept&gt;..HEAD -- rlsentry/contracts rlsentry/safety lab</pre>
+<p>上面列出的檔案，其 ticket 都應該有 <code>docs/pr/T-xxx.md</code>。</p>
+</div>
+
+<div class="step">
+<h3>步驟 6：追蹤 ticket 足跡（10 分鐘）</h3>
+<pre>python3 harness/tickets.py status
+grep -E '"kind": "(ticket_fail|ticket_blocked|dispatch_blocked|guard_block)"' logs/events.jsonl</pre>
+<ul>
+  <li>對每個 <code>ticket_fail</code>：原因看 <code>logs/check-T-xxx-attemptN.log</code>；同因失敗兩次後 ticket 檔是否被改寫（<code>git log -p docs/tickets/T-xxx.md</code>）。</li>
+  <li>對每個 <code>guard_block</code>：是誤判（指令字串碰到關鍵字）還是代理真的想越界？後者是紅旗。</li>
+  <li>抽查一張 ticket 的派工與回報全文：</li>
+</ul>
+<pre>grep '"ticket": "T-xxx"' logs/events.jsonl
+cat logs/messages/&lt;dispatch id&gt;-dispatch.json
+cat logs/messages/&lt;report id&gt;-report.json</pre>
+<p>確認：派工訊息很短、只引用 ticket、沒有提到 holdout；回報的檔案與 commit 和 git 歷史一致。</p>
+</div>
+
+<div class="step">
+<h3>步驟 7：holdout 時序與內容（5 分鐘）</h3>
+<pre>python3 harness/holdout.py list
+grep -E '"kind": "(holdout_added|dispatch)"' logs/events.jsonl | head
+git log --format='%h %ad %s' -- PRODUCTION_LOG.md | head</pre>
+<p><strong>預期</strong>：<code>holdout_added</code> 早於本 milestone 第一個 <code>dispatch</code>；PRODUCTION_LOG 中的 sha256 與 <code>list</code> 一致。必要時 <code>git show rlsentry-holdout:&lt;MS&gt;/&lt;檔案&gt;</code> 看 holdout 是否測到可見測試沒測到的情況。</p>
+</div>
+
+<div class="step">
+<h3>步驟 8：執行清單第 3 段的手驗項目（15–30 分鐘）</h3>
+<p>逐項執行並打勾。每一項都必須有指令或 <code>檔案:行號</code> 與預期結果；沒有的項目本身就是紅旗。auditor 的手驗項目也要包含在內。</p>
+</div>
+
+<div class="step">
+<h3>步驟 9：auditor 追溯表（5–10 分鐘）</h3>
+<pre>sed -n '/&lt;MS&gt;/,$p' docs/verification/traceability.md | head -80</pre>
+<ul>
+  <li>本 milestone 範圍內的 FR/NFR 都有對應的測試嗎？</li>
+  <li>auditor 的發現是否都有對應的 ticket 或在清單中說明不處理的理由？</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>步驟 10：決定並簽章</h3>
+<pre>bash host/review.sh &lt;MS&gt; &lt;session 分支&gt;</pre>
+<ul>
+  <li><strong>approve</strong>：所有紅旗都已排除，或你明確接受（寫在意見裡）。</li>
+  <li><strong>changes</strong>：每一條意見寫成一件<strong>可驗證</strong>的事（例如「L10 改為 Suspected，並在 ADR-009 說明」），architect 會把每條轉成 ticket。</li>
+  <li>意見是下一個 session 唯一確定讀得到的指令。對話中講過、但沒寫進意見的事，下一個 session 不會知道。</li>
+  <li>核准後若有 milestone PR：在 GitHub 上把 session 分支 merge 到 <code>main</code>，確認 merge 的 commit 就是清單標頭 <code>main @ xxxxxxxxx</code> 之後的分支頂端。</li>
+</ul>
+<p>簽完後開<strong>新的雲端 session</strong>送出「繼續」。不要同時在舊 session 回覆，避免兩個 architect 同時操作同一分支。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="changes">6. 要求修改之後（時機 C）</h2>
+<ol>
+  <li>讀新清單第 0 段「與 vN 的差異」。</li>
+  <li>確認每一條你的意見都對應到一張 <code>origin: human-review</code> 的 ticket：
+<pre>grep -l 'origin: human-review' docs/tickets/*.md</pre></li>
+  <li>只 review 這些 ticket 的 diff 與新增 ADR。</li>
+  <li>重跑第 5 節步驟 1、2、10。</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="red">7. 紅旗清單：出現任一項就不要直接核准</h2>
+<div class="red">
+<ul>
+  <li><code>git diff harness-frozen</code> 不為空。</li>
+  <li><code>verify-milestone</code> 不是 <code>ALL PASSED</code>，或你沒有自己跑。</li>
+  <li>測試中出現 <code>skip</code>、<code>xfail</code>、<code>type: ignore</code>、<code>noqa</code>，或針對特定輸入的特例。</li>
+  <li><code>holdout_added</code> 晚於第一個 <code>dispatch</code>，或派工訊息提到 holdout。</li>
+  <li>某個 <code>dispatch</code> 沒有對應的 <code>report</code>，且清單沒有解釋。</li>
+  <li>subagent 反覆被 <code>guard_block</code> 擋在同一類越界動作（代表 ticket 或代理行為有問題）。</li>
+  <li>修改 <code>contracts/models.py</code> 欄位卻沒有 ADR（違反 SPEC §6）。</li>
+  <li>ADR 只有一個選項，或「後果與風險」為空。</li>
+  <li>任何地方把 <code>inconclusive</code> 當成安全、或把 <code>count = 0</code> 當成 <code>denied</code>（SPEC §5 M3）。</li>
+  <li>任何非 localhost 的網址出現在測試或程式的實際請求中（SPEC §7、NFR-09）。</li>
+  <li>輸出或 log 中出現完整的 key 或 JWT（NFR-03）。</li>
+  <li>清單第 3 段的項目沒有指令或行號，只寫「確認正確」。</li>
+  <li><code>logs/INCOMPLETE.md</code> 存在，或 <code>stop_allowed</code> 的 <code>reason</code> 不是 <code>awaiting_human</code>。</li>
+  <li>PR 說明的預期輸出與你親手執行的結果不同。</li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="cheat">8. 指令速查</h2>
+<table>
+  <tr><th>目的</th><th>指令</th></tr>
+  <tr><td>目前狀態</td><td><code>python3 harness/tickets.py status</code></td></tr>
+  <tr><td>護欄是否被改</td><td><code>git diff --stat harness-frozen -- harness .claude CLAUDE.md Makefile docs/SPEC.md host tests/toy cloud .gitattributes</code></td></tr>
+  <tr><td>獨立驗收</td><td><code>make verify-milestone MS=&lt;MS&gt;</code></td></tr>
+  <tr><td>最近事件</td><td><code>tail -30 logs/events.jsonl</code></td></tr>
+  <tr><td>所有阻擋</td><td><code>grep -E '"kind": "(guard_block|dispatch_blocked)"' logs/events.jsonl</code></td></tr>
+  <tr><td>某張 ticket 的足跡</td><td><code>grep '"ticket": "T-xxx"' logs/events.jsonl</code></td></tr>
+  <tr><td>某張 ticket 的程式差異</td><td><code>git show --stat $(git log --format=%h --grep='RLSentry-Accepted: T-xxx' -1)</code></td></tr>
+  <tr><td>本 milestone 所有驗收</td><td><code>git log --oneline --grep='RLSentry-Accepted'</code></td></tr>
+  <tr><td>holdout 雜湊</td><td><code>python3 harness/holdout.py list</code></td></tr>
+  <tr><td>你過去的核准與意見</td><td><code>git show origin/rlsentry-approvals:&lt;MS&gt;.yaml</code></td></tr>
+  <tr><td>簽章</td><td><code>bash host/review.sh &lt;MS&gt; &lt;session 分支&gt;</code></td></tr>
+</table>
+
+<p style="margin-top:2rem;color:#57606a;font-size:.9em">本文件由 architect 撰寫，可依審查經驗更新；更新請寫在核准意見中，由 architect 修改並在清單中註明。</p>
+</body>
+</html>
