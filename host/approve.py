@@ -123,7 +123,7 @@ def main() -> int:
         while (line := input()) != "":
             lines.append(line)
         notes = "\n".join(lines)
-    record = (f"milestone: {a.ms}\nchecklist: {path.relative_to(repo)}\nchecklist_sha256: {digest}\n"
+    record = (f"milestone: {a.ms}\nchecklist: {path.relative_to(repo).as_posix()}\nchecklist_sha256: {digest}\n"
               f"decision: {decision}\nreviewer: {reviewer}\ndate: {time.strftime('%Y-%m-%d %H:%M')}\n"
               f"notes: {yaml_block(notes)}")
 
@@ -133,14 +133,14 @@ def main() -> int:
         wt = open_approvals_worktree(repo, Path(tmp), remote)
         try:
             y = wt / f"{a.ms}.yaml"
-            y.write_text(record)
+            y.write_text(record, encoding="utf-8", newline="\n")
             sig = wt / f"{a.ms}.yaml.sig"
             sig.unlink(missing_ok=True)
             subprocess.run(["ssh-keygen", "-Y", "sign", "-f", str(Path(a.key).expanduser()), "-n", NAMESPACE,
                             str(y)], check=True, capture_output=True)
             hist = wt / "history"
             hist.mkdir(exist_ok=True)
-            (hist / f"{a.ms}-v{version}-{time.strftime('%Y%m%d%H%M%S')}.yaml").write_text(record)
+            (hist / f"{a.ms}-v{version}-{time.strftime('%Y%m%d%H%M%S')}.yaml").write_text(record, encoding="utf-8", newline="\n")
             git("add", "-A", cwd=wt)
             git("commit", "-q", "-m", f"{a.ms} v{version}: {decision}", cwd=wt)
             if remote:
