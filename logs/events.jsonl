@@ -14,3 +14,11 @@
 {"ts": "2026-11-02T15:01:08", "kind": "subagent_stop", "id": "54fa783c", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-02T15:06:54", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
 {"ts": "2026-11-02T15:07:04", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
+{"ts": "2026-11-02T15:07:07", "kind": "subagent_stop", "id": "2afbab57", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-02T15:09:27", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "copying files between branches bypasses the acceptance gate"}
+{"ts": "2026-11-02T15:09:48", "kind": "ticket_start", "ticket": "T-001", "agent": "recon-dev", "attempt": 1}
+{"ts": "2026-11-02T15:09:51", "kind": "dispatch", "id": "2060c40c", "agent": "recon-dev", "ticket": "T-001", "review": null, "body": "logs/messages/2060c40c-dispatch.json"}
+{"ts": "2026-11-02T15:09:58", "kind": "subagent_start", "id": "57572c9a", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T15:10:22", "kind": "subagent_stop", "id": "4ba1d1ad", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T15:10:22", "kind": "report", "id": "6f773391", "agent": "recon-dev", "ticket": "T-001", "review": null, "body": "logs/messages/6f773391-report.json"}
+{"ts": "2026-11-02T15:10:30", "kind": "ticket_accepted", "ticket": "T-001", "commit": "3a3c6110e95b9e1eb66128824143f3e650969165", "files": ["rlsentry/toy.py"]}

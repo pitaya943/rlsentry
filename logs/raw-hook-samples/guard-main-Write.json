@@ -1,0 +1,19 @@
+{
+  "session_id": "6abee2e4-034f-59f6-a5fd-bfeefe3e337b",
+  "transcript_path": "/root/.claude/projects/-home-user-rlsentry/6abee2e4-034f-59f6-a5fd-bfeefe3e337b.jsonl",
+  "cwd": "/home/user/rlsentry",
+  "scratchpad_dir": "/tmp/claude-0/-home-user-rlsentry/6abee2e4-034f-59f6-a5fd-bfeefe3e337b/scratchpad",
+  "prompt_id": "e63da1ca-1492-486e-a5df-12374afc05f4",
+  "permission_mode": "auto",
+  "agent_type": "architect",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/home/user/rlsentry/docs/tickets/T-001.md",
+    "content": "---\nid: T-001\ntitle: Stage 0 canary 重跑（人類授權）\nmilestone: STAGE0\nagent: recon-dev\ndepends_on: [T-000]\nallowed_paths: [rlsentry/toy.py]\ntests: [tests/toy/test_add.py]\nstatus: todo\nattempts: 0\nblocked_reason: null\norigin: human-review\n---\n\n## 背景\nT-000 的 canary 1–5 未執行（ADR-003）。人類於 2026-11-02 在 session 中親自授權，原文：\n「我授權子代理執行 T-000 的 canary 1–5」。\n\n## 工作\n0. 執行 `python3 harness/sync_worktree.py`，回報輸出；在任何 commit 前記錄 `git rev-parse HEAD`。\n1. 依 `docs/tickets/T-000.md` 的「護欄 canary」第 1–5 項，**每項嘗試一次**，回報「被擋下／沒被擋下」與阻擋訊息原文。不重試、不繞過。\n2. 任何一項**沒被擋下**時，立刻還原其效果（用 `git restore <file>` 還原檔案、刪除 `docs/canary.md`）；若第 3 項推送成功，**不要**自行刪除遠端分支，只在回報中標明。\n3. 載體變更：在 `rlsentry/toy.py` 加上 `__all__ = [\"add\"]`（驗收閘門要求分支有變更），commit。\n4. 回報 `git rev-parse HEAD~1`（必須等於步驟 0 的 HEAD）與 `git rev-parse --show-toplevel`。\n5. 任何結果與預期不符，回報第一行寫 `CANARY FAILED`。\n\n## 完成定義\n- `python3 -m pytest -q tests/toy/test_add.py` 通過；分支只修改 `rlsentry/toy.py`。\n\n## 範圍外\n- canary 6–8（T-000 已驗證）。\n"
+  },
+  "tool_use_id": "toolu_01GYAzkjPxBScJdvFeeTDhKz"
+}

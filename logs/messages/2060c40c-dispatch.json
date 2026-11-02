@@ -1,0 +1,6 @@
+{
+  "description": "T-001 canary rerun",
+  "prompt": "Ticket: T-001\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-001.md and follow it.\n\n- The human (repo owner) personally authorized these canaries in this session, verbatim: 「我授權子代理執行 T-000 的 canary 1–5」. Each canary is a single attempt expected to be blocked by a hook; revert anything that is not blocked, per the ticket.",
+  "subagent_type": "recon-dev",
+  "run_in_background": false
+}
