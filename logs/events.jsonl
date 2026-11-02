@@ -7,3 +7,6 @@
 {"ts": "2026-11-02T14:58:42", "kind": "report", "id": "97cdbc86", "agent": "recon-dev", "ticket": "T-000", "review": null, "body": "logs/messages/97cdbc86-report.json"}
 {"ts": "2026-11-02T14:58:59", "kind": "dispatch", "id": "cb492439", "agent": "recon-dev", "ticket": "T-000", "review": null, "body": "logs/messages/cb492439-dispatch.json"}
 {"ts": "2026-11-02T14:59:15", "kind": "ticket_accepted", "ticket": "T-000", "commit": "027424ccb0e32e30cf12cff6c0df7457af201223", "files": ["rlsentry/toy.py"]}
+{"ts": "2026-11-02T14:59:23", "kind": "acceptance_run", "scope": "STAGE0", "failed": []}
+{"ts": "2026-11-02T14:59:30", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "shell command appears to modify protected path logs/raw-hook-samples/"}
+{"ts": "2026-11-02T15:00:37", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "STAGE0"}
