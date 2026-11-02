@@ -99,7 +99,13 @@ class Target(_Strict):
 
 
 class ProbeResult(_Strict):
-    """M3: one cell of the access matrix (target × role × op)."""
+    """M3: one cell of the access matrix (target × role × op).
+
+    known_rows_checked counts the known rows the verdict rests on (ADR-006, ADR-014):
+    for reads, known primary keys queried; for UPDATE/DELETE, seeded rows whose final state
+    was read back; for INSERT, the canary whose presence (allowed) or absence (denied) was
+    verified by a reader that could see it (owner identity, or the lab DB).
+    """
 
     target: str
     role: Role
@@ -141,6 +147,14 @@ class Finding(_Strict):
     lint: str | None = None
     correlation: str | None = Field(default=None, pattern=r"^(confirmed|lint_only|probe_only)$")
     fix_sql: str | None = None
+
+    @model_validator(mode="after")
+    def _known_rule(self) -> Finding:
+        # Rule ids are part of the report format (ADR-008); an unknown id is a bug, not data.
+        from rlsentry.contracts.rules import RULES  # local import: rules imports this module
+        if self.rule not in RULES:
+            raise ValueError(f"unknown rule {self.rule!r}")
+        return self
 
 
 def finding_id(target: str | None, role: Role | None, op: Op | None, rule: str) -> str:
