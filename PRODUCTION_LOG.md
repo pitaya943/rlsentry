@@ -40,3 +40,43 @@
 | MS0/__pycache__/test_holdout_policy.cpython-313-pytest-9.2.0.pyc | `bfb8d974ce37b7e805cb2ff06b09a4fb535a9f530b79dd19b347928ae7628409`（誤帶入的位元組碼，pytest 不會收集；來自 architect 以 scratchpad 參考實作確認測試可滿足） |
 
 內容：resolve_expected、row_permitted、load_config 的不同輸入（部分 op／role 覆寫、未列出表的欄位推斷順序、anon 簡化、錯誤鍵路徑）。
+
+### Tickets（23 張，0 blocked；T-026 2 次，其餘 1 次）
+| ticket | agent | 結果 | 事件（events.jsonl 行） |
+| --- | --- | --- | --- |
+| T-010 §6 模型＋rule catalog | architect | accepted @ 49ab8c417 | 376 |
+| T-011 expected policy／rlsentry.yaml | architect | accepted @ d3aec63a5 | 378 |
+| T-012 ground truth 格式＋計分 ⚠ | architect | accepted @ bfd030d0e | 380 |
+| T-013 介面＋相依套件 | architect | accepted @ f2405b319 | 382 |
+| T-014 policy 可見測試 | architect | accepted @ cd51bdfdd | 384 |
+| T-015–T-018 ground truth L01–L12 ⚠ | architect | accepted @ 0c93678d5、8defddced、e6271aa7a、c93d33b31 | 398–406 |
+| T-019、T-020 ground truth C01–C04 ⚠ | architect | accepted @ 6cab53b3d、43ba7b005 | 412、414 |
+| T-021 resolve_expected ⚠ | probe-dev | accepted @ 3c20e505a | dispatch `5afeae12`、accept 408 |
+| T-022 row_permitted ⚠ | probe-dev | accepted @ f1da434a7 | dispatch `538691c9`、accept 409 |
+| T-023 load_config | probe-dev | accepted @ 75f25da3c | dispatch `19a20a1a`、accept 410 |
+| T-024 ground truth 一致性測試 | architect | accepted @ cd028f5ff | 416 |
+| T-025 MS1–MS7 ticket 計畫 | architect | accepted @ a59ff5b53 | 418 |
+| T-026 稽核修正：已知列語意、rule 檢查 | architect | 第 1 次失敗、第 2 次 accepted @ 2aeda597f | ticket_fail＋accept |
+| T-027 稽核修正：primary_key、寫入閘門、profile | architect | accepted @ 5b1c147dd | — |
+| T-028 稽核修正：計分、lab 慣例、隔離 | architect | accepted @ ac202fa10 | — |
+| T-029、T-030 稽核修正 ground truth ⚠ | architect | accepted @ e37743920、4ecbe30be | — |
+| T-031 可見測試：錯誤不回顯 | architect | accepted @ 9b44176f5 | — |
+| T-032 load.py 錯誤只回報位置 | probe-dev | accepted @ c01d68c61（回報只有 "placeholder"，以 diff 審查後驗收） | — |
+
+### 失敗與處理
+| 問題 | 處理 |
+| --- | --- |
+| guard 把 helper script 中 `git switch …` 之後的 `git add --` 誤認為 `git checkout … --`（跨分支複製） | 改用不帶 `--` 的 `git add` |
+| 三個 probe-dev 回報：worktree 內 ruff isort 把 `rlsentry` 當第三方（I001）；mypy 缺 yaml stub | pyproject 加 `known-first-party`、dev 加 `types-PyYAML`，重排測試 import（commit 於 accept 前） |
+| 背景派工時，events.jsonl 的 `report` 事件記到的是「啟動」中繼資料，不是 subagent 的回報 | subagent 回報摘要記於本表（皆 9–10 passed、0 failed）；列入驗證清單已知限制 |
+| auditor（dispatch `2c8e2119`）：L05 在真實 Postgres 上不成立（G1，P0）、audit 登入與 log 判準（F1、F2，P0）、YAML 錯誤回顯密碼（F5）等 | ADR-014；T-026–T-032；追溯表 docs/verification/traceability.md |
+| T-026 第 1 次：未完成實作的新測試留在回歸測試檔工作區 | 新測試改放 tests/policy/test_load_safety.py |
+| 本 session 沒有建立 GitHub PR 的工具 | 推送 `review/*` 分支，PR 說明見 `docs/reviews/MS0-high-risk.md`（ADR-005） |
+
+### ADR
+ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = select）、008（rule catalog）、009（ground truth 格式增補）、010（設定預設值）、011（計分與 ground truth 規則、L04 偏離）、012（相依套件與 mypy）、013（D4 Firebase 列為未來工作）、014（auditor 修正）
+
+### 指標
+- 測試 302 passed；holdout 12 passed；safety 9 passed；acceptance `--no-vc` ALL PASSED。
+- ground truth：P0 漏洞案例 32、safe 案例 72、inconclusive 案例 7（L11 為 P2，另有漏洞 2、safe 2，不計分）。
+- subagent tokens：T-021 約 18k、T-022 約 17k、T-023 約 17k、T-032 約 14k、auditor 約 132k。
