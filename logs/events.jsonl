@@ -405,3 +405,4 @@
 {"ts": "2026-11-02T16:34:37", "kind": "subagent_stop", "id": "8b5ea65d", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-02T16:34:38", "kind": "ticket_accepted", "ticket": "T-018", "commit": "c93d33b310ed218590fb53203ee4a4586c97e21c", "files": ["lab/L10_sensitive_column/expected.yaml", "lab/L11_public_bucket/expected.yaml", "lab/L12_openapi_restricted/expected.yaml"]}
 {"ts": "2026-11-02T16:34:38", "kind": "subagent_stop", "id": "b97a9394", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-02T16:35:05", "kind": "ticket_accepted", "ticket": "T-021", "commit": "3c20e505ad9633f9514ec61ace8096febda92319", "files": ["rlsentry/policy/resolve.py"]}
