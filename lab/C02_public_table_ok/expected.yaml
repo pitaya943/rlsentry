@@ -1,0 +1,33 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: C02
+title: 安全對照：正確的公開表
+plant: |
+  public.articles 啟用 RLS。SELECT：USING (is_published OR author_id = auth.uid())（適用 anon 與
+  authenticated）；INSERT／UPDATE／DELETE：TO authenticated 比對 author_id = auth.uid()。
+  欄位不含敏感資料。anon 讀到已發佈文章是預期行為，不應產生任何 finding。
+schema:
+  articles: {kind: table, columns: [id, author_id, title, is_published], primary_key: [id]}
+rows:
+  art_a1: {target: articles, pk: 5ce0c002-0000-4000-8000-000000000001, owner: user_a, public: true}
+  art_a2: {target: articles, pk: 5ce0c002-0000-4000-8000-000000000002, owner: user_a, public: false}
+  art_b1: {target: articles, pk: 5ce0c002-0000-4000-8000-000000000003, owner: user_b, public: true}
+  art_b2: {target: articles, pk: 5ce0c002-0000-4000-8000-000000000004, owner: user_b, public: false}
+policy:
+  tables:
+    articles:
+      owner_column: author_id
+      public_column: is_published
+      select: {anon: public_rows_only, user: public_or_own_rows}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: own_rows_only}
+      delete: {anon: deny, user: own_rows_only}
+vulnerable_cases: []
+safe_cases:
+  - {id: C02-S1, target: articles, op: select, role: anon, rows: [art_a1, art_b1], expect: allowed}
+  - {id: C02-S2, target: articles, op: select, role: user_a, rows: [art_b2], expect: denied}
+  - {id: C02-S3, target: articles, op: select, role: user_b, rows: [art_a2], expect: denied}
+  - {id: C02-S4, target: articles, op: insert, role: anon, expect: denied, profiles: [dev, ci]}
+  - {id: C02-S5, target: articles, op: update, role: anon, rows: [art_a1], expect: denied, profiles: [dev, ci]}
+  - {id: C02-S6, target: articles, op: update, role: user_b, rows: [art_a1], expect: denied, profiles: [dev, ci]}
+  - {id: C02-S7, target: articles, op: delete, role: user_a, rows: [art_b1], expect: denied, profiles: [dev, ci]}
+splinter_expected: measure
