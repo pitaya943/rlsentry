@@ -151,3 +151,9 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | --- | --- |
 | 審查政策改為 A＋B：safety／寫入逐張審查，lab 類合併成一個 review 分支抽查（自 MS2 起） | ADR-005 補記 |
 | architect 維護 `docs/system_overview.html`（系統設計視角＋視覺化，每個 milestone 更新） | ADR-021；初版已建立 |
+
+### MS1 核准（2026-11-03 18:26，人類簽署）
+| 事件 | 處理 |
+| --- | --- |
+| 本機無 Docker；雲端新 session 驗證了過期的 clone（`25c6374`）且缺相依套件 | 改為 GitHub Actions 獨立驗證（`main` 上的 workflow、輸入 ref）＋本機防竄改＋sha 比對；Actions 結果 `MS1: ALL PASSED`（受測 `6daab21`，與本機 `388d3e5` 除 `logs/` 外相同） |
+| 變異測試要放在哪裡 | 放在 repo 測試、標記 safety、holdout 附變異版本（ADR-022），自 MS2 起實施 |

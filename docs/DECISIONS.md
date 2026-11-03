@@ -265,3 +265,32 @@ D2–D4 由 architect 決定並記錄於此。
   4. 每份驗證清單加一項：開啟 overview，確認「本 milestone」一節與架構圖的狀態色和實際一致。
 - 理由：圖與理念是人類建立 mental model 的入口；用文字描述的 ADR 一多就難以看出彼此的關係。
 - 後果與風險：overview 是手寫的，可能與程式漂移。緩解方式：狀態、數字一律引用 PRODUCTION_LOG 與 tickets；每個 milestone 由 architect 對照 `progress.html` 檢查一次。CLAUDE.md 為凍結檔，本規則只記在此 ADR，建議你在 MS1 核准意見中重述，讓下一個 session 一定會讀到。
+
+## ADR-022：獨立驗證流程（本機防竄改＋GitHub Actions verify＋sha 比對）與 repo 內的變異測試
+- 日期：2026-11-03 · Milestone：MS1 核准後 · 相關：ADR-005 補記、ADR-018、ADR-019、ADR-021；SPEC §11 模組關卡
+- 背景：MS1 審查時發現四個環境問題：
+  - 人類本機（Windows）沒有 Docker；lab 工具只支援 POSIX（`fcntl`、`/tmp`）。
+  - Claude Code app 只能在 localhost 執行 shell 指令。
+  - 另一個雲端 session 照「只執行 make」的提示，驗證了一個落後約 120 個 commit 的過期 clone，而且沒有安裝相依套件。
+  - `workflow_dispatch` 會使用所選分支上的 workflow 檔。
+  人類要求驗證必須在線上執行、結果不能經過 prompt 轉述。
+- 決定（人類於 MS1 審查期間決定）：
+  1. **三段信任鏈**：
+     - (a) 本機 `host/review.sh` 第 1、2 步：同步與防竄改檢查，只需要 git。
+     - (b) GitHub Actions `verify-milestone`：workflow 只放在人類控制的 `main` 上，`ref` 由輸入參數指定，權限 `contents: read`，log 印出受測 sha。
+     - (c) 檢查 C：`git diff --stat <本機 sha> <Actions sha> -- . ':!logs'` 必須沒有輸出。
+     - 簽章仍在本機。
+  2. 每份驗證清單第 3 段第 1 項改寫為上述三步驟。不再使用「另開雲端 session 請 agent 執行」的做法。
+  3. **變異測試放在 repo 裡，不放在 workflow**：
+     - `tests/lab/test_oracle_mutations.py`：情境載入後以 SQL 製造缺陷，斷言 oracle **以預期的原因**失敗。訊息必須含指定的 case id 或 `positive control`，避免「意外失敗」被誤認為抓到缺陷（人類 Q3）。
+     - `tests/lab/test_design_assumptions.py`：設計前提，例如 ADR-019 的 CTE 盲點。
+     - 以上測試皆標記 `safety`。
+     - 每個 milestone 的 holdout 都另附一組變異方式不同的版本。
+     - 需要在合約中新增 `labctl.execute(sql)`（`query()` 維持唯讀）。
+  4. 選擇性：MS4 之後再考慮每週排程一次的上游漂移檢查（最新的 Supabase CLI 與映像）。
+- 已知限制（補記 MS1）：
+  - lab 只能在 POSIX 系統執行（Linux、macOS、WSL2）。
+  - 雲端新 session 的 clone 可能過期，任何驗證前都必須比對 sha。
+- 後果與風險：
+  - workflow 只有人類能改，所以穩定；隨每個 milestone 成長的變異測試由 architect 維護，靠驗收閘門、auditor、holdout 與 `safety` 標記制衡。
+  - 若 architect 同時弱化測試與 oracle，只有 holdout 與人工抽查能發現。
