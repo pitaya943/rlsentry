@@ -678,3 +678,24 @@
 {"ts": "2026-11-03T07:42:40", "kind": "ticket_start", "ticket": "T-074", "agent": "lab-dev", "attempt": 1}
 {"ts": "2026-11-03T07:42:43", "kind": "ticket_start", "ticket": "T-075", "agent": "lab-dev", "attempt": 1}
 {"ts": "2026-11-03T07:42:45", "kind": "ticket_start", "ticket": "T-076", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:42:49", "kind": "dispatch", "id": "ed4e1dad", "agent": "lab-dev", "ticket": "T-074", "review": null, "body": "logs/messages/ed4e1dad-dispatch.json"}
+{"ts": "2026-11-03T07:42:49", "kind": "dispatch", "id": "ae594e29", "agent": "lab-dev", "ticket": "T-076", "review": null, "body": "logs/messages/ae594e29-dispatch.json"}
+{"ts": "2026-11-03T07:42:49", "kind": "dispatch", "id": "0d072045", "agent": "lab-dev", "ticket": "T-075", "review": null, "body": "logs/messages/0d072045-dispatch.json"}
+{"ts": "2026-11-03T07:42:49", "kind": "dispatch", "id": "73cf2b2c", "agent": "lab-dev", "ticket": "T-073", "review": null, "body": "logs/messages/73cf2b2c-dispatch.json"}
+{"ts": "2026-11-03T07:42:49", "kind": "dispatch", "id": "dc38bc2b", "agent": "lab-dev", "ticket": "T-080", "review": null, "body": "logs/messages/dc38bc2b-dispatch.json"}
+{"ts": "2026-11-03T07:42:50", "kind": "subagent_start", "id": "00a7188b", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:42:50", "kind": "report", "id": "f131a4bd", "agent": "lab-dev", "ticket": "T-074", "review": null, "body": "logs/messages/f131a4bd-report.json"}
+{"ts": "2026-11-03T07:42:50", "kind": "report", "id": "31cfa374", "agent": "lab-dev", "ticket": "T-075", "review": null, "body": "logs/messages/31cfa374-report.json"}
+{"ts": "2026-11-03T07:42:50", "kind": "subagent_start", "id": "396642ca", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:42:50", "kind": "report", "id": "623b4a99", "agent": "lab-dev", "ticket": "T-076", "review": null, "body": "logs/messages/623b4a99-report.json"}
+{"ts": "2026-11-03T07:42:50", "kind": "subagent_start", "id": "9a071d91", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:42:50", "kind": "report", "id": "89100141", "agent": "lab-dev", "ticket": "T-080", "review": null, "body": "logs/messages/89100141-report.json"}
+{"ts": "2026-11-03T07:42:50", "kind": "subagent_start", "id": "c3705f80", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:42:50", "kind": "subagent_start", "id": "d541a95c", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:42:50", "kind": "report", "id": "e04a3ec5", "agent": "lab-dev", "ticket": "T-073", "review": null, "body": "logs/messages/e04a3ec5-report.json"}
+{"ts": "2026-11-03T07:43:25", "kind": "subagent_stop", "id": "eb4ddc25", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:43:31", "kind": "subagent_stop", "id": "ba707bd7", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:43:39", "kind": "subagent_stop", "id": "ee734528", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:43:50", "kind": "subagent_stop", "id": "c9bdf693", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:44:30", "kind": "subagent_stop", "id": "d69364ae", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:45:46", "kind": "ticket_accepted", "ticket": "T-080", "commit": "49816b11eaf4e16992bd99d45b42981e1ff85278", "files": ["lab/L11_public_bucket/frontend/assets/app.js", "lab/L11_public_bucket/frontend/index.html", "lab/L11_public_bucket/migration.sql", "lab/L11_public_bucket/seed.sql", "lab/L11_public_bucket/storage/private-docs/user_a/contract.pdf", "lab/L11_public_bucket/storage/private-ok/user_b/notes.pdf", "lab/_shared/labctl.py"]}
