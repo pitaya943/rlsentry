@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 33/53 · 進行中 2 · blocked 0
+自動產生，請勿手改 · 完成 34/53 · 進行中 1 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -44,7 +44,7 @@
 - [x] T-051 safety/mode.py：require_write_allowed 寫入閘門（recon-dev，done，1 次）
 - [x] T-052 safety/mask.py：mask、mask_text（recon-dev，done，1 次）
 - [x] T-053 safety/ratelimit.py：RateLimiter（recon-dev，done，1 次）
-- [ ] T-054 safety/http.py：SafeClient（唯一的 HTTP client）（recon-dev，in_progress，1 次） ← 依賴 T-043✓ T-051✓ T-053✓
+- [x] T-054 safety/http.py：SafeClient（唯一的 HTTP client）（recon-dev，done，1 次）
 - [ ] T-060 Lab 共用：Supabase 專案設定與 labctl（lab-dev，todo，0 次） ← 依賴 T-044…
 - [ ] T-061 Lab L01：RLS 未啟用（lab-dev，todo，0 次） ← 依賴 T-045… T-060…
 - [ ] T-062 Lab L02：Policy 恆真（lab-dev，todo，0 次） ← 依賴 T-045… T-060…
