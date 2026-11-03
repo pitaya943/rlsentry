@@ -10,6 +10,7 @@ local lab (localhost). It never contacts any other host.
 """
 from __future__ import annotations
 
+import re
 from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Protocol
@@ -68,9 +69,15 @@ class DbWrite(BaseModel):
     command: str    # upper-case; see WRITE_COMMANDS
 
 WRITE_COMMANDS: tuple[str, ...] = ("INSERT", "UPDATE", "DELETE", "TRUNCATE", "MERGE", "COPY")
-"""DbWrite.command is the first of these keywords appearing in the logged statement (PostgREST
-logs writes as `execute <name>: WITH pgrst_source AS (INSERT …`, so the first keyword would be
-WITH); when none appears (DDL), it is the statement's first keyword (CREATE, ALTER, …)."""
+
+WRITE_KEYWORD_RE = re.compile(
+    r"\b(INSERT\s+INTO|UPDATE\s+[\"\w]|DELETE\s+FROM|MERGE\s+INTO|TRUNCATE|COPY\s+[\"\w(])",
+    re.IGNORECASE)
+"""ADR-019: a logged statement is a write iff this matches anywhere in its text. PostgREST
+sends writes as `WITH pgrst_source AS (INSERT INTO …) SELECT …`, which Postgres classifies as
+SELECT, so neither log_statement = mod nor pgaudit's session mode logs them. DbWrite.command is
+the first word of the first match, upper-case (INSERT, UPDATE, …); for DDL logged by
+log_statement = mod without such a keyword, it is the statement's first keyword (CREATE, …)."""
 
 
 class LabCtl(Protocol):
@@ -79,7 +86,9 @@ class LabCtl(Protocol):
     def ensure_up(self) -> LabInfo:
         """Start the lab if it is not running (`supabase start -x <LAB_EXCLUDED_SERVICES>` in
         LAB_PROJECT_DIR), otherwise reuse it. Idempotent. Ensures, as supabase_admin,
-        `log_statement = 'mod'` (SPEC §8) with the database user in log_line_prefix, so
+        `log_statement = 'mod'` (SPEC §8) with the database user in log_line_prefix, plus
+        the role-level `ALTER ROLE authenticator SET log_statement = 'all'` (ADR-019; PostgREST
+        is then reconnected so its pooled connections pick the setting up), so
         db_writes_since can attribute every write, and that every LAB_USERS account exists
         and can log in (created as in apply step 2 if missing). Raises RuntimeError with the CLI's last
         output lines when Docker or the CLI fails."""
@@ -117,9 +126,11 @@ class LabCtl(Protocol):
         ...
 
     def db_writes_since(self, marker: str) -> list[DbWrite]:
-        """Data-modifying statements (log_statement = mod) logged after `marker`, in order,
-        including those of every role (filter with POSTGREST_ROLES). DDL is included too,
-        because log_statement = mod also logs it."""
+        """Writes logged after `marker`, in order, for every role (filter with POSTGREST_ROLES):
+        every logged statement matching WRITE_KEYWORD_RE (this catches PostgREST's CTE-wrapped
+        writes, ADR-019), plus DDL logged by log_statement = mod. Statements without a write
+        keyword (the reads authenticator now logs) are NOT returned. An UPDATE/DELETE that RLS
+        filters down to 0 rows is still returned: NFR-01 counts write attempts, not effects."""
         ...
 
     def scenario_dir(self, scenario: str) -> Path:

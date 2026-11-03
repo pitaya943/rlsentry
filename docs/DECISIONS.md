@@ -213,3 +213,16 @@ D2–D4 由 architect 決定並記錄於此。
   - 從 MS1 起，lab 測試是回歸測試的一部分：之後每次 `accept` 與 `make verify-milestone` 都需要 Docker 與 Supabase 映像（首次 ~1 分鐘拉取與啟動）。沒有 Docker 時 lab 測試會失敗而不是略過（CLAUDE.md 禁止 skip）。
   - 清空方式若漏掉某種物件（例如 role 層級設定），情境之間可能互相汙染；`apply()` 合約列出必須重設的項目，L12 的 `pgrst.openapi_mode` 已涵蓋。
   - 每個情境的 ticket 有 4 類檔案（migration、seed、index.html、app.js），超過「最多 3 個檔案」的指引；各檔都很小（合計 < 200 行），拆開反而讓同一情境由兩個 agent 寫。
+
+## ADR-019：NFR-01 的資料庫 log 驗證改為「authenticator 記錄全部語句＋寫入關鍵字分類」
+- 日期：2026-11-03 · Milestone：MS1 · 相關：NFR-01、SPEC §8（`log_statement = mod`）、ADR-014 #2、ADR-018
+- 背景：T-061（L01）與 T-065（L05）的 lab-dev 回報：寫入確實生效，但 DB log 裡找不到 PostgREST 的寫入。architect 實測確認：PostgREST 把寫入送成 `WITH pgrst_source AS (INSERT …) SELECT …`，Postgres 依「外層」指令分類為 SELECT，所以 `log_statement = mod` 完全不記錄；pgaudit 的 session 模式也一樣，會把它分類為 READ。**SPEC 指定的驗證方式對它要防的寫入（PostgREST 寫入）是盲的**：audit 模式就算真的寫了，log 仍會顯示 0 次寫入。
+- 考慮過的選項：
+  1. 全域 `log_statement = all`（缺點：GoTrue、Storage 的大量讀取也進 log，雜訊大）
+  2. pgaudit（缺點：session 模式同樣依外層分類；object 模式要逐表設定 audit role，且情境每次重建）
+  3. `pg_stat_user_tables` 計數差（缺點：統計延遲數秒才刷新，無法可靠地「立即」判定；也無法歸屬角色）
+  4. 只對 `authenticator`（PostgREST 的登入角色）設 role 層級 `log_statement = all`，再以 `WRITE_KEYWORD_RE` 在語句全文中找資料修改關鍵字（採用）
+- 決定：保留全域 `log_statement = mod`（SPEC §8，涵蓋 DDL 與其他角色），另加 `ALTER ROLE authenticator SET log_statement = 'all'`；`db_writes_since` 回傳所有含寫入關鍵字的語句（合約 `rlsentry/contracts/lab.py` `WRITE_KEYWORD_RE`），不含純讀取。被 RLS 過濾成 0 列的 UPDATE／DELETE 仍算一次寫入嘗試（NFR-01 量的是「有沒有送出寫入」，比「有沒有改到資料」更嚴格）。
+- 理由：歸屬仍由 log 前綴的資料庫使用者決定（ADR-014 #2 不變）；關鍵字分類以實測的 PostgREST 語句格式驗證，且 `tests/lab/test_shared.py` 同時測「寫入被抓到」與「讀取不被誤算」。
+- 偏離 SPEC：§8「log_statement = mod 即可留下所有寫入」的前提不成立；改為上述組合。
+- 後果與風險：關鍵字分類是文字比對；若未來 PostgREST 改變語句格式，`test_postgrest_writes_are_attributed_and_reads_are_not` 會失敗而不是靜默放過。字串常值中的關鍵字理論上可能造成誤報（多算寫入），方向是保守的。
