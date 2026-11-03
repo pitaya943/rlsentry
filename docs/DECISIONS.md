@@ -166,3 +166,50 @@ D2–D4 由 architect 決定並記錄於此。
   - 每份驗證清單加一項：`python3 docs/tools/progress.py && git diff --stat docs/progress.html docs/branch-log.md` 必須沒有差異（代表檔案是最新的）。
 - 理由：產生的內容與程式碼必然一致，重跑即可驗證，也不需要 architect 記住要更新哪些地方。
 - 後果與風險：「目的」只和 docstring 一樣好（CLAUDE.md 已要求 public 函式寫 docstring）；腳本 import 凍結的 harness（唯讀）；檔案是衍生資料，不要手改。CLAUDE.md 是凍結檔，本規則只記在此 ADR；建議專案負責人在 MS0 核准意見中重述，讓下一個 session 一定會讀到。
+
+## ADR-016：harness/spec.py 的 code fence 解析缺陷（人類修正）
+- 日期：2026-11-03 · Milestone：MS1 · 相關：SPEC §6、§11 Token 使用原則；MS0 核准意見；auditor K5
+- 背景：`spec.py` 以「行首為 `#`」判斷標題，沒有略過 ``` code fence。SPEC.md:342-365 是 `rlsentry.yaml` 範例（YAML code block），其中 `# Expected access policy…`（SPEC.md:342）與下一行的 YAML 註解被當成標題，`spec.py "6"` 在 `db_url_env:` 就截斷，`tables:`、`defaults:`、`fail_on:` 與 `rlsentry init` 段落都讀不到。MS0 期間所有依規定用 `spec.py` 讀 §6 的 agent 都看到不完整的設定檔範例。
+- 考慮過的選項：
+  1. architect 修改 spec.py（不可行：harness 為凍結檔，hook 會拒絕）
+  2. 在 ticket 中直接貼 SPEC 原文（違反 Token 規則 2，且只是繞過）
+  3. 由人類修正凍結檔並 refreeze（採用）
+- 決定：人類於 commit `ddedd60`（harness: refreeze）新增 `_heading_indices()`，略過 fence 內的行；`toc()` 與 `section()` 都改用它，並在 `harness/tests/test_harness.py` 加回歸測試。MS1 開始時已確認 `spec.py "6"` 輸出含 `tables:`、`defaults:`、`fail_on:` 與 `rlsentry init` 段落。
+- 影響範圍：只影響 SPEC.md:342-365 所在的 §6「設定檔 `rlsentry.yaml`」小節（SPEC 中唯一含 `#` 註解的 code block）。MS0 的合約（`rlsentry/contracts/policy.py`）是 architect 讀 SPEC 全文撰寫的，已含 `tables`／`defaults`／`fail_on`，不受影響；受影響的是 MS0 implementer（T-021–T-023、T-032）可讀到的背景，但它們以合約 docstring 為唯一依據，且 holdout 通過，故不重做。
+- 後果與風險：之後 ticket 引用 §6 可以直接要 implementer 用 `spec.py "6"`；若 SPEC 新增含 `#` 的 code block，修正後的解析已涵蓋。
+
+## ADR-017：ci 可寫入遠端 preview DB 的 `write_hosts` 欄位
+- 日期：2026-11-03 · Milestone：MS1 · 相關：SPEC §2、§5 Safety、NFR-01、NFR-02；MS0 核准意見 #4；ADR-014 #4 補記
+- 背景：人類在 MS0 核准意見中把 ADR-014 #4 改為開放：ci 可寫入遠端 preview DB，但需明確清單、完全比對 host、需授權、只寫 canary 與植入列。
+- 考慮過的選項：
+  1. host 支援萬用字元（`*.supabase.co`）：方便，但一個字元就可能涵蓋正式環境（人類已否決）
+  2. 以完整 URL 比對：連埠號、路徑都要一致，使用者難以正確填寫且沒有額外安全性
+  3. 以 host（含明確埠號時連埠號）完全比對、大小寫不敏感（採用）
+- 決定：
+  1. `ScanConfig.write_hosts: list[str] = []`：每一項是裸 host（可帶 `:port`），不得含 scheme、路徑、`*`、空白；載入時轉小寫並去重。
+  2. `require_write_allowed(profile, method, url, write_hosts=())`：GET／HEAD 一律放行；登入 POST 一律放行（ADR-014 #1）；其餘 audit 一律拒絕；dev 只允許 localhost（`localhost`、`127.0.0.1`、`::1`）；ci 允許 localhost 或 `write_hosts` 中完全相同的 host（URL 帶埠號時，清單項目為無埠號 host 或相同的 `host:port` 才算相符）。
+  3. `authorized: true`（或 CLI 確認）由 `safety/gate.py` 在任何請求前檢查；寫入閘門本身不再重複檢查授權，但 `write_hosts` 非空時 `authorize()` 會把清單寫進 `AuthorizationRecord.write_hosts`，讓報告開頭列出本次允許寫入的主機。
+  4. 「只寫 canary 與植入列、讀回驗證、自動清理、清理失敗 exit code 非 0」屬於 MS3（probe/seed、write、cleanup）與 MS6（exit code）的完成定義，於該 milestone 的 ticket 中引用本 ADR。
+- 理由：host 完全比對讓清單內容一目了然；把清單寫入授權紀錄，使用者在報告第一屏就看得到 ci 這次可能寫到哪裡。
+- 後果與風險：最壞情況是使用者把正式環境 host 列入清單，ci 掃描就會在正式資料庫植入、修改、刪除測試列；緩解只能是「明列＋報告揭露＋清理失敗即失敗」，工具無法分辨 preview 與正式環境。dev 不讀 `write_hosts`：設定檔即使列了遠端 host，dev 仍只能寫 localhost。
+- 與凍結規則的關係：CLAUDE.md「寫入只在 lab mode、只在 localhost」描述的是開發期間的行為；本 ADR 改的是產品在使用者環境中的行為，依人類簽署的 MS0 核准意見。開發與測試期間仍只連 localhost：`write_hosts` 的測試只呼叫閘門函式、不發出任何網路請求。
+
+## ADR-018：Lab 架構：單一本機 Supabase 專案、逐情境載入、以 oracle 驗證 ground truth
+- 日期：2026-11-03 · Milestone：MS1 · 相關：SPEC §8、§9、NFR-01；ADR-009、ADR-014 #2 #8
+- 背景：SPEC §8 每個情境有 migration、seed、frontend，benchmark「以 Supabase CLI 啟動該情境」。16 個情境的表名互相重複（notes、profiles…），不能同時載入同一個 schema。MS0 的 ground truth 只與自己的 policy 驗證過一致（auditor 在 L05 找到 P0），MS1 必須以真實 Postgres／PostgREST 驗證。
+- 考慮過的選項：
+  1. 每個情境一個 Supabase 專案，各自 `supabase start`（缺點：每個 ~50 秒、16 組容器、埠號衝突）
+  2. 一個專案，每次 `supabase db reset`（缺點：會重啟服務，每次數十秒，逐案還原時無法接受）
+  3. 一個專案常駐，`apply(id)` 以 SQL 清空 public schema、storage、auth.users 後載入該情境（採用）
+- 決定：
+  1. `lab/_shared/` 是唯一的 Supabase CLI 專案（`project_id = rlsentry-lab`，排除 studio、realtime 等不需要的服務）；介面在 `rlsentry/contracts/lab.py`，lab-dev 實作 `lab/_shared/labctl.py`。
+  2. 驗證方式：architect 的 `tests/lab/oracle.py` 讀 expected.yaml，對執行中的 lab 逐案以原始 HTTP 驗證 `schema`、`rows`、每個 case 的 `expect`、key 與 discovery 案例；寫入案例以 service_role 讀回最終狀態判定，每個成功的寫入後重新 `apply()`，案例之間互不影響。oracle 是測試程式，不是掃描器：它看得到 ground truth 與 service_role key。
+  3. 前端是手寫、模仿打包輸出的 `frontend/index.html` + `frontend/assets/app.js`，不跑 npm 建置。真實框架（Next.js、Vite、CRA）的 bundle 解析留給 MS5 M1 的 fixture。
+  4. `log_statement = mod`、log 前綴含資料庫使用者；`db_writes_since()` 只回傳角色與指令種類，不保存值（NFR-03）；NFR-01 只計 `POSTGREST_ROLES`（ADR-014 #2，人類已確認）。
+  5. 多個 process 共用一個 lab，以 `/tmp/rlsentry-lab.lock` 檔案鎖序列化。
+  6. Storage 物件放在 `lab/<id>/storage/<bucket>/<path>`，在 migration 之後、seed 之前以 Storage API 上傳（Storage 的 HEAD 需要實際檔案，只寫 `storage.objects` 列不夠）。
+- 理由：方案 3 讓單一情境載入在數秒內完成，oracle 才能在每個寫入案例後還原；ground truth 由獨立於掃描器的程式在真實服務上驗證，掃描器的錯誤與 ground truth 的錯誤不會互相掩蓋。
+- 後果與風險：
+  - 從 MS1 起，lab 測試是回歸測試的一部分：之後每次 `accept` 與 `make verify-milestone` 都需要 Docker 與 Supabase 映像（首次 ~1 分鐘拉取與啟動）。沒有 Docker 時 lab 測試會失敗而不是略過（CLAUDE.md 禁止 skip）。
+  - 清空方式若漏掉某種物件（例如 role 層級設定），情境之間可能互相汙染；`apply()` 合約列出必須重設的項目，L12 的 `pgrst.openapi_mode` 已涵蓋。
+  - 每個情境的 ticket 有 4 類檔案（migration、seed、index.html、app.js），超過「最多 3 個檔案」的指引；各檔都很小（合計 < 200 行），拆開反而讓同一情境由兩個 agent 寫。
