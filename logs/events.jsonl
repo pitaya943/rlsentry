@@ -581,3 +581,9 @@
 {"ts": "2026-11-03T07:10:26", "kind": "stop_blocked", "attempt": 3, "state": "active", "milestone": "MS1"}
 {"ts": "2026-11-03T07:13:03", "kind": "subagent_stop", "id": "91ff0e0e", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T07:13:09", "kind": "ticket_accepted", "ticket": "T-060", "commit": "c3c79c46a224afa31d4f066724ba9c1b5ee86b22", "files": ["lab/_shared/labctl.py", "lab/_shared/supabase/.gitignore", "lab/_shared/supabase/config.toml"]}
+{"ts": "2026-11-03T07:13:29", "kind": "ticket_start", "ticket": "T-061", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:13:32", "kind": "ticket_start", "ticket": "T-062", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:13:34", "kind": "ticket_start", "ticket": "T-063", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:13:36", "kind": "ticket_start", "ticket": "T-064", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:13:39", "kind": "ticket_start", "ticket": "T-065", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:13:41", "kind": "ticket_start", "ticket": "T-066", "agent": "lab-dev", "attempt": 1}
