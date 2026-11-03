@@ -518,3 +518,7 @@
 {"ts": "2026-11-03T06:19:05", "kind": "acceptance_run", "scope": "MS0", "failed": []}
 {"ts": "2026-11-03T06:19:32", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
 {"ts": "2026-11-03T06:19:49", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
+{"ts": "2026-11-03T06:19:53", "kind": "subagent_stop", "id": "455c2a05", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-03T06:21:50", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
+{"ts": "2026-11-03T06:22:05", "kind": "acceptance_run", "scope": "MS0", "failed": []}
+{"ts": "2026-11-03T06:22:29", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
