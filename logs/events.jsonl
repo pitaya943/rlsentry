@@ -855,3 +855,7 @@
 {"ts": "2026-11-03T11:19:28", "kind": "ticket_accepted", "ticket": "T-093", "commit": "af08e9f897962b9600546f48ff96eebb3aaf8f7b", "files": ["tests/lab/test_design_assumptions.py", "tests/lab/test_oracle_mutations.py"]}
 {"ts": "2026-11-03T11:22:12", "kind": "ticket_accepted", "ticket": "T-104", "commit": "473189f4d97af73373b09996923aa463aa5f16d7", "files": ["rlsentry/probe/evidence.py"]}
 {"ts": "2026-11-03T11:25:06", "kind": "ticket_accepted", "ticket": "T-101", "commit": "f976364fe1c96b0978757512028588eed84bf293", "files": ["rlsentry/discovery/bundle.py"]}
+{"ts": "2026-11-03T11:27:21", "kind": "stop_blocked", "attempt": 2, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:27:41", "kind": "stop_blocked", "attempt": 3, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:28:00", "kind": "stop_blocked", "attempt": 4, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:28:09", "kind": "ticket_accepted", "ticket": "T-107", "commit": "4f97ad2526a73a7459935c3184713923758815ce", "files": ["rlsentry/probe/verdict.py"]}
