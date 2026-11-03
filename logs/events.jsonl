@@ -619,3 +619,4 @@
 {"ts": "2026-11-03T07:19:27", "kind": "ticket_fail", "ticket": "T-078", "reason": "checks failed:\nE       assert 400 in (200, 204)\nE        +  where 400 = <Response [400 Bad Request]>.status_code\nFAILED tests/lab/test_shared.py::test_postgrest_writes_are_attributed_and_reads_are_not", "attempts": 1}
 {"ts": "2026-11-03T07:19:45", "kind": "ticket_start", "ticket": "T-078", "agent": "architect", "attempt": 2}
 {"ts": "2026-11-03T07:20:00", "kind": "ticket_accepted", "ticket": "T-078", "commit": "6040e5220309cac8287cdedee98a84767f4aeacd", "files": ["docs/DECISIONS.md", "rlsentry/contracts/lab.py", "tests/lab/test_shared_writes.py"]}
+{"ts": "2026-11-03T07:20:12", "kind": "ticket_start", "ticket": "T-077", "agent": "lab-dev", "attempt": 1}
