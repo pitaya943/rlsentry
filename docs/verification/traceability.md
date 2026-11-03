@@ -27,3 +27,23 @@
 | §9／ADR-011 計分規則 | 只有 docstring | MISSING P1 | MS4 bench ticket 前補測試 |
 | ADR-011 #9 key 以標籤比對 | 無，docstring 矛盾（O5） | MISSING P1 | docstring 已修（T-028）；測試隨 MS4 bench |
 | ground truth 隔離（O2） | 無 | — | tests/contracts/test_contract_imports.py（T-028） |
+
+## MS1（auditor 兩部分：safety、lab；Base `c01d68c61`）
+
+| SPEC／決定 | 實作 | 測試 | 狀態（處理後） |
+| --- | --- | --- | --- |
+| NFR-01 audit 不寫、GET／HEAD 放行 | `rlsentry/safety/mode.py` | `tests/safety/test_mode.py`、`test_http.py` | OK |
+| NFR-01 未知 profile 拒絕（fail-closed） | mode.py（T-083） | `tests/safety/test_hardening_mode.py` | 稽核 P2-1 → 已修 |
+| ADR-014 #1 登入例外完全比對、只限 POST | mode.py | test_mode.py、test_http.py | OK |
+| ADR-014 #3 RPC 不得 POST（含編碼路徑） | mode.py（T-083） | test_mode.py、test_hardening_mode.py | 稽核 P2-2 → 已修 |
+| ADR-017 ci write_hosts 完全比對、dev 不寫遠端 | mode.py、`contracts/policy.py` | test_mode.py、test_safety_contract.py、test_hardening_mode.py（預設埠） | OK；P2-3 → 已修 |
+| NFR-02 未授權拒絕、記錄確認者與時間 | `rlsentry/safety/gate.py` | `tests/safety/test_gate.py` | OK |
+| NFR-02 授權必在任何請求之前 | 無（MS6 pipeline） | 無 | 稽核 P1-1 → ADR-020 #6 延到 MS6（靜態測試＋計數測試） |
+| NFR-03 遮罩 6+4、mask_text 冪等 | `rlsentry/safety/mask.py` | `tests/safety/test_mask.py` | OK；套用到所有輸出待 MS6 |
+| NFR-04 token bucket、並行上限、rps 有限 | `rlsentry/safety/ratelimit.py` | test_ratelimit.py、test_hardening_client.py | OK；整合測試（預設 5 rps）待 MS6 |
+| §5 User-Agent、不跟隨 redirect、不讀 proxy 環境、不留 cookie | `rlsentry/safety/http.py` | test_http.py、test_hardening_client.py | OK（trust_env 只能程式審查） |
+| §8 lab 情境植入漏洞、對照組安全 | `lab/<id>/migration.sql`、`seed.sql` | `tests/lab/test_<id>.py`（oracle） | OK：冷啟動 175 passed；oracle 經變異驗證會失敗 |
+| oracle 能分辨錯的 lab | `tests/lab/oracle*.py` | 手動變異（C04 USING false、L05 RLS off） | 稽核 P1-1–P1-4 → T-081 已修 |
+| NFR-01 DB log 驗證（含 PostgREST CTE 寫入） | `lab/_shared/labctl.py` | test_shared.py、test_shared_writes.py | ADR-019；稽核 P1-5 經實測不成立（GET 唯讀交易） |
+| log 前綴明確設定 | labctl.py（T-085） | test_shared_prefix.py | 稽核 P2-1 → 已修 |
+| apply 清除前一情境 | labctl.py | test_shared_storage.py（storage） | storage 已涵蓋；role／cluster 層級物件為已知限制（稽核 P2-2） |
