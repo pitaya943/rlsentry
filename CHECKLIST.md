@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 57/62 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 57/62 · 進行中 2 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -66,9 +66,9 @@
 - [x] T-078 合約與測試：DB log 寫入判定改為關鍵字分類（ADR-019）（architect，done，2 次）
 - [x] T-079 合約與測試：apply 重設 storage policy、上傳 storage/ 檔案（architect，done，1 次）
 - [x] T-080 labctl：apply 清除 storage policy、上傳 storage/ 檔案（lab-dev，done，1 次）
-- [ ] T-081 稽核修正：oracle 強化（拒絕必須是 RLS 拒絕、正向對照、獨立於掃描器）（architect，todo，0 次） ← 依賴 T-080✓
+- [ ] T-081 稽核修正：oracle 強化（拒絕必須是 RLS 拒絕、正向對照、獨立於掃描器）（architect，in_progress，1 次） ← 依賴 T-080✓
 - [x] T-082 稽核修正：safety 合約與測試（fail-closed、RPC 路徑正規化、預設埠、限速數值）（architect，done，1 次）
-- [ ] T-083 safety/mode.py：未知 profile 拒絕、RPC 路徑正規化（recon-dev，todo，0 次） ← 依賴 T-082✓
+- [ ] T-083 safety/mode.py：未知 profile 拒絕、RPC 路徑正規化（recon-dev，in_progress，1 次） ← 依賴 T-082✓
 - [ ] T-084 safety/http.py、ratelimit.py：不讀環境 proxy、不保留 cookie、rps 必須有限（recon-dev，todo，0 次） ← 依賴 T-083…
 - [ ] T-085 labctl：ensure_up 明確設定 log_line_prefix（lab-dev，todo，0 次） ← 依賴 T-081…
 

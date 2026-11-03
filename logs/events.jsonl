@@ -729,3 +729,5 @@
 {"ts": "2026-11-03T08:01:33", "kind": "subagent_stop", "id": "1f2603c3", "agent": "auditor", "ticket": null, "review": null}
 {"ts": "2026-11-03T08:02:56", "kind": "ticket_start", "ticket": "T-082", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-03T08:04:22", "kind": "ticket_accepted", "ticket": "T-082", "commit": "7a02bfc668ddee8335042f634aee84cb24f5e088", "files": ["docs/DECISIONS.md", "rlsentry/contracts/policy.py", "rlsentry/contracts/safety.py", "tests/safety/test_hardening.py"]}
+{"ts": "2026-11-03T08:04:34", "kind": "ticket_start", "ticket": "T-083", "agent": "recon-dev", "attempt": 1}
+{"ts": "2026-11-03T08:04:37", "kind": "ticket_start", "ticket": "T-081", "agent": "architect", "attempt": 1}
