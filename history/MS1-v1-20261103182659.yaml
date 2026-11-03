@@ -1,0 +1,8 @@
+milestone: MS1
+checklist: docs/verification/MS1-v1.md
+checklist_sha256: 463223225a955e00d10a99a5f773e5a980ca46f55de444f875046abd44f5c175
+decision: approve
+reviewer: Kuei
+date: 2026-11-03 18:26
+notes: |
+  MS1 done!
