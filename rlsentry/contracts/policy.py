@@ -125,6 +125,9 @@ class ScanConfig(ExpectedPolicy):
             if not WRITE_HOST_RE.match(host):
                 raise ValueError(f"write_hosts[{i}] must be a bare host or host:port, "
                                  "without scheme, path or wildcard (ADR-017)")
+            if host.endswith((":80", ":443")):
+                raise ValueError(f"write_hosts[{i}] names a default port; URLs never state it, so "
+                                 "the entry could never match: use the bare host (ADR-020)")
             if host not in out:
                 out.append(host)
         return out

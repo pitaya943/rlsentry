@@ -90,8 +90,12 @@ def require_write_allowed(profile: Profile, method: str, url: str,
     have a host, else WriteRefused (for every method). Host comparison is on
     `urlsplit(url).hostname` (lower-case, so "http://localhost@evil.test/" is evil.test).
     Rules, first match wins:
+    0. `profile` is not a Profile member (e.g. the plain string "AUDIT", None) → refused for
+       every method: the gate fails closed (ADR-020).
     1. method in READ_METHODS → allowed (any profile, any host).
-    2. path starts with RPC_PATH_PREFIX → refused (ADR-014 #3).
+    2. the normalized path starts with RPC_PATH_PREFIX → refused (ADR-014 #3). Normalized =
+       percent-decoded repeatedly until stable, lower-cased, runs of "/" collapsed to one, so
+       "/rest/v1/%72pc/f", "/REST/v1//rpc/f" are RPC paths too (ADR-020).
     3. method is POST, path == LOGIN_PATH and query == LOGIN_QUERY → allowed (ADR-014 #1).
     4. profile audit → refused.
     5. host in LOCAL_HOSTS → allowed (dev and ci).
@@ -131,7 +135,7 @@ class RateLimiterContract(Protocol):
     Constructor: RateLimiter(rps: float = 5.0, concurrency: int = 4, *,
                              clock: Callable[[], float] = time.monotonic,
                              sleep: Callable[[float], Awaitable[None]] = asyncio.sleep)
-    rps <= 0 or concurrency < 1 → ValueError.
+    rps not a finite number > 0 (0, negative, nan, inf) or concurrency < 1 → ValueError.
     Bucket capacity is 1 token, refilled at `rps` tokens per second, starting full. Each
     `async with limiter:` waits for a semaphore slot, then for a token (by awaiting `sleep`
     for exactly the missing time, using `clock`), then consumes it. Consequently the k-th
@@ -152,6 +156,9 @@ class SafeClientContract(Protocol):
                             transport: httpx.AsyncBaseTransport | None = None,
                             timeout: float = 10.0)
     `transport` exists for tests (httpx.MockTransport); production passes None.
+    The underlying client ignores proxy/SSL environment variables (trust_env=False, NFR-09)
+    and never sends a cookie it received earlier: no state crosses requests or identities
+    (ADR-020).
     request():
     1. builds the final URL (url plus `params`, as httpx would send it) and calls
        require_write_allowed(profile, method, final_url, write_hosts) BEFORE waiting on the
