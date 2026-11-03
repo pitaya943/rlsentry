@@ -5,6 +5,9 @@ on:
       ms:
         description: "Milestone (e.g. MS1)"
         required: true
+      ref:
+        description: "Session branch to verify (e.g. claude/busy-darwin-asvox3)"
+        required: true
 permissions:
   contents: read            # read-only: this job can never push
 jobs:
@@ -14,7 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0    # provenance check needs full history; holdout/approvals branches are fetched by the harness
+          ref: ${{ inputs.ref }}   # the workflow itself always comes from main
+          fetch-depth: 0
       - name: Show exact commit under test
         run: git log -1 --format='%H %s'
       - uses: actions/setup-python@v5
