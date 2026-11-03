@@ -899,3 +899,9 @@
 {"ts": "2026-11-03T12:04:25", "kind": "ticket_accepted", "ticket": "T-102", "commit": "8e94dbcda243c60b1cb35a5340b2d6ece50ee279", "files": ["rlsentry/discovery/discover.py", "rlsentry/discovery/merge.py"]}
 {"ts": "2026-11-03T12:12:16", "kind": "stop_blocked", "attempt": 12, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T12:25:11", "kind": "ticket_accepted", "ticket": "T-106", "commit": "d47738ec2af5391db523c1112c37b0a7a400227c", "files": ["rlsentry/probe/read.py"]}
+{"ts": "2026-11-03T12:25:37", "kind": "ticket_start", "ticket": "T-109", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-03T12:25:46", "kind": "dispatch", "id": "0d06101a", "agent": "probe-dev", "ticket": "T-109", "review": null, "body": "logs/messages/0d06101a-dispatch.json"}
+{"ts": "2026-11-03T12:25:48", "kind": "subagent_start", "id": "ea3e6fe1", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T12:26:29", "kind": "subagent_stop", "id": "dc042951", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T12:26:34", "kind": "report", "id": "b0c15a2e", "agent": "probe-dev", "ticket": "T-109", "review": null, "body": "logs/messages/b0c15a2e-report.json"}
+{"ts": "2026-11-03T12:30:24", "kind": "ticket_accepted", "ticket": "T-109", "commit": "9942634027dbce9747be29c5c795efffc5f28acd", "files": ["rlsentry/probe/run.py"]}
