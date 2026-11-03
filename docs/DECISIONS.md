@@ -240,3 +240,7 @@ D2–D4 由 architect 決定並記錄於此。
   7. **P2-6（登入 POST 會送到任何設定的目標）**：照 ADR-014 #1 的設計保留；登入的密碼只來自使用者自己設定的 test_users。
 - 理由（第 6 點）：現在把建構子改成必須傳入 AuthorizationRecord，會讓已驗收的 `tests/safety/test_http.py` 與實作必須同時修改，否則兩張 ticket 都過不了驗收閘門。放到 pipeline 統一處理，加上靜態測試，同樣能保證「沒有授權就沒有連線」。
 - 後果與風險：在 MS6 之前，任何新模組都可以不經授權就自建 SafeClient。MS2–MS5 的模組只接受由呼叫端傳入的 client，不自行建立。這條規則寫進各 milestone 的 ticket，並由 MS6 的靜態測試把關。
+
+### ADR-019 補記：MS1 lab 稽核（2026-11-03）
+- P1-5「RPC 內的寫入在 log 中看不到」**經實測不成立於掃描器的呼叫方式**：PostgREST 以唯讀交易執行 GET，VOLATILE 函式內的 INSERT 回 `25006 cannot execute INSERT in a read-only transaction`（HTTP 405）；STABLE 函式本身不能含 INSERT（`0A000`）。L07 `accounts` 列數維持 2。掃描器的 RPC 一律 GET／HEAD（ADR-014 #3、ADR-020 #2），所以 NFR-01 不受影響。觸發器只在寫入時執行，寫入本身已被記錄。
+- oracle 強化（T-081）：被拒的寫入必須是 401／403／42501，或者 UPDATE／DELETE 得到 2xx 但被 RLS 過濾成沒有變化；讀取的錯誤一律算失敗，不算 denied；新增正向對照（policy 允許的身分必須看得到植入列）；預期範圍改由 oracle 直接讀 `gt.policy` 判定，不再匯入 `rlsentry.policy`。驗證方式：故意把 C04 改成 `USING (false)`、把 L05 的 RLS 關掉，oracle 都會失敗（C04：正向對照；L05：10 個 denied 案例全部失敗）。
