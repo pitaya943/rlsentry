@@ -634,3 +634,9 @@
 {"ts": "2026-11-03T07:24:50", "kind": "subagent_start", "id": "282fe6b8", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T07:26:16", "kind": "subagent_stop", "id": "b48ceb89", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T07:32:04", "kind": "ticket_accepted", "ticket": "T-077", "commit": "4047e4e84e33a9fc0fc1fdb4ff4e64830042351a", "files": ["lab/_shared/labctl.py"]}
+{"ts": "2026-11-03T07:34:03", "kind": "ticket_start", "ticket": "T-067", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:34:05", "kind": "ticket_start", "ticket": "T-068", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:34:08", "kind": "ticket_start", "ticket": "T-069", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:34:10", "kind": "ticket_start", "ticket": "T-070", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:34:13", "kind": "ticket_start", "ticket": "T-071", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:34:15", "kind": "ticket_start", "ticket": "T-072", "agent": "lab-dev", "attempt": 1}
