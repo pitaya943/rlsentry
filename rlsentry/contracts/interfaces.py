@@ -7,6 +7,8 @@ from rlsentry.contracts.models.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
+from datetime import datetime
 from typing import Protocol
 
 from rlsentry.contracts.models import (
@@ -32,10 +34,12 @@ class WriteRefused(PermissionError):
 
 
 class Authorize(Protocol):
-    """safety/gate.py. Returns the record stored in the report; raises AuthorizationRefused."""
+    """safety/gate.py. Returns the record stored in the report; raises AuthorizationRefused.
+    Full rules: rlsentry.contracts.safety.authorize."""
 
-    def __call__(self, config: ScanConfig, *, cli_confirmed: bool,
-                 confirmed_by: str) -> AuthorizationRecord: ...
+    def __call__(self, config: ScanConfig, *, cli_confirmed: bool, confirmed_by: str,
+                 profile: Profile | None = None,
+                 now: datetime | None = None) -> AuthorizationRecord: ...
 
 
 class RequireWriteAllowed(Protocol):
@@ -43,11 +47,13 @@ class RequireWriteAllowed(Protocol):
 
     ADR-014: (1) the only non-GET request allowed in every profile is the test-user login
     `POST /auth/v1/token?grant_type=password` (FR-07), matched exactly; (2) audit refuses
-    everything else; (3) dev/ci writes are allowed only to localhost until the human decides
-    otherwise (SPEC §2 ci preview DB is an open question); (4) RPCs are never POSTed: they are
-    called with GET/HEAD only, in every profile."""
+    everything else; (3) dev writes only to localhost; ci to localhost or to hosts listed
+    exactly in `write_hosts` (ADR-017, human decision on MS0); (4) RPCs are never POSTed:
+    they are called with GET/HEAD only, in every profile.
+    Full rules: rlsentry.contracts.safety.require_write_allowed."""
 
-    def __call__(self, profile: Profile, method: str, url: str) -> None: ...
+    def __call__(self, profile: Profile, method: str, url: str,
+                 write_hosts: Iterable[str] = ()) -> None: ...
 
 
 class Mask(Protocol):

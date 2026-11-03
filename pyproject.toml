@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
   "pydantic>=2.6,<3",
   "pyyaml>=6",
+  "httpx>=0.27,<1",        # MS1 safety/http.py: the only HTTP client (ADR-012)
 ]                          # more are added by the milestone that first needs them (ADR-012)
 
 [project.optional-dependencies]

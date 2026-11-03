@@ -199,6 +199,7 @@ class AuthorizationRecord(_Strict):
     confirmed_by: str
     method: str = Field(pattern=r"^(cli_flag|config)$")
     confirmed_at: datetime
+    write_hosts: list[str] = []      # ADR-017: remote hosts this run may write to (ci only)
 
 
 class ScanReport(_Strict):

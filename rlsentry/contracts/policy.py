@@ -112,6 +112,22 @@ class ScanConfig(ExpectedPolicy):
     test_users: list[TestUser] = []
     db_url_env: str | None = None            # enables M4 when set
     fail_on: FailOn = FailOn()
+    write_hosts: list[str] = []              # ADR-017: remote hosts ci may write to (exact)
+
+    @field_validator("write_hosts")
+    @classmethod
+    def _exact_hosts(cls, v: list[str]) -> list[str]:
+        # Imported here: safety.py imports this module, so a top-level import would be circular.
+        from rlsentry.contracts.safety import WRITE_HOST_RE
+        out: list[str] = []
+        for i, raw in enumerate(v):
+            host = raw.lower()
+            if not WRITE_HOST_RE.match(host):
+                raise ValueError(f"write_hosts[{i}] must be a bare host or host:port, "
+                                 "without scheme, path or wildcard (ADR-017)")
+            if host not in out:
+                out.append(host)
+        return out
 
     @model_validator(mode="after")
     def _unique_users(self) -> ScanConfig:
