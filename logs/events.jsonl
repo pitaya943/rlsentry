@@ -587,3 +587,26 @@
 {"ts": "2026-11-03T07:13:36", "kind": "ticket_start", "ticket": "T-064", "agent": "lab-dev", "attempt": 1}
 {"ts": "2026-11-03T07:13:39", "kind": "ticket_start", "ticket": "T-065", "agent": "lab-dev", "attempt": 1}
 {"ts": "2026-11-03T07:13:41", "kind": "ticket_start", "ticket": "T-066", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:13:45", "kind": "dispatch", "id": "abd8ba48", "agent": "lab-dev", "ticket": "T-061", "review": null, "body": "logs/messages/abd8ba48-dispatch.json"}
+{"ts": "2026-11-03T07:13:45", "kind": "dispatch", "id": "246f29e6", "agent": "lab-dev", "ticket": "T-063", "review": null, "body": "logs/messages/246f29e6-dispatch.json"}
+{"ts": "2026-11-03T07:13:45", "kind": "dispatch", "id": "507249af", "agent": "lab-dev", "ticket": "T-064", "review": null, "body": "logs/messages/507249af-dispatch.json"}
+{"ts": "2026-11-03T07:13:45", "kind": "dispatch", "id": "d3b0aa4a", "agent": "lab-dev", "ticket": "T-065", "review": null, "body": "logs/messages/d3b0aa4a-dispatch.json"}
+{"ts": "2026-11-03T07:13:45", "kind": "dispatch", "id": "994aad8e", "agent": "lab-dev", "ticket": "T-066", "review": null, "body": "logs/messages/994aad8e-dispatch.json"}
+{"ts": "2026-11-03T07:13:45", "kind": "dispatch", "id": "74e5af7b", "agent": "lab-dev", "ticket": "T-062", "review": null, "body": "logs/messages/74e5af7b-dispatch.json"}
+{"ts": "2026-11-03T07:13:46", "kind": "report", "id": "3c1258ed", "agent": "lab-dev", "ticket": "T-062", "review": null, "body": "logs/messages/3c1258ed-report.json"}
+{"ts": "2026-11-03T07:13:46", "kind": "subagent_start", "id": "da289ca4", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:13:46", "kind": "report", "id": "e7d5b82a", "agent": "lab-dev", "ticket": "T-061", "review": null, "body": "logs/messages/e7d5b82a-report.json"}
+{"ts": "2026-11-03T07:13:46", "kind": "subagent_start", "id": "15242bf5", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:13:46", "kind": "report", "id": "709da46e", "agent": "lab-dev", "ticket": "T-063", "review": null, "body": "logs/messages/709da46e-report.json"}
+{"ts": "2026-11-03T07:13:46", "kind": "subagent_start", "id": "21fe17c2", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:13:46", "kind": "report", "id": "3fe83878", "agent": "lab-dev", "ticket": "T-066", "review": null, "body": "logs/messages/3fe83878-report.json"}
+{"ts": "2026-11-03T07:13:46", "kind": "subagent_start", "id": "8e9c8c6f", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:13:46", "kind": "subagent_start", "id": "d9a5c18f", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:13:46", "kind": "report", "id": "cb7f4e59", "agent": "lab-dev", "ticket": "T-065", "review": null, "body": "logs/messages/cb7f4e59-report.json"}
+{"ts": "2026-11-03T07:13:46", "kind": "report", "id": "2c3fca53", "agent": "lab-dev", "ticket": "T-064", "review": null, "body": "logs/messages/2c3fca53-report.json"}
+{"ts": "2026-11-03T07:13:46", "kind": "subagent_start", "id": "8d7c7e4e", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:14:38", "kind": "subagent_stop", "id": "2407a2be", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:15:00", "kind": "subagent_stop", "id": "720f8bb9", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:15:05", "kind": "subagent_stop", "id": "3f894384", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:15:23", "kind": "subagent_stop", "id": "c8c0cb23", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:15:35", "kind": "ticket_accepted", "ticket": "T-062", "commit": "ce824d91fcd69b3f664aba3b823430ca3382a73d", "files": ["lab/L02_using_true/frontend/assets/app.js", "lab/L02_using_true/frontend/index.html", "lab/L02_using_true/migration.sql", "lab/L02_using_true/seed.sql"]}

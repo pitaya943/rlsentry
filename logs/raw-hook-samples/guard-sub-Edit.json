@@ -1,0 +1,22 @@
+{
+  "session_id": "924b7998-392f-5603-b371-6b3a9a16b316",
+  "transcript_path": "/root/.claude/projects/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316.jsonl",
+  "cwd": "/home/user/rlsentry/.claude/worktrees/agent-a65ab64fe5af1fedf",
+  "scratchpad_dir": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/scratchpad",
+  "prompt_id": "903b5cdb-00be-41dc-8544-bdc9012fec52",
+  "permission_mode": "auto",
+  "agent_id": "a65ab64fe5af1fedf",
+  "agent_type": "lab-dev",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/home/user/rlsentry/.claude/worktrees/agent-a65ab64fe5af1fedf/lab/L06_security_definer_view/frontend/assets/app.js",
+    "old_string": "  document.getElementById(\"root\").textContent = JSON.stringify(data);",
+    "new_string": "  const mine = await supabase.from('invoices').select('id, owner_id, amount');\n  document.getElementById(\"root\").textContent = JSON.stringify([data, mine.data]);",
+    "replace_all": false
+  },
+  "tool_use_id": "toolu_01WFeTJmrvRsoVBpsojLryKm"
+}

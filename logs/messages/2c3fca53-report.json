@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a00afee25ea8e2f38",
+  "description": "T-064 lab L04",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-064\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-064.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/a00afee25ea8e2f38.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}
