@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 63/78 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 63/78 · 進行中 6 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -76,16 +76,16 @@
 ## [ ] MS2 M2 Discovery + M3 讀取（進行中）
 - [x] T-090 合約：M2 Discovery、M3 讀取、labctl.execute；ADR-023、ADR-024（architect，done，1 次）
 - [x] T-091 可見測試：M2、M3 讀取單元測試與 labctl.execute 測試（architect，done，1 次）
-- [ ] T-092 labctl：execute()、query() 唯讀、寫入分類排除字串常值（ADR-022、ADR-024）（lab-dev，todo，0 次） ← 依賴 T-091✓
+- [ ] T-092 labctl：execute()、query() 唯讀、寫入分類排除字串常值（ADR-022、ADR-024）（lab-dev，in_progress，1 次） ← 依賴 T-091✓
 - [ ] T-093 可見測試：oracle 變異測試與設計前提測試（ADR-022（architect，todo，0 次） ← 依賴 T-092…
-- [ ] T-100 discovery/openapi.py：fetch_openapi、parse_openapi（FR-04）（probe-dev，todo，0 次） ← 依賴 T-091✓
-- [ ] T-101 discovery/bundle.py：infer_from_bundle（FR-05）（probe-dev，todo，0 次） ← 依賴 T-091✓
+- [ ] T-100 discovery/openapi.py：fetch_openapi、parse_openapi（FR-04）（probe-dev，in_progress，1 次） ← 依賴 T-091✓
+- [ ] T-101 discovery/bundle.py：infer_from_bundle（FR-05）（probe-dev，in_progress，1 次） ← 依賴 T-091✓
 - [ ] T-102 discovery/merge.py 與 discover.py：合併與 M2 進入點（probe-dev，todo，0 次） ← 依賴 T-100… T-101…
 - [ ] T-103 probe/session.py：測試帳號登入取得 JWT（FR-07）（probe-dev，todo，0 次） ← 依賴 T-091✓
-- [ ] T-104 probe/evidence.py：遮罩後的 curl 重現指令（probe-dev，todo，0 次） ← 依賴 T-091✓
-- [ ] T-105 probe/cross_tenant.py：已知列（主鍵交集，FR-08）（probe-dev，todo，0 次） ← 依賴 T-091✓
+- [ ] T-104 probe/evidence.py：遮罩後的 curl 重現指令（probe-dev，in_progress，1 次） ← 依賴 T-091✓
+- [ ] T-105 probe/cross_tenant.py：已知列（主鍵交集，FR-08）（probe-dev，in_progress，1 次） ← 依賴 T-091✓
 - [ ] T-106 probe/read.py：HEAD + count 的可見數（FR-06）（probe-dev，todo，0 次） ← 依賴 T-104… T-105…
-- [ ] T-107 probe/verdict.py：三態判定（probe-dev，todo，0 次） ← 依賴 T-091✓
+- [ ] T-107 probe/verdict.py：三態判定（probe-dev，in_progress，1 次） ← 依賴 T-091✓
 - [ ] T-108 rules/severity.py 與 probe/diff.py：規則、嚴重度與差分（FR-10）（probe-dev，todo，0 次） ← 依賴 T-091✓
 - [ ] T-109 probe/run.py：Probe 階段（MS2 只做讀取）（probe-dev，todo，0 次） ← 依賴 T-105… T-106… T-107… T-108…
 - [ ] T-110 policy/init.py：rlsentry init 草稿（FR-15）（probe-dev，todo，0 次） ← 依賴 T-091✓
