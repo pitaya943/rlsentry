@@ -512,3 +512,4 @@
 {"ts": "2026-11-03T06:11:56", "kind": "subagent_stop", "id": "2f8fcd15", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-03T06:13:03", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 32}
 {"ts": "2026-11-03T06:13:14", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 33}
+{"ts": "2026-11-03T06:16:40", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
