@@ -13,7 +13,7 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from rlsentry.contracts.models import Evidence, Op, Profile, Role, Severity
+from rlsentry.contracts.models import Evidence, Op, Profile, Role, Severity, Target
 
 
 class RowScope(str, Enum):
@@ -212,5 +212,27 @@ def load_config(text: str) -> ScanConfig:
     offending key path (e.g. "tables.posts.select.anon") or, for YAML syntax errors, the
     line/column ("line 3, column 5") and the problem kind; never a snippet of the input.
     Environment variables are NOT read.
+    """
+    raise NotImplementedError
+
+
+def draft_policy(targets: list[Target]) -> str:
+    """Contract only; implemented by rlsentry.policy.init.draft_policy (FR-15 `rlsentry init`).
+
+    Returns YAML text for the `tables:` section of rlsentry.yaml, as a starting point the user
+    edits; prepending "target: <url>\\n" gives text load_config accepts. Pure, deterministic
+    (targets sorted by name; a name present twice is written once, first kind wins).
+    Per target:
+    - primary_key: [..] when target.primary_key is non-empty;
+    - owner_column / public_column: first of OWNER_COLUMN_CANDIDATES /
+      PUBLIC_COLUMN_CANDIDATES in target.columns, omitted when none;
+    - select: anon public_rows_only if a public column else deny; user public_or_own_rows if
+      both columns, own_rows_only if only an owner column, public_rows_only if only a public
+      column, else deny;
+    - insert, update, delete: anon deny; user own_rows_only if an owner column else deny;
+    - RPC targets get only `select: {anon: deny, user: deny}`.
+    Every target without an owner column gets a YAML comment line saying no owner column was
+    found and the policy denies by default. An empty list gives "tables: {}\\n".
+    Never emits values read from the target (there are none in Target), only names.
     """
     raise NotImplementedError

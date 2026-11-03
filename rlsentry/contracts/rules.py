@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from rlsentry.contracts.models import Evidence, Severity
+from rlsentry.contracts.models import Evidence, Role, Severity
 
 
 class RuleSpec(BaseModel):
@@ -68,3 +68,33 @@ SENSITIVE_COLUMN_PATTERNS: tuple[str, ...] = (
     "email", "phone", "token", "password", "secret", "ssn",
 )
 """Case-insensitive substrings marking a column as sensitive (SPEC §5 M5 Critical row)."""
+
+
+# --- function contracts (implemented in rlsentry/rules/severity.py, MS2; ADR-023) ----------
+
+def is_sensitive_column(name: str) -> bool:
+    """Contract only; implemented by rlsentry.rules.severity.is_sensitive_column. Pure.
+
+    True iff any SENSITIVE_COLUMN_PATTERNS entry is a substring of name.lower().
+    """
+    raise NotImplementedError
+
+
+def read_rule(target_kind: str, role: Role) -> str:
+    """Contract only; implemented by rlsentry.rules.severity.read_rule. Pure.
+
+    Rule id for a confirmed read beyond the expected scope: target_kind "rpc" →
+    SECURITY_DEFINER_RPC_DATA (any role: an RPC that returns rows RLS would hide is the L07
+    pattern); role ANON → ANON_READ_OWNER_SCOPED; user_a / user_b → CROSS_TENANT_READ.
+    """
+    raise NotImplementedError
+
+
+def read_severity(rule: str, columns: list[str]) -> Severity:
+    """Contract only; implemented by rlsentry.rules.severity.read_severity. Pure.
+
+    RULES[rule].escalates_to when it is set and any column is_sensitive_column, else
+    RULES[rule].severity (SPEC §5 M5: anon read of a table with sensitive columns is Critical).
+    Unknown rule → KeyError. Columns unknown (bundle-inferred target, []) never escalate.
+    """
+    raise NotImplementedError

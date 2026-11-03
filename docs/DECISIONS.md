@@ -294,3 +294,35 @@ D2–D4 由 architect 決定並記錄於此。
 - 後果與風險：
   - workflow 只有人類能改，所以穩定；隨每個 milestone 成長的變異測試由 architect 維護，靠驗收閘門、auditor、holdout 與 `safety` 標記制衡。
   - 若 architect 同時弱化測試與 oracle，只有 holdout 與人工抽查能發現。
+
+## ADR-023：MS2 M2 Discovery 與 M3 讀取的設計
+- 日期：2026-11-03 · Milestone：MS2 · 相關：SPEC §5 M2、M3；FR-04–FR-08、FR-10、FR-15；ADR-007、ADR-014、ADR-022
+- 背景：SPEC 只說「已知主鍵的可見數」與「audit 以主鍵交集判定」，沒有定義已知列從哪裡來、一個 cell 的三態怎麼由計數決定、哪些 HTTP 狀態可以當成 denied。以下各點都在本機 lab 實測過（`tests/lab/test_design_assumptions.py`）。
+- 決定：
+  1. **OpenAPI 不區分 table 與 view**：L06 的 view 與 table 在 PostgREST OpenAPI 中有相同的 methods 與 `<pk/>` 標記，所以 M2 一律回報 `kind: table`（RPC 為 `rpc`），不回報 `view`；MS4 whitebox 有 DB 連線時可再細分。
+  2. **bundle 推測與 OpenAPI 取聯集**：SPEC 寫「OpenAPI 關閉時改用 bundle」，本設計在 OpenAPI 可用時也加入 bundle 中出現、但 OpenAPI 沒列的名稱（`inferred`）。理由：PostgREST 預設只列出 anon 有權限的關聯，authenticated 才能用的表不會出現在 anon 的文件中。代價：不存在的名稱會多出 inconclusive 與 `INFERRED_TARGET` 提示。`supabase.storage.from('x')` 與 JS 內建物件的 `.from()` 不算目標。
+  3. **一個讀取 cell 的判定**（`contracts/probe.py` 模組說明）：
+     - 已知列：每位測試使用者用自己的 JWT 列出自己的主鍵（`<owner>=eq.<自己的 id>`，只取主鍵，最多 50 筆），有公開欄位時分成公開與非公開。這就是 SPEC 的「主鍵交集」；MS2 在所有 profile 都這樣做，MS3 為 dev／ci 加上植入資料。
+     - 對被測角色，把已知列分成「預期不可見（forbidden）」與「預期可見（permitted）」；以 `HEAD … <pk>=in.(forbidden)` 加 `Prefer: count=exact` 取得可見數。
+     - 可見數 > 0 → allowed（漏洞）；= 0 → denied；沒有 forbidden 已知列 → inconclusive。因此 C04 的 user_a（別人沒有資料）、C03（空表）都是 inconclusive，不會寫成安全。
+     - 只有 200／206 且 Content-Range 有數字、且不超過查詢數，才下判定。401／403／404／400 一律 inconclusive：HEAD 沒有 body，無法分辨權限錯誤、JWT 錯誤與過濾條件錯誤（實測：不合法的 uuid 回 400）。代價：撤銷 GRANT 的表會是 inconclusive 而不是 denied（偏保守）。
+     - permitted 列只用來產生提示：預期可見卻看不到 → `EXPECTED_ACCESS_DENIED`；anon 看得到含敏感欄位的公開列 → `SENSITIVE_COLUMN_PUBLIC`（L10-W1）。
+  4. **規則對應**：RPC 讀到 forbidden 列 → `SECURITY_DEFINER_RPC_DATA`（任何角色，L07）；anon → `ANON_READ_OWNER_SCOPED`（欄位名含敏感字樣升為 Critical，bundle 推測的目標沒有欄位，不升級）；user → `CROSS_TENANT_READ`。
+  5. **介面**：`Discover`、`Probe` 以 run 的 `SafeClient` 作為第一個參數，sessions 改為 `Sessions` 模型（token 不進 repr 與 JSON）。登入取得的 JWT 只解碼 `sub`（不驗簽、不新增 PyJWT 相依；M1 的 key 分類在 MS5 再決定）。
+  6. **MS2 的寫入 cell**：一律 `not_tested`，audit 註明唯讀，dev／ci 註明 MS3 才實作；MS2 在任何 profile 都只送 GET／HEAD，以及允許的登入 POST。
+  7. **`labctl.query()` 強制唯讀**（`default_transaction_read_only = on`），寫入只能透過新增的 `labctl.execute()`，且只供變異測試使用（ADR-022 #3）。
+- 後果與風險：
+  - audit 的已知列完全依賴擁有者欄位：找不到擁有者欄位的表一律 inconclusive（`NO_OWNER_COLUMN`）。
+  - 每位使用者最多取 50 個主鍵：大表只抽樣，可見數仍是精確值，但只代表這 50 筆。
+  - Storage（L11，P2）不在 MS2 範圍；計畫中尚無 Storage 探測的 milestone，列為已知限制。
+
+## ADR-024：DB log 寫入分類排除字串常值（修訂 ADR-019，變更 MS1 的 labctl）
+- 日期：2026-11-03 · Milestone：MS2 · 相關：ADR-019、ADR-022 #3、NFR-01
+- 背景：MS2 的 lab 掃描測試（`tests/lab/test_scan_reads.py`）第一次在 audit 掃描中抓取 OpenAPI（`GET /rest/v1/`）。PostgREST 產生 OpenAPI 的 SQL 含 `has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, …')`，authenticator 記錄全部語句，ADR-019 的「全文任一處含寫入關鍵字」規則因此每次都回報一筆 `TRUNCATE`。實測：`GET /rest/v1/` 一次 → `[DbWrite(role='authenticator', command='TRUNCATE')]`；一般表的 GET → `[]`。
+- 考慮過的選項：
+  1. 測試中在 OpenAPI 請求之後才取 marker（缺點：把盲點藏起來，之後任何讀取 OpenAPI 的 NFR-01 檢查都會誤報）
+  2. 在 `db_writes_since` 比對前，先移除單引號字串常值（採用）
+  3. 只排除特定語句樣式（缺點：綁死 PostgREST 版本的 SQL 文字）
+- 決定：WRITE_KEYWORD_RE 改為套用在「把所有 `'…'` 字串常值（`''` 為跳脫）替換成 `''` 之後」的語句上（`contracts/lab.py` 的 `SQL_STRING_LITERAL_RE`）。`E'…'` 反斜線跳脫不處理（PostgREST 不產生）。新增回歸測試：OpenAPI 讀取不得記成寫入，緊接著一筆內容含 `'TRUNCATE'` 字樣的真實 UPDATE 仍必須被記成 `UPDATE`。
+- 為什麼不是 reopen MS1：MS1 範圍內的請求不會觸發此誤報（MS1 的測試從未抓取 OpenAPI），誤報方向是多報寫入（fail-closed），不會讓 MS1 的任何安全結論變成錯誤；這是 MS2 新流量暴露的設計限制。但此變更會修改 MS1 已核准的 `lab/_shared/labctl.py`，因此在 MS2 驗證清單第 4 段列為偏差，請人類確認；若你認為應以 reopen 處理，請在核准意見中註明，我會改走 reopen。
+- 後果與風險：若有寫入語句完全包在字串常值中執行（例如 `EXECUTE 'INSERT …'` 的動態 SQL），authenticator 那一層不會再被計為寫入；PostgREST 不會送出這種語句，且被呼叫函式內的動態 SQL 原本就不會出現在 authenticator 的語句文字中（ADR-019 已知限制）。

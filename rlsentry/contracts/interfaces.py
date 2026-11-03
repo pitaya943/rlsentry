@@ -18,11 +18,12 @@ from rlsentry.contracts.models import (
     Finding,
     Profile,
     ReconResult,
-    Role,
     ScanReport,
     Target,
 )
 from rlsentry.contracts.policy import ExpectedPolicy, ScanConfig
+from rlsentry.contracts.probe import Sessions
+from rlsentry.contracts.safety import SafeClientContract
 
 
 class AuthorizationRefused(PermissionError):
@@ -69,17 +70,22 @@ class Recon(Protocol):
 
 
 class Discover(Protocol):
-    """discovery/ (M2). `bundle_sources` are the JS texts M1 scanned (for FR-05 inference)."""
+    """discovery/ (M2). `bundle_sources` are the JS texts M1 scanned (for FR-05 inference).
+    ADR-023: every stage that sends requests receives the run's SafeClient as first argument,
+    so the write gate, rate limit and User-Agent apply to it. Full rules:
+    rlsentry.contracts.discovery.discover."""
 
-    async def __call__(self, supabase_url: str, anon_key: str, policy: ExpectedPolicy,
-                       bundle_sources: list[str]) -> DiscoveryResult: ...
+    async def __call__(self, client: SafeClientContract, supabase_url: str, anon_key: str,
+                       policy: ExpectedPolicy, bundle_sources: list[str]) -> DiscoveryResult: ...
 
 
 class Probe(Protocol):
-    """probe/ (M3). `sessions` maps each role to its bearer token (anon key for anon)."""
+    """probe/ (M3). ADR-023: SafeClient first; `sessions` carries each role's bearer token
+    (anon key for anon), the test users' ids and why a role has no session.
+    Full rules: rlsentry.contracts.probe.probe."""
 
-    async def __call__(self, supabase_url: str, anon_key: str, targets: list[Target],
-                       sessions: dict[Role, str], policy: ExpectedPolicy,
+    async def __call__(self, client: SafeClientContract, supabase_url: str, anon_key: str,
+                       targets: list[Target], sessions: Sessions, policy: ExpectedPolicy,
                        profile: Profile) -> tuple[AccessMatrix, list[Finding]]: ...
 
 

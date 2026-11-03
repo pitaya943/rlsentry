@@ -79,9 +79,18 @@ WRITE_KEYWORD_RE = re.compile(
     re.IGNORECASE)
 """ADR-019: a logged statement is a write iff this matches anywhere in its text. PostgREST
 sends writes as `WITH pgrst_source AS (INSERT INTO …) SELECT …`, which Postgres classifies as
-SELECT, so neither log_statement = mod nor pgaudit's session mode logs them. DbWrite.command is
+SELECT, so neither log_statement = mod nor pgaudit's session mode logs them. ADR-024: "its text"
+means the statement with every SQL_STRING_LITERAL_RE match replaced by '' (keywords inside
+string literals are data, not commands). DbWrite.command is
 the first word of the first match, upper-case (INSERT, UPDATE, …); for DDL logged by
 log_statement = mod without such a keyword, it is the statement's first keyword (CREATE, …)."""
+
+SQL_STRING_LITERAL_RE = re.compile(r"'(?:[^']|'')*'")
+"""A single-quoted SQL string literal ('' is an escaped quote). ADR-024: removed from a logged
+statement before WRITE_KEYWORD_RE is applied, because PostgREST's OpenAPI query contains
+has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, …') and would otherwise be
+reported as a TRUNCATE by authenticator on every `GET /rest/v1/` (found by MS2's lab scan test).
+E'…' strings with backslash-escaped quotes are not handled; PostgREST does not log any."""
 
 
 class LabCtl(Protocol):
@@ -128,7 +137,21 @@ class LabCtl(Protocol):
 
     def query(self, sql: str) -> list[tuple[str, ...]]:
         """Run one read-only SQL statement as postgres and return rows as text tuples
-        (psql -At semantics; NULL → ""). For tests that check schema, owners and grants."""
+        (psql -At semantics; NULL → ""). For tests that check schema, owners and grants.
+        Read-only is enforced, not assumed (ADR-022): the session runs with
+        default_transaction_read_only = on, so a write through query() fails with
+        RuntimeError (SQLSTATE 25006) and changes nothing. This guards against accidents in
+        test code, not against a statement that deliberately turns the setting off."""
+        ...
+
+    def execute(self, sql: str) -> None:
+        """Run `sql` (one or more statements) as postgres in ONE transaction with
+        ON_ERROR_STOP (psql -1), then NOTIFY pgrst 'reload schema' and wait (≤ 10 s) until
+        PostgREST answers again, so a changed grant, policy or function is served at once.
+        Any SQL error → RuntimeError with psql's last lines; nothing of the transaction stays.
+        For lab mutation tests only (ADR-022 #3: break a loaded scenario on purpose and check
+        that the oracle notices); the caller re-applies the scenario afterwards. Holds lock()
+        while running. Never used by rlsentry itself (lab code is not product code)."""
         ...
 
     def db_log_marker(self) -> str:
@@ -139,7 +162,9 @@ class LabCtl(Protocol):
         """Writes logged after `marker`, in order, for every role (filter with POSTGREST_ROLES):
         every logged statement matching WRITE_KEYWORD_RE (this catches PostgREST's CTE-wrapped
         writes, ADR-019), plus DDL logged by log_statement = mod. Statements without a write
-        keyword (the reads authenticator now logs) are NOT returned. An UPDATE/DELETE that RLS
+        keyword (the reads authenticator now logs) are NOT returned; keywords inside single-quoted
+        string literals do not count (SQL_STRING_LITERAL_RE, ADR-024), so `GET /rest/v1/`
+        (OpenAPI) logs no write. An UPDATE/DELETE that RLS
         filters down to 0 rows is still returned: NFR-01 counts write attempts, not effects."""
         ...
 
