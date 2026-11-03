@@ -614,3 +614,4 @@
 {"ts": "2026-11-03T07:16:17", "kind": "subagent_stop", "id": "7e6bf10e", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T07:16:19", "kind": "subagent_stop", "id": "d2a4f2d1", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T07:16:23", "kind": "ticket_accepted", "ticket": "T-064", "commit": "453f61d33bc26f249fb0a59a8bd32c37dcf8b645", "files": ["lab/L04_cross_tenant_read/frontend/assets/app.js", "lab/L04_cross_tenant_read/frontend/index.html", "lab/L04_cross_tenant_read/migration.sql", "lab/L04_cross_tenant_read/seed.sql"]}
+{"ts": "2026-11-03T07:17:50", "kind": "ticket_accepted", "ticket": "T-066", "commit": "3fad5dcfdc2a736e582e94ab5472e7f7043edcc4", "files": ["lab/L06_security_definer_view/frontend/assets/app.js", "lab/L06_security_definer_view/frontend/index.html", "lab/L06_security_definer_view/migration.sql", "lab/L06_security_definer_view/seed.sql"]}
