@@ -749,3 +749,4 @@
 {"ts": "2026-11-03T08:12:00", "kind": "subagent_start", "id": "7dc246ed", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T08:13:02", "kind": "subagent_stop", "id": "3793962c", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T08:14:33", "kind": "ticket_accepted", "ticket": "T-085", "commit": "7d99422ef01a6a4df342afe056d109206ca1f46e", "files": ["lab/_shared/labctl.py"]}
+{"ts": "2026-11-03T08:17:25", "kind": "acceptance_run", "scope": "MS1", "failed": []}
