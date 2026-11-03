@@ -788,3 +788,6 @@
 {"ts": "2026-11-03T10:23:59", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS1"}
 {"ts": "2026-11-03T10:24:11", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS1"}
 {"ts": "2026-11-03T10:24:14", "kind": "subagent_stop", "id": "c7ea0a58", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:05:16", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
+{"ts": "2026-11-03T11:05:40", "kind": "ticket_start", "ticket": "T-090", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-03T11:07:20", "kind": "ticket_accepted", "ticket": "T-090", "commit": "30016ccef476220962d4feb63c00f22c33c22c49", "files": ["docs/DECISIONS.md", "rlsentry/contracts/discovery.py", "rlsentry/contracts/interfaces.py", "rlsentry/contracts/lab.py", "rlsentry/contracts/policy.py", "rlsentry/contracts/probe.py", "rlsentry/contracts/rules.py", "rlsentry/discovery/__init__.py", "rlsentry/probe/__init__.py", "rlsentry/rules/__init__.py"]}
