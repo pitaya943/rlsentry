@@ -326,3 +326,18 @@ D2–D4 由 architect 決定並記錄於此。
 - 決定：WRITE_KEYWORD_RE 改為套用在「把所有 `'…'` 字串常值（`''` 為跳脫）替換成 `''` 之後」的語句上（`contracts/lab.py` 的 `SQL_STRING_LITERAL_RE`）。`E'…'` 反斜線跳脫不處理（PostgREST 不產生）。新增回歸測試：OpenAPI 讀取不得記成寫入，緊接著一筆內容含 `'TRUNCATE'` 字樣的真實 UPDATE 仍必須被記成 `UPDATE`。
 - 為什麼不是 reopen MS1：MS1 範圍內的請求不會觸發此誤報（MS1 的測試從未抓取 OpenAPI），誤報方向是多報寫入（fail-closed），不會讓 MS1 的任何安全結論變成錯誤；這是 MS2 新流量暴露的設計限制。但此變更會修改 MS1 已核准的 `lab/_shared/labctl.py`，因此在 MS2 驗證清單第 4 段列為偏差，請人類確認；若你認為應以 reopen 處理，請在核准意見中註明，我會改走 reopen。
 - 後果與風險：若有寫入語句完全包在字串常值中執行（例如 `EXECUTE 'INSERT …'` 的動態 SQL），authenticator 那一層不會再被計為寫入；PostgREST 不會送出這種語句，且被呼叫函式內的動態 SQL 原本就不會出現在 authenticator 的語句文字中（ADR-019 已知限制）。
+
+### ADR-024 補記：MS2 auditor 的處理（2026-11-03）
+- F1（P1）：原回歸測試的 PATCH 內容以 bind parameter 送出、記在 `DETAIL` 行，根本不會經過字串移除，因此是空轉的。改為新增純函式 `labctl.write_command(sql)`，並以 `tests/lab/test_shared_classify.py` 用合成語句直接測試（T-112 測試、T-113 實作）。
+- F2：字串移除改為單次由左到右掃描單引號常值、雙引號識別字與 `$$` 字串（`SQL_QUOTED_RE`），所以識別字或 `$$` 內的單引號不能再開出假常值、吞掉後面的寫入關鍵字。
+- F6：`db_writes_since` 改以 `RAISE LOG` sentinel 確認 log 已寫出，不再只靠 0.3 秒等待。
+- F3–F5：變異測試同時比對 case id 與失敗片語；`query()` 唯讀測試比對 `read-only transaction`；掃描測試檢查所有 2xx GET，並移除不可能失敗的 HEAD body 檢查。
+
+### ADR-023 補記：MS2 auditor 第 1 部分（2026-11-03）
+- S1：RPC 只以 GET／HEAD 呼叫。新增設計前提測試：VOLATILE 函式（即使是 SECURITY DEFINER 且會寫入）對 GET 回 405；STABLE 函式內的 INSERT 在執行時被 Postgres 拒絕。因此 GET 呼叫 RPC 不會造成寫入。
+- 已知限制（列入驗證清單第 5 段）：
+  - S2：已知列的主鍵值會出現在 evidence curl 中；主鍵若是 email 這類個資，報告會帶出它（主鍵是 CLAUDE.md 允許記錄的唯一值）。MS6 報告階段再決定是否遮罩。
+  - D1：沒有擁有者欄位的表，即使 anon 讀得到全部列，也只回報 inconclusive。
+  - D2：`SENSITIVE_COLUMN_PUBLIC` 與嚴重度升級依表的所有欄位名判斷，沒有測試欄位層級的 GRANT。
+  - D3：OpenAPI 只有 `/rpc/x` 時，bundle 的 `.from('x')` 會被略過。
+  - FR-05 的「覆蓋率與未發現不代表安全」聲明屬於報告，延到 MS6；MS2 只提供 `openapi_available` 與每個目標的 confidence。

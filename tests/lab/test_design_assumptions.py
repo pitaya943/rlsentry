@@ -99,3 +99,40 @@ def test_bad_filter_value_is_an_error_not_an_empty_result(lab_info: LabInfo) -> 
     labctl.apply("C01")
     r = head_count(lab_info, "todos", None, ["not-a-uuid"])
     assert r.status_code == 400 and "content-range" not in r.headers
+
+
+def anon_get(info: LabInfo, fn: str) -> httpx.Response:
+    return httpx.get(f"{info.api_url}/rest/v1/rpc/{fn}", headers=h(info))
+
+
+def test_volatile_rpc_refuses_get_and_has_no_effect(lab_info: LabInfo) -> None:
+    """ADR-014 #3 / MS2 audit S1: the scanner calls RPCs with GET/HEAD only. That is read-only
+    because PostgREST refuses GET for VOLATILE functions — even a SECURITY DEFINER one that
+    would insert."""
+    labctl.apply("L07")
+    try:
+        labctl.execute(f"create function public.vol_touch() returns int language sql volatile security definer "
+                       f"as $$ insert into public.accounts (id, owner_id, balance) values "
+                       f"('{row_pk('L07', 9)}', '{LAB_USERS[Role.USER_A]['id']}', 0) returning 1 $$; "
+                       "grant execute on function public.vol_touch() to anon, authenticated;")
+        r = anon_get(lab_info, "vol_touch")
+        assert r.status_code == 405
+        assert labctl.query(f"select count(*) from public.accounts where id = '{row_pk('L07', 9)}'") == [("0",)]
+    finally:
+        labctl.apply("L07")
+
+
+def test_stable_rpc_cannot_write(lab_info: LabInfo) -> None:
+    """MS2 audit S1: a function PostgREST does run on GET (STABLE) cannot modify data: Postgres
+    rejects INSERT in a non-volatile function at execution time."""
+    labctl.apply("L07")
+    try:
+        labctl.execute("create function public.stable_touch() returns int language plpgsql stable security definer "
+                       f"as $$ begin insert into public.accounts (id, owner_id, balance) values ('{row_pk('L07', 9)}', "
+                       f"'{LAB_USERS[Role.USER_A]['id']}', 0); return 1; end $$; "
+                       "grant execute on function public.stable_touch() to anon, authenticated;")
+        r = anon_get(lab_info, "stable_touch")
+        assert r.status_code >= 400 and "non-volatile" in r.text
+        assert labctl.query(f"select count(*) from public.accounts where id = '{row_pk('L07', 9)}'") == [("0",)]
+    finally:
+        labctl.apply("L07")
