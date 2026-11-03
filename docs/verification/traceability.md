@@ -47,3 +47,21 @@
 | NFR-01 DB log 驗證（含 PostgREST CTE 寫入） | `lab/_shared/labctl.py` | test_shared.py、test_shared_writes.py | ADR-019；稽核 P1-5 經實測不成立（GET 唯讀交易） |
 | log 前綴明確設定 | labctl.py（T-085） | test_shared_prefix.py | 稽核 P2-1 → 已修 |
 | apply 清除前一情境 | labctl.py | test_shared_storage.py（storage） | storage 已涵蓋；role／cluster 層級物件為已知限制（稽核 P2-2） |
+
+## MS2（auditor 兩部分：discovery／probe 邏輯、lab 與測試；Base `eee985f`）
+
+| SPEC／決定 | 實作 | 測試 | 狀態（處理後） |
+| --- | --- | --- | --- |
+| FR-04 OpenAPI → confirmed 目標、欄位、主鍵 | `rlsentry/discovery/openapi.py` | `tests/discovery/test_openapi.py`；lab：test_design_assumptions（view＝table、PGRST126） | OK |
+| FR-05 bundle 推測 inferred | `discovery/bundle.py`、`merge.py`、`discover.py` | test_bundle.py、test_merge.py、test_discover.py；lab：L12 discovery_cases | OK；覆蓋率聲明屬報告 → MS6（ADR-023 補記） |
+| FR-06 三態、不下載資料 | `probe/read.py`、`verdict.py`、`run.py` | test_read.py、test_verdict.py、test_run.py；lab：test_scan_reads（只下載主鍵）、test_design_assumptions（*/0 與空表相同、400 非空結果） | OK；稽核 F5 → T-112 收緊 |
+| FR-07 測試帳號 JWT | `probe/session.py` | test_session.py（三個 profile、錯誤不洩漏） | OK |
+| FR-08 跨租戶讀取、無資料 → inconclusive | `probe/cross_tenant.py`、`verdict.py` | test_cross_tenant.py、test_run.py；lab：C03、C04、L04 | OK（寫入延到 MS3） |
+| FR-10 差分 actual − expected | `probe/diff.py`、`rules/severity.py` | test_diff.py、test_severity.py；lab：15 情境、FP = 0 | OK；D1–D3 列為已知限制 |
+| FR-15 init 草稿 | `policy/init.py` | tests/policy/test_init.py（load_config 往返） | OK |
+| NFR-01 audit 掃描零寫入 | 整個 MS2 只送 GET／HEAD＋登入 | test_run.py（三 profile）、lab test_scan_reads（DB log） | OK |
+| ADR-014 #3 RPC 以 GET 呼叫不會寫入 | — | test_design_assumptions（VOLATILE → 405、STABLE 不能 INSERT） | 稽核 S1 → T-112 新增 |
+| NFR-03 遮罩 curl 與錯誤訊息 | `probe/evidence.py`、session.py | test_evidence.py、test_session.py | OK；主鍵值進 curl → 已知限制（S2） |
+| ADR-022 #3 query 唯讀、execute 原子 | `lab/_shared/labctl.py` | test_shared_execute.py | OK；F4 → T-112 收緊 |
+| ADR-022 #3 變異測試以預期原因失敗 | tests/lab/test_oracle_mutations.py | 同左＋holdout 變異版本 | F3 → T-112 改為 case id＋失敗片語 |
+| ADR-024 寫入分類排除引號內關鍵字 | labctl.py `write_command` | test_shared_classify.py（純函式）、test_shared_execute.py（端到端） | F1（P1）、F2、F6 → T-112、T-113 |
