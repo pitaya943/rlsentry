@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from http.cookiejar import Cookie, DefaultCookiePolicy
 from typing import Any, Self
 
 import httpx
@@ -10,6 +11,22 @@ from rlsentry.contracts.models import Profile
 from rlsentry.contracts.safety import USER_AGENT
 from rlsentry.safety.mode import require_write_allowed
 from rlsentry.safety.ratelimit import RateLimiter
+
+
+class _NoCookies(DefaultCookiePolicy):
+    """Refuse to store or return any cookie, so no state crosses requests or identities."""
+
+    def set_ok(self, cookie: Cookie, request: object) -> bool:
+        return False
+
+    def return_ok(self, cookie: Cookie, request: object) -> bool:
+        return False
+
+    def domain_return_ok(self, domain: str, request: object) -> bool:
+        return False
+
+    def path_return_ok(self, path: str, request: object) -> bool:
+        return False
 
 
 class SafeClient:
@@ -28,7 +45,8 @@ class SafeClient:
         self._limiter = limiter
         self._write_hosts = tuple(write_hosts)
         self._client = httpx.AsyncClient(transport=transport, timeout=timeout,
-                                         follow_redirects=False)
+                                         follow_redirects=False, trust_env=False)
+        self._client.cookies.jar.set_policy(_NoCookies())
 
     async def request(self, method: str, url: str, *, headers: Mapping[str, str] | None = None,
                       params: Mapping[str, str] | None = None, json: Any = None) -> httpx.Response:

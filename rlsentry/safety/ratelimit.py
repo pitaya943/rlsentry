@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 import time
 from collections.abc import Callable
 
@@ -18,8 +19,8 @@ class RateLimiter:
     def __init__(self, rps: float = 5.0, concurrency: int = 4, *,
                  clock: Callable[[], float] = time.monotonic,
                  sleep: Sleep = asyncio.sleep) -> None:
-        if rps <= 0 or concurrency < 1:
-            raise ValueError("rps must be > 0 and concurrency >= 1")
+        if not math.isfinite(rps) or rps <= 0 or concurrency < 1:
+            raise ValueError("rps must be finite and > 0 and concurrency >= 1")
         self._rps = rps
         self._clock = clock
         self._sleep = sleep
