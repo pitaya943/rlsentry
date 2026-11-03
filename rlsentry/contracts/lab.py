@@ -65,7 +65,12 @@ class DbWrite(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     role: str       # database user from log_line_prefix, e.g. "authenticator"
-    command: str    # first SQL keyword, upper-case: INSERT, UPDATE, DELETE, TRUNCATE, …
+    command: str    # upper-case; see WRITE_COMMANDS
+
+WRITE_COMMANDS: tuple[str, ...] = ("INSERT", "UPDATE", "DELETE", "TRUNCATE", "MERGE", "COPY")
+"""DbWrite.command is the first of these keywords appearing in the logged statement (PostgREST
+logs writes as `execute <name>: WITH pgrst_source AS (INSERT …`, so the first keyword would be
+WITH); when none appears (DDL), it is the statement's first keyword (CREATE, ALTER, …)."""
 
 
 class LabCtl(Protocol):
@@ -75,7 +80,8 @@ class LabCtl(Protocol):
         """Start the lab if it is not running (`supabase start -x <LAB_EXCLUDED_SERVICES>` in
         LAB_PROJECT_DIR), otherwise reuse it. Idempotent. Ensures, as supabase_admin,
         `log_statement = 'mod'` (SPEC §8) with the database user in log_line_prefix, so
-        db_writes_since can attribute every write. Raises RuntimeError with the CLI's last
+        db_writes_since can attribute every write, and that every LAB_USERS account exists
+        and can log in (created as in apply step 2 if missing). Raises RuntimeError with the CLI's last
         output lines when Docker or the CLI fails."""
         ...
 
