@@ -33,7 +33,7 @@
 - [x] T-032 policy/load.py：YAML 錯誤只回報位置與種類（probe-dev，done，1 次）
 - 驗證清單：docs/verification/MS0-v1.md（v1）
 
-## [ ] MS1 Lab benchmark + Safety（進行中）
+## [ ] MS1 Lab benchmark + Safety（等待你審查）
 - [x] T-040 pyproject：限定 package discovery，讓 pip install -e .[dev] 在乾淨環境可用（architect，done，1 次）
 - [x] T-041 合約：safety 層、ci write_hosts、lab 工具；ADR-016–018（architect，done，1 次）
 - [x] T-042 可見測試：safety gate、mode、mask（architect，done，1 次）
@@ -71,6 +71,7 @@
 - [x] T-083 safety/mode.py：未知 profile 拒絕、RPC 路徑正規化（recon-dev，done，1 次）
 - [x] T-084 safety/http.py、ratelimit.py：不讀環境 proxy、不保留 cookie、rps 必須有限（recon-dev，done，1 次）
 - [x] T-085 labctl：ensure_up 明確設定 log_line_prefix（lab-dev，done，1 次）
+- 驗證清單：docs/verification/MS1-v1.md（v1）
 
 ## [ ] MS2 M2 Discovery + M3 讀取（鎖定）
 
