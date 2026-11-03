@@ -859,3 +859,6 @@
 {"ts": "2026-11-03T11:27:41", "kind": "stop_blocked", "attempt": 3, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T11:28:00", "kind": "stop_blocked", "attempt": 4, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T11:28:09", "kind": "ticket_accepted", "ticket": "T-107", "commit": "4f97ad2526a73a7459935c3184713923758815ce", "files": ["rlsentry/probe/verdict.py"]}
+{"ts": "2026-11-03T11:28:21", "kind": "stop_blocked", "attempt": 5, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:28:42", "kind": "stop_blocked", "attempt": 6, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:31:21", "kind": "ticket_accepted", "ticket": "T-100", "commit": "a586272fc9fe6b951614502cacbac07dbafbfef9", "files": ["rlsentry/discovery/openapi.py"]}
