@@ -27,6 +27,7 @@ from rlsentry.contracts.lab import (
     LAB_LOCK_FILE,
     LAB_PROJECT_DIR,
     LAB_PROJECT_ID,
+    LOG_LINE_PREFIX,
     POSTGREST_ROLES,
     WRITE_KEYWORD_RE,
     DbWrite,
@@ -38,8 +39,23 @@ _REPO = Path(__file__).resolve().parents[2]
 _DB = f"supabase_db_{LAB_PROJECT_ID}"
 _LOCK_STATE = threading.local()
 _INFO_CACHE: list[LabInfo] = []
+_PREFIX_TOKENS = {
+    "%h": r"\S*",
+    "%m": r"\d{4}-\d\d-\d\d \S+ \S+",
+    "%p": r"\d+",
+    "%u": r"(?P<user>[^@\s]*)",
+    "%d": r"\S*",
+    "%q": "",
+}
+
+
+def _prefix_regex(prefix: str) -> str:
+    """Regex source derived from LOG_LINE_PREFIX so the parser cannot drift from the setting."""
+    return "".join(_PREFIX_TOKENS.get(part, re.escape(part)) for part in re.split(r"(%[a-z])", prefix))
+
+
 _LOG_RE = re.compile(
-    r"^(?:\S+\s+)?\d{4}-\d\d-\d\d \S+ \S+ \[\d+\] (?P<user>[^@\s]*)@\S* LOG:\s+"
+    "^" + _prefix_regex(LOG_LINE_PREFIX) + r"LOG:\s+"
     r"(?:statement|execute [^:]*): (?P<sql>.*)$"
 )
 
@@ -74,6 +90,7 @@ ALTER ROLE authenticator RESET pgrst.openapi_mode;
 
 _LOGGING_SQL = """
 ALTER SYSTEM SET log_statement = 'mod';
+ALTER SYSTEM SET log_line_prefix = '__PREFIX__';
 SELECT pg_reload_conf();
 ALTER ROLE supabase_auth_admin RESET log_statement;
 ALTER ROLE supabase_storage_admin RESET log_statement;
@@ -171,7 +188,7 @@ def ensure_up() -> LabInfo:
             "(r.rolname = 'authenticator' AND NOT EXISTS (SELECT 1 FROM pg_db_role_setting s "
             "WHERE s.setrole = r.oid AND s.setconfig::text LIKE '%log_statement=all%'))",
             user="supabase_admin")
-        _psql(_LOGGING_SQL, user="supabase_admin")
+        _psql(_LOGGING_SQL.replace("__PREFIX__", LOG_LINE_PREFIX), user="supabase_admin")
         if pending.strip() != "0":  # pooled sessions keep the old per-role setting until reconnect
             _psql("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename IN "
                   "('supabase_auth_admin', 'supabase_storage_admin', 'authenticator')",
