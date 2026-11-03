@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 38/53 · 進行中 5 · blocked 0
+自動產生，請勿手改 · 完成 39/53 · 進行中 4 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -48,7 +48,7 @@
 - [x] T-060 Lab 共用：Supabase 專案設定與 labctl（lab-dev，done，1 次）
 - [ ] T-061 Lab L01：RLS 未啟用（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓
 - [x] T-062 Lab L02：Policy 恆真（lab-dev，done，1 次）
-- [ ] T-063 Lab L03：依 user_metadata 授權（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓
+- [x] T-063 Lab L03：依 user_metadata 授權（lab-dev，done，1 次）
 - [ ] T-064 Lab L04：跨租戶讀取（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓
 - [ ] T-065 Lab L05：跨租戶修改（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓
 - [ ] T-066 Lab L06：SECURITY DEFINER view（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓
