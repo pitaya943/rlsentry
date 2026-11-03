@@ -6,7 +6,9 @@ can never hide a bug in the lab, and the other way round.
 
 Scenario.load applies the scenario; every case that changed data re-applies it, so cases are
 independent. Case semantics are those of rlsentry.contracts.ground_truth.Case; evaluation of
-access and storage cases lives in tests/lab/oracle_cases.py.
+access and storage cases lives in tests/lab/oracle_cases.py. Nothing here imports rlsentry
+implementation code (only contracts): the expected scope is read from gt.policy directly
+(MS1 audit P1-4).
 """
 from __future__ import annotations
 
@@ -131,9 +133,28 @@ class Scenario:
         col = self.pk_col(target)
         r = self.http.get(self.path(target), headers=self.headers(role),
                           params={col: f"in.({','.join(pks)})", "select": col})
-        if r.status_code != 200 or not isinstance(r.json(), list):
-            return set()
-        return {str(row[col]) for row in r.json() if isinstance(row, dict) and col in row}
+        # Any error is a failure, never "denied": RLS hides rows with 200 + [], so a 401/404/500
+        # means the lab (or the request) is broken, not that access is correctly denied.
+        who = role.value if role else "service_role"
+        assert r.status_code == 200, f"GET {target} as {who}: HTTP {r.status_code} (expected 200)"
+        body = r.json()
+        assert isinstance(body, list), f"GET {target} as {who}: not a JSON list"
+        return {str(row[col]) for row in body if isinstance(row, dict) and col in row}
+
+    def scope(self, target: str, op: str, role: Role) -> str:
+        """Expected row scope read straight from gt.policy (independent of rlsentry.policy):
+        tables[target].<op>.<anon|user>, else defaults.<anon|user>."""
+        key = "anon" if role is Role.ANON else "user"
+        tp = self.gt.policy.tables.get(target)
+        ops = getattr(tp, op) if tp else None
+        val = getattr(ops, key) if ops else None
+        return str((val or getattr(self.gt.policy.defaults, key)).value)
+
+    def permitted(self, target: str, op: str, role: Role, owner: str | None, public: bool) -> bool:
+        s = self.scope(target, op, role)
+        own = owner is not None and owner == user_id(role)
+        return (s == "all" or (s in ("own_rows_only", "public_or_own_rows") and own)
+                or (s in ("public_rows_only", "public_or_own_rows") and public))
 
     def all_rows(self, table: str) -> list[dict[str, Any]]:
         """Every row of a base table, read with service_role."""
@@ -202,6 +223,20 @@ class Scenario:
         for e_name, e in self.gt.schema_.items():
             if e.kind == "table" and e_name not in by_target:
                 assert self.all_rows(e_name) == [], f"{e_name} must be empty"
+        self._positive_controls()
+
+    def _positive_controls(self) -> None:
+        """Every seeded table row that the policy lets a role SELECT is visible to that role,
+        so a lab that denies everything (USING (false), table not in the schema cache) cannot
+        pass its safe cases (MS1 audit P1-3). Rows the scenario deliberately leaks are not
+        checked here; cases cover them."""
+        for name, row in self.gt.rows.items():
+            if self.entry(row.target).kind != "table":
+                continue
+            for role in ROLES:
+                if self.permitted(row.target, "select", role, user_id(row.owner), row.public):
+                    assert self.visible(role, row.target, [row.pk]) == {row.pk}, \
+                        f"positive control: {role.value} must see {name} in {row.target}"
 
     def check_discovery(self) -> None:
         """OpenAPI exposure and frontend references match `in_openapi`, `in_bundle`, discovery_cases."""

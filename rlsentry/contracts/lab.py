@@ -43,6 +43,10 @@ LAB_LOCK_FILE = Path("/tmp/rlsentry-lab.lock")
 """fcntl lock serializing every process that applies a scenario or tests against the lab
 (parallel tickets share the one lab)."""
 
+LOG_LINE_PREFIX = "%h %m [%p] %q%u@%d "
+"""log_line_prefix that ensure_up sets explicitly (Supabase's current default); db_writes_since
+parses the database user out of it, so it must never silently change (MS1 audit P2-1)."""
+
 POSTGREST_ROLES: frozenset[str] = frozenset({"anon", "authenticated", "authenticator"})
 """ADR-014 #2 (human-confirmed): NFR-01 counts only writes executed by these roles; GoTrue's
 writes to auth.* (supabase_auth_admin) are listed separately and not counted."""
@@ -86,7 +90,7 @@ class LabCtl(Protocol):
     def ensure_up(self) -> LabInfo:
         """Start the lab if it is not running (`supabase start -x <LAB_EXCLUDED_SERVICES>` in
         LAB_PROJECT_DIR), otherwise reuse it. Idempotent. Ensures, as supabase_admin,
-        `log_statement = 'mod'` (SPEC §8) with the database user in log_line_prefix, plus
+        `log_statement = 'mod'` (SPEC §8) with log_line_prefix = LOG_LINE_PREFIX (set explicitly), plus
         the role-level `ALTER ROLE authenticator SET log_statement = 'all'` (ADR-019; PostgREST
         is then reconnected so its pooled connections pick the setting up), so
         db_writes_since can attribute every write, and that every LAB_USERS account exists
