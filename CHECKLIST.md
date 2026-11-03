@@ -73,7 +73,7 @@
 - [x] T-085 labctl：ensure_up 明確設定 log_line_prefix（lab-dev，done，1 次）
 - 驗證清單：docs/verification/MS1-v1.md（v1）
 
-## [ ] MS2 M2 Discovery + M3 讀取（進行中）
+## [ ] MS2 M2 Discovery + M3 讀取（等待你審查）
 - [x] T-090 合約：M2 Discovery、M3 讀取、labctl.execute；ADR-023、ADR-024（architect，done，1 次）
 - [x] T-091 可見測試：M2、M3 讀取單元測試與 labctl.execute 測試（architect，done，1 次）
 - [x] T-092 labctl：execute()、query() 唯讀、寫入分類排除字串常值（ADR-022、ADR-024）（lab-dev，done，1 次）
@@ -92,6 +92,7 @@
 - [x] T-111 Lab 整合測試：audit 掃描對照 ground truth（MS2 讀取）（architect，done，1 次）
 - [x] T-112 稽核修正（架構師）：寫入分類合約、變異測試理由片語、掃描測試流量檢查、RPC 前提（architect，done，1 次）
 - [x] T-113 labctl：write_command、識別字與 $$ 感知的常值移除、log flush sentinel（ADR-024 補記）（lab-dev，done，1 次）
+- 驗證清單：docs/verification/MS2-v1.md（v1）
 
 ## [ ] MS3 M3 寫入（鎖定）
 

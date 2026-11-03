@@ -158,7 +158,7 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | 本機無 Docker；雲端新 session 驗證了過期的 clone（`25c6374`）且缺相依套件 | 改為 GitHub Actions 獨立驗證（`main` 上的 workflow、輸入 ref）＋本機防竄改＋sha 比對；Actions 結果 `MS1: ALL PASSED`（受測 `6daab21`，與本機 `388d3e5` 除 `logs/` 外相同） |
 | 變異測試要放在哪裡 | 放在 repo 測試、標記 safety、holdout 附變異版本（ADR-022），自 MS2 起實施 |
 
-## MS2 M2 Discovery + M3 讀取（進行中）
+## MS2 M2 Discovery + M3 讀取（等待審查）
 
 ### Holdout hashes（派工前記錄）
 | 檔案 | sha256 |
@@ -169,3 +169,34 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | MS2/test_holdout_probe.py | `73f20ccb43cb05e3a32ca913051e3d91fcf91848c8e0d5e5324ff6b0c5d07024` |
 
 內容：discovery、probe、init 的不同輸入；`test_holdout_lab_mutations.py` 是 ADR-022 要求的變異版本（L02、C02、L06 的 oracle 變異，以及 C01 關閉 RLS、C04 補上 B 的資料後掃描器的判定變化）。派工前以 scratchpad 參考實作確認：可見單元測試 125 passed、lab 新測試 16 passed、`test_scan_reads.py` 15 passed、holdout 25 passed（參考實作未提交）。
+
+### Tickets（18 張，全部 done，每張 1 次）
+| ticket | agent | 結果 |
+| --- | --- | --- |
+| T-090 合約、ADR-023／024；T-091 可見測試 | architect | accepted |
+| T-092 labctl execute／唯讀 query ⚠2 | lab-dev | accepted |
+| T-093 變異測試＋設計前提測試（ADR-022 #3） | architect | accepted |
+| T-100–T-102 discovery（openapi、bundle、merge＋discover） | probe-dev | accepted |
+| T-103 session ⚠2/3；T-104–T-109 evidence、cross_tenant、read、verdict、severity＋diff、run ⚠3/4 | probe-dev | accepted |
+| T-110 init 草稿 | probe-dev | accepted |
+| T-111 lab 整合測試（15 情境 audit 掃描對照 ground truth） | architect | accepted |
+| T-112、T-113 稽核修正 | architect、lab-dev | accepted |
+
+### 失敗與處理
+| 問題 | 處理 |
+| --- | --- |
+| 參考實作的 lab 掃描：`GET /rest/v1/` 每次都被 `db_writes_since` 記成 authenticator 的 TRUNCATE（PostgREST 權限查詢的字串常值） | ADR-024；改在 MS2 修正並列為偏差，未走 reopen（理由見 ADR-024） |
+| 第一批 6 個 subagent 全部在 `sync_worktree.py` 停下（2026-11-03T10:4x 的 report 事件）：worktree 從 `origin/main` 建立，main 有人類新增的 workflow commit `9c0f591`、`d342de3`，不是 session 分支的祖先 | subagent 正確地沒有繞過。architect 以 `git remote set-head origin claude/busy-darwin-asvox3`（只改本機 metadata）讓 worktree 從 session 分支建立，之後 12 次派工皆正常 |
+| auditor 第 2 部分 F1（P1）：ADR-024 回歸測試的 PATCH 內容是 bind parameter，從未經過字串移除 | T-112 新增純函式合約 `write_command` 與 `test_shared_classify.py`；T-113 實作 |
+| auditor F2：識別字或 `$$` 中的單引號可能開出假常值、吞掉寫入關鍵字 | `SQL_QUOTED_RE` 單次掃描（T-112／T-113） |
+| auditor F3–F6、S1 | 變異測試比對失敗片語；掃描測試檢查所有 2xx GET；flush sentinel；RPC 前提測試（VOLATILE → 405、STABLE 不能 INSERT） |
+| 兩位 auditor 都被 harness 擋下執行 pytest（「auditor is read-only」，12:39–12:40 的 guard_block 事件） | 執行面的結果改由 architect 的 acceptance 提供；auditor 的手動驗證項目放進驗證清單第 3 段 |
+| architect 等待時用 `pgrep -f` 比對到自己的 shell，T-106 的驗收延遲約 20 分鐘 | 改用輸出檔輪詢 |
+
+### ADR
+023（M2／M3 讀取設計＋稽核補記）、024（寫入分類排除引號內容，修訂 ADR-019＋稽核補記）
+
+### 指標
+- acceptance `--no-vc`：ALL PASSED（MS2 holdout 25 passed；回歸、safety、provenance、ruff、mypy 通過）。
+- lab 整合：15 個情境以 audit 掃描，所有 audit SELECT case 都符合 ground truth。confirmed 誤報為 0；PostgREST 角色寫入為 0；GET 只下載主鍵。
+- subagent tokens（約）：probe-dev 每張 16k–26k；lab-dev T-092 23k、T-113 30k；auditor 43k、48k。

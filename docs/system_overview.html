@@ -91,12 +91,12 @@
     <rect x="230" y="30" width="120" height="70" rx="8" fill="#f1f3f5" stroke="#adb5bd"/>
     <text x="290" y="60" text-anchor="middle" font-size="14" font-weight="bold">M1 Recon</text>
     <text x="290" y="80" text-anchor="middle" font-size="12">bundle → URL、key（MS5）</text>
-    <rect x="380" y="30" width="130" height="70" rx="8" fill="#f1f3f5" stroke="#adb5bd"/>
+    <rect x="380" y="30" width="130" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
     <text x="445" y="60" text-anchor="middle" font-size="14" font-weight="bold">M2 Discovery</text>
-    <text x="445" y="80" text-anchor="middle" font-size="12">OpenAPI＋推測（MS2）</text>
-    <rect x="540" y="30" width="150" height="70" rx="8" fill="#f1f3f5" stroke="#adb5bd"/>
+    <text x="445" y="80" text-anchor="middle" font-size="12">OpenAPI＋推測 ✓</text>
+    <rect x="540" y="30" width="150" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44" stroke-dasharray="5,4"/>
     <text x="615" y="60" text-anchor="middle" font-size="14" font-weight="bold">M3 Probe（核心）</text>
-    <text x="615" y="80" text-anchor="middle" font-size="12">讀 MS2、寫 MS3</text>
+    <text x="615" y="80" text-anchor="middle" font-size="12">讀取 ✓、寫入 MS3（虛線＝部分）</text>
     <rect x="720" y="30" width="140" height="70" rx="8" fill="#f1f3f5" stroke="#adb5bd" stroke-dasharray="5,4"/>
     <text x="790" y="60" text-anchor="middle" font-size="14" font-weight="bold">M4 Whitebox</text>
     <text x="790" y="80" text-anchor="middle" font-size="12">splinter 交叉（MS4，選配）</text>
@@ -283,8 +283,8 @@
     <tr><th>Milestone</th><th>狀態</th><th>交付的模組</th><th>它讓系統多了什麼能力</th></tr>
     <tr><td>STAGE0</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>harness 護欄測試</td><td>確認 hook、隔離、暫停機制有效</td></tr>
     <tr><td>MS0</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>contracts、policy/*、16 份 ground truth</td><td>「正確答案」與模組之間的語言定案</td></tr>
-    <tr><td>MS1</td><td><i class="dot" style="background:var(--wip)"></i>等待你審查</td><td>safety/*、lab/_shared、16 個情境、oracle</td><td>安全地送出請求；有一個答案已被證明的靶場</td></tr>
-    <tr><td>MS2</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>discovery/*、probe 讀取、diff、severity、init</td><td>第一次能說出「這裡有讀取漏洞」</td></tr>
+    <tr><td>MS1</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>safety/*、lab/_shared、16 個情境、oracle</td><td>安全地送出請求；有一個答案已被證明的靶場</td></tr>
+    <tr><td>MS2</td><td><i class="dot" style="background:var(--wip)"></i>等待你審查</td><td>discovery/*、probe 讀取、diff、severity、init</td><td>第一次能說出「這裡有讀取漏洞」</td></tr>
     <tr><td>MS3</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>probe 寫入、植入、清理</td><td>寫入類漏洞（L05、L09）</td></tr>
     <tr><td>MS4</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>whitebox、bench</td><td>第一次完整計分（recall／precision／FPR）</td></tr>
     <tr><td>MS5</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>recon/*</td><td>從網址出發，自己找到 Supabase 與 key</td></tr>
@@ -295,34 +295,49 @@
 
 <!-- 8 ------------------------------------------------------------------>
 <section id="s8">
-  <h2>8. MS1 的過程（overview）</h2>
-  <h3>工作量與分工（37 張 ticket）</h3>
+  <h2>8. MS2 的過程（overview）</h2>
+  <h3>一個讀取 cell 怎麼被判定（ADR-023 #3）</h3>
+  <svg viewBox="0 0 1100 230" width="100%" role="img" aria-label="讀取判定流程">
+    <g font-size="12">
+      <rect x="10" y="20" width="200" height="70" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/>
+      <text x="110" y="45" text-anchor="middle" font-weight="bold">已知列</text>
+      <text x="110" y="65" text-anchor="middle">A、B 各用自己的 JWT 列出</text>
+      <text x="110" y="80" text-anchor="middle">自己的主鍵（只取主鍵）</text>
+      <rect x="250" y="20" width="200" height="70" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/>
+      <text x="350" y="45" text-anchor="middle" font-weight="bold">split_known</text>
+      <text x="350" y="65" text-anchor="middle">依預期 policy 分成</text>
+      <text x="350" y="80" text-anchor="middle">forbidden／permitted</text>
+      <rect x="490" y="20" width="220" height="70" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/>
+      <text x="600" y="45" text-anchor="middle" font-weight="bold">HEAD ＋ count=exact</text>
+      <text x="600" y="65" text-anchor="middle">pk=in.(forbidden)</text>
+      <text x="600" y="80" text-anchor="middle">不下載任何列</text>
+      <rect x="750" y="5" width="330" height="40" rx="8" fill="#ffe3e3" stroke="#c92a2a"/>
+      <text x="915" y="30" text-anchor="middle">可見數 &gt; 0 → allowed（漏洞，confirmed）</text>
+      <rect x="750" y="55" width="330" height="40" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+      <text x="915" y="80" text-anchor="middle">可見數 = 0 且狀態 200／206 → denied</text>
+      <rect x="750" y="105" width="330" height="55" rx="8" fill="#fff3bf" stroke="#f08c00"/>
+      <text x="915" y="128" text-anchor="middle">沒有 forbidden 已知列、或 401／403／404／400</text>
+      <text x="915" y="146" text-anchor="middle">→ inconclusive（永遠不寫成安全）</text>
+      <line x1="210" y1="55" x2="250" y2="55" stroke="#486581" stroke-width="2"/>
+      <line x1="450" y1="55" x2="490" y2="55" stroke="#486581" stroke-width="2"/>
+      <line x1="710" y1="55" x2="750" y2="25" stroke="#486581" stroke-width="2"/>
+      <line x1="710" y1="55" x2="750" y2="75" stroke="#486581" stroke-width="2"/>
+      <line x1="710" y1="55" x2="750" y2="132" stroke="#486581" stroke-width="2"/>
+      <text x="10" y="200" fill="#616e7c">為什麼不能只看 count：RLS 擋住的列與空表的回應完全相同（*/0），test_design_assumptions 在真實 lab 上固定了這一點。</text>
+    </g>
+  </svg>
+  <h3>工作量與分工（18 張 ticket，全部 done）</h3>
   <table>
     <tr><th>角色</th><th>張數</th><th></th><th>內容</th></tr>
-    <tr><td>architect</td><td>12</td><td><span class="bar" style="width:120px;background:#f08c00"></span></td><td>packaging、合約、測試、oracle、稽核修正</td></tr>
-    <tr><td>recon-dev</td><td>7</td><td><span class="bar" style="width:70px;background:#2f9e44"></span></td><td>safety 五個模組＋兩張稽核修正</td></tr>
-    <tr><td>lab-dev</td><td>18</td><td><span class="bar" style="width:180px;background:#1c7ed6"></span></td><td>共用 lab、16 個情境（1 張 blocked、由 T-080 交付）、labctl 修正 3 張</td></tr>
+    <tr><td>architect</td><td>5</td><td><span class="bar" style="width:50px;background:#f08c00"></span></td><td>合約、可見測試、變異／前提測試、lab 整合測試、稽核修正</td></tr>
+    <tr><td>probe-dev</td><td>11</td><td><span class="bar" style="width:110px;background:#2f9e44"></span></td><td>discovery 3 張、probe 7 張（session、evidence、cross_tenant、read、verdict、diff、run）、init 1 張</td></tr>
+    <tr><td>lab-dev</td><td>2</td><td><span class="bar" style="width:20px;background:#1c7ed6"></span></td><td>labctl.execute、唯讀 query、寫入分類（ADR-024）</td></tr>
   </table>
-  <h3>時間線：問題是怎麼被發現的</h3>
-  <svg viewBox="0 0 1100 200" width="100%" role="img" aria-label="MS1 時間線">
-    <line x1="30" y1="100" x2="1070" y2="100" stroke="#829ab1" stroke-width="3"/>
-    <g font-size="12">
-      <circle cx="60" cy="100" r="8" fill="#2f9e44"/><text x="60" y="80" text-anchor="middle">合約＋測試</text><text x="60" y="130" text-anchor="middle">T-040–045</text>
-      <circle cx="190" cy="100" r="8" fill="#c92a2a"/><text x="190" y="80" text-anchor="middle">push 被擋</text><text x="190" y="130" text-anchor="middle">測試字串像金鑰</text>
-      <circle cx="320" cy="100" r="8" fill="#2f9e44"/><text x="320" y="80" text-anchor="middle">safety 5 模組</text><text x="320" y="130" text-anchor="middle">一次通過</text>
-      <circle cx="450" cy="100" r="8" fill="#2f9e44"/><text x="450" y="80" text-anchor="middle">共用 lab</text><text x="450" y="130" text-anchor="middle">T-060</text>
-      <circle cx="580" cy="100" r="8" fill="#c92a2a"/><text x="580" y="70" text-anchor="middle">L01、L05 回報：</text><text x="580" y="84" text-anchor="middle">log 看不到寫入</text><text x="580" y="130" text-anchor="middle">ADR-019</text>
-      <circle cx="710" cy="100" r="8" fill="#c92a2a"/><text x="710" y="80" text-anchor="middle">L11 二次載入失敗</text><text x="710" y="130" text-anchor="middle">T-079/080</text>
-      <circle cx="840" cy="100" r="8" fill="#9c36b5"/><text x="840" y="80" text-anchor="middle">auditor ×2</text><text x="840" y="130" text-anchor="middle">oracle 太弱、fail-open</text>
-      <circle cx="970" cy="100" r="8" fill="#2f9e44"/><text x="970" y="80" text-anchor="middle">修正＋冷啟動</text><text x="970" y="130" text-anchor="middle">177 lab 測試通過</text>
-    </g>
-    <text x="30" y="180" font-size="12" fill="#616e7c">紅＝發現問題、紫＝稽核、綠＝通過。沒有任何一個問題是在最後的人工審查才被發現的。</text>
-  </svg>
-  <h3>本 milestone 改變了哪些「理解」</h3>
+  <h3>問題在哪一層被攔下</h3>
   <ul>
-    <li><b>SPEC 的驗證方法本身可能是錯的</b>：<code>log_statement=mod</code> 對 PostgREST 寫入是盲的（ADR-019）。</li>
-    <li><b>驗證器也要被驗證</b>：oracle 一開始會把任何錯誤當成 denied；現在以變異測試證明它會失敗。</li>
-    <li><b>共用環境會污染驗收</b>：某次測試在 lab 留下的設定，讓其他 ticket 過早通過；之後一律以冷啟動複查。</li>
+    <li><b>architect 的參考實作</b>：派工前就在真實 lab 跑完 15 個情境，發現讀取 OpenAPI 會被誤記為 TRUNCATE（ADR-024）。</li>
+    <li><b>工作樹同步</b>：subagent 的 worktree 從 main 建立，而 main 有你新增的 workflow commit，同步腳本拒絕覆蓋；改設本機 origin/HEAD 後重派。</li>
+    <li><b>auditor</b>：ADR-024 的回歸測試其實沒測到字串移除（P1）；識別字中的單引號可能吞掉寫入關鍵字；變異測試只比對 case id。以上全部在 T-112、T-113 修正。</li>
   </ul>
 </section>
 
@@ -334,7 +349,9 @@
     <tr><td>1</td><td>使用者把正式環境 host 列進 write_hosts</td><td>ci 在正式 DB 植入／修改／刪除測試列</td><td>只有 ci 會寫、必須完全比對、報告列出可寫入的 host</td><td>MS3 清理失敗即 exit≠0；MS6 報告</td></tr>
     <tr><td>2</td><td>有模組繞過授權直接建立 SafeClient</td><td>未經授權就發出請求</td><td>目前沒有任何呼叫端</td><td>MS6 靜態測試＋計數測試（ADR-020 #6）</td></tr>
     <tr><td>3</td><td>oracle 與 lab 共用同一個錯誤假設</td><td>ground truth 錯了而沒人發現，指標失真</td><td>變異測試、auditor 抽查、你的抽查</td><td>每個 milestone 至少一項變異測試（ADR-005 補記）</td></tr>
-    <tr><td>4</td><td>lab 清除不完整（role 層級設定）</td><td>情境之間互相汙染</td><td>目前沒有情境建立 role</td><td>出現時補上</td></tr>
+    <tr><td>4</td><td>主鍵值本身是個資（如以 email 當主鍵）</td><td>報告的 curl 帶出他人的主鍵</td><td>只記錄主鍵（CLAUDE.md 允許的唯一值）</td><td>MS6 報告決定是否遮罩（ADR-023 補記 S2）</td></tr>
+    <tr><td>5</td><td>沒有擁有者欄位的表</td><td>anon 讀得到全部也只報 inconclusive</td><td>NO_OWNER_COLUMN／INCONCLUSIVE_CELL 提示，不寫成安全</td><td>MS3 植入資料後可判定</td></tr>
+    <tr><td>6</td><td>lab 清除不完整（role 層級設定）</td><td>情境之間互相汙染</td><td>目前沒有情境建立 role</td><td>出現時補上</td></tr>
   </table>
 </section>
 
@@ -347,8 +364,8 @@
     <tr><td>某個函式在做什麼、哪張 ticket 加的</td><td><code>docs/progress.html</code>（程式自動產生）</td></tr>
     <tr><td>每個 milestone 發生了什麼、哪裡失敗</td><td><code>PRODUCTION_LOG.md</code></td></tr>
     <tr><td>SPEC 需求對到哪個檔案、哪個測試</td><td><code>docs/verification/traceability.md</code></td></tr>
-    <tr><td>這次要親手驗證什麼</td><td><code>docs/verification/MS1-v1.md</code></td></tr>
-    <tr><td>高風險 ticket 的 diff</td><td><code>docs/reviews/MS1-high-risk.md</code></td></tr>
+    <tr><td>這次要親手驗證什麼</td><td><code>docs/verification/MS2-v1.md</code></td></tr>
+    <tr><td>高風險 ticket 的 diff</td><td><code>docs/reviews/MS2-high-risk.md</code></td></tr>
     <tr><td>模組之間交換什麼資料</td><td><code>rlsentry/contracts/</code>（每個檔案開頭的 docstring）</td></tr>
   </table>
 </section>
