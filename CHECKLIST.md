@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 27/53 · 進行中 0 · blocked 0
+自動產生，請勿手改 · 完成 28/53 · 進行中 0 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -36,13 +36,13 @@
 ## [ ] MS1 Lab benchmark + Safety（進行中）
 - [x] T-040 pyproject：限定 package discovery，讓 pip install -e .[dev] 在乾淨環境可用（architect，done，1 次）
 - [x] T-041 合約：safety 層、ci write_hosts、lab 工具；ADR-016–018（architect，done，1 次）
-- [ ] T-042 可見測試：safety gate、mode、mask（architect，todo，0 次） ← 依賴 T-041✓
-- [ ] T-043 可見測試：ratelimit、http client（architect，todo，0 次） ← 依賴 T-042…
+- [x] T-042 可見測試：safety gate、mode、mask（architect，done，1 次）
+- [ ] T-043 可見測試：ratelimit、http client（architect，todo，0 次） ← 依賴 T-042✓
 - [ ] T-044 Lab 驗證測試基礎：conftest、oracle、共用 lab 測試（architect，todo，0 次） ← 依賴 T-041✓
 - [ ] T-045 Lab 驗證測試：16 個情境的測試檔（architect，todo，0 次） ← 依賴 T-044…
-- [ ] T-050 safety/gate.py：authorize 授權閘門（recon-dev，todo，0 次） ← 依賴 T-042…
-- [ ] T-051 safety/mode.py：require_write_allowed 寫入閘門（recon-dev，todo，0 次） ← 依賴 T-042…
-- [ ] T-052 safety/mask.py：mask、mask_text（recon-dev，todo，0 次） ← 依賴 T-042…
+- [ ] T-050 safety/gate.py：authorize 授權閘門（recon-dev，todo，0 次） ← 依賴 T-042✓
+- [ ] T-051 safety/mode.py：require_write_allowed 寫入閘門（recon-dev，todo，0 次） ← 依賴 T-042✓
+- [ ] T-052 safety/mask.py：mask、mask_text（recon-dev，todo，0 次） ← 依賴 T-042✓
 - [ ] T-053 safety/ratelimit.py：RateLimiter（recon-dev，todo，0 次） ← 依賴 T-043…
 - [ ] T-054 safety/http.py：SafeClient（唯一的 HTTP client）（recon-dev，todo，0 次） ← 依賴 T-043… T-051… T-053…
 - [ ] T-060 Lab 共用：Supabase 專案設定與 labctl（lab-dev，todo，0 次） ← 依賴 T-044…
