@@ -737,3 +737,8 @@
 {"ts": "2026-11-03T08:05:09", "kind": "subagent_stop", "id": "220cd47d", "agent": "recon-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T08:06:33", "kind": "ticket_accepted", "ticket": "T-083", "commit": "6659d10a9ada53806e7f09e8c6a444e253cedcbe", "files": ["rlsentry/safety/mode.py"]}
 {"ts": "2026-11-03T08:06:46", "kind": "ticket_start", "ticket": "T-084", "agent": "recon-dev", "attempt": 1}
+{"ts": "2026-11-03T08:06:49", "kind": "dispatch", "id": "40e8b75d", "agent": "recon-dev", "ticket": "T-084", "review": null, "body": "logs/messages/40e8b75d-dispatch.json"}
+{"ts": "2026-11-03T08:06:50", "kind": "report", "id": "aedb7684", "agent": "recon-dev", "ticket": "T-084", "review": null, "body": "logs/messages/aedb7684-report.json"}
+{"ts": "2026-11-03T08:06:50", "kind": "subagent_start", "id": "de1c57ea", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T08:07:43", "kind": "subagent_stop", "id": "8fa3360c", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T08:09:59", "kind": "ticket_accepted", "ticket": "T-084", "commit": "65dc9958f218e9cb626539de120eaa5ddc0fc7e3", "files": ["rlsentry/safety/http.py", "rlsentry/safety/ratelimit.py"]}

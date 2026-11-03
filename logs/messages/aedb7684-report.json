@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "aa7a5281de0dd898d",
+  "description": "T-084 client hardening",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-084\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-084.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/aa7a5281de0dd898d.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}
