@@ -1,0 +1,6 @@
+{
+  "description": "Audit MS2 probe logic",
+  "prompt": "Review: MS2\nBase: eee985f\nScope (part 1 of 2): rlsentry/discovery/**, rlsentry/probe/**, rlsentry/rules/**, rlsentry/policy/init.py, rlsentry/contracts/{discovery,probe,rules,policy,interfaces}.py vs SPEC §5 M2/M3, FR-04–FR-08, FR-10, FR-15, ADR-023. Focus: inconclusive never reported as safe; no row data downloaded; diff actual−expected correct; secrets masked. Budget ≤15 tool calls. Output: traceability table (FR → code → test) + findings P0–P2 with file:line + up to 3 hand-check items for the human.",
+  "subagent_type": "auditor",
+  "run_in_background": false
+}

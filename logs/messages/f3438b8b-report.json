@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a227c8b1a52fdd194",
+  "description": "Audit MS2 lab and tests",
+  "resolvedModel": "claude-opus-5-5",
+  "prompt": "Review: MS2\nBase: eee985f\nScope (part 2 of 2): lab/_shared/labctl.py diff, rlsentry/contracts/lab.py, tests/lab/test_shared_execute.py, test_oracle_mutations.py, test_design_assumptions.py, test_scan_reads.py vs ADR-022 #3, ADR-024, NFR-01. Focus: query() really read-only; execute atomic; ADR-024 literal stripping cannot hide a real PostgREST write; mutation tests fail for the stated reason; scan test really checks no-download and zero writes. Spot-check 3 scenarios. Budget ≤15 tool calls. Output: traceability rows + findings P0–P2 with file:line + up to 3 hand-check items.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/505ebaef-3fa1-5dce-8359-2913693d1ef6/tasks/a227c8b1a52fdd194.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "check": "tickets & checklist",
+    "ok": true,
+    "detail": "tickets valid, checklist consistent"
+  },
+  {
+    "check": "provenance",
+    "ok": true,
+    "detail": "every product-code commit is a genuine accept merge (scope and cheat checks recomputed)"
+  },
+  {
+    "check": "ruff",
+    "ok": true,
+    "detail": "All checks passed!\n"
+  },
+  {
+    "check": "mypy",
+    "ok": true,
+    "detail": "Success: no issues found in 39 source files\n"
+  },
+  {
+    "check": "tests",
+    "ok": true,
+    "detail": "........................................................................ [  9%]\n........................................................................ [ 18%]\n........................................................................ [ 28%]\n........................................................................ [ 37%]\n........................................................................ [ 47%]\n........................................................................ [ 56%]\n........................................................................ [ 66%]\n........................................................................ [ 75%]\n........................................................................ [ 85%]\n........................................................................ [ 94%]\n......................................                                   [100%]\n758 passed in 632.34s (0:10:32)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
+  },
+  {
+    "check": "holdout",
+    "ok": true,
+    "detail": ".........................                                                [100%]\n=============================== warnings summary ===============================\n../../../tmp/tmplbwfp9b7/MS2/test_holdout_lab_mutations.py:22\n  /tmp/tmplbwfp9b7/MS2/test_holdout_lab_mutations.py:22: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    pytestmark = pytest.mark.safety\n\n../../../tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:64\n  /tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:64: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n../../../tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:89\n  /tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n25 passed, 3 warnings in 16.98s\n"
+  },
+  {
+    "check": "safety invariants",
+    "ok": true,
+    "detail": "........................................................................ [ 56%]\n.......................................................                  [100%]\n127 passed, 631 deselected in 223.17s (0:03:43)\n"
+  },
+  {
+    "check": "mutation",
+    "ok": true,
+    "detail": "mutation testing skipped (set MUTATION=1 to run)"
+  },
+  {
+    "check": "checklist sync",
+    "ok": true,
+    "detail": "CHECKLIST.md up to date"
+  }
+]

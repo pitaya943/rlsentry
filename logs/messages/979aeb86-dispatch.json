@@ -1,0 +1,6 @@
+{
+  "description": "Audit MS2 lab and tests",
+  "prompt": "Review: MS2\nBase: eee985f\nScope (part 2 of 2): lab/_shared/labctl.py diff, rlsentry/contracts/lab.py, tests/lab/test_shared_execute.py, test_oracle_mutations.py, test_design_assumptions.py, test_scan_reads.py vs ADR-022 #3, ADR-024, NFR-01. Focus: query() really read-only; execute atomic; ADR-024 literal stripping cannot hide a real PostgREST write; mutation tests fail for the stated reason; scan test really checks no-download and zero writes. Spot-check 3 scenarios. Budget ≤15 tool calls. Output: traceability rows + findings P0–P2 with file:line + up to 3 hand-check items.",
+  "subagent_type": "auditor",
+  "run_in_background": false
+}
