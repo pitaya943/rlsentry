@@ -145,3 +145,9 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
   - lab-dev 情境每張 17k–36k
   - labctl：T-060 41k、T-077 32k＋26k、T-080 34k
   - auditor：133k（中止）、66k、53k
+
+### 審查期間的人類決定（2026-11-03）
+| 決定 | 紀錄 |
+| --- | --- |
+| 審查政策改為 A＋B：safety／寫入逐張審查，lab 類合併成一個 review 分支抽查（自 MS2 起） | ADR-005 補記 |
+| architect 維護 `docs/system_overview.html`（系統設計視角＋視覺化，每個 milestone 更新） | ADR-021；初版已建立 |

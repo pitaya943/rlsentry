@@ -59,6 +59,15 @@ D2–D4 由 architect 決定並記錄於此。
   審查 PR 的做法：推送 `review/T-xxx`（ticket 分支 tip）與 `review/T-xxx-base`（該 ticket 的 merge-base），PR 由前者指向後者，因此 diff 只含該 ticket、且永遠不會被合併；PR 說明附 file:line 逐段說明、驗證指令與預期輸出。milestone PR 由 session 分支指向 `main`，只由人類 merge。
 - 後果與風險：本 session 的工具沒有 GitHub PR 建立權限（沒有 GitHub MCP 工具，gh 只允許搜尋）。在權限補上之前，architect 只推送分支，並在驗證清單「阻擋與困難」一節提供可直接開 PR 的 compare 連結與預先寫好的 PR 說明檔（`docs/reviews/`）。MS0 的高風險 ticket：T-012（計分規則，第 4 類）、T-015–T-020（第 5 類）、T-021、T-022（第 4 類）。
 
+### ADR-005 補記：審查政策改為「依後果分級＋依類別合併」（2026-11-03，人類於 MS1 審查期間決定，選項 A＋B）
+- 背景：MS0–MS1 累積 36 個僅供審查的分支（MS0 11 個、MS1 25 個）；人類的審查與學習速度跟不上產出。
+- 決定（自 MS2 起適用；MS0、MS1 已推送的分支保留不動）：
+  1. **A 分級**：第 1 類（safety）與第 2 類（非 GET 請求、DB 連線、寫入）**逐張**審查，各自一個 review 分支。第 3、4、6 類照舊逐張推送，但在說明檔中標為「建議抽查」。第 5 類（ground truth 與 lab migration）**抽查** 2–3 個情境，其餘由 lab oracle 與變異測試把關。
+  2. **B 合併**：同一個 milestone 中同一類別的抽查型 ticket，合成一個 review 分支 `review/<MS>-<類別>`（base 為該 milestone 第一張此類 ticket 驗收前的 main），說明檔列出每張 ticket 的 file:line 重點，以及建議抽查的情境。
+  3. 每份 `docs/reviews/<MS>-high-risk.md` 開頭先列出「逐張審查」與「抽查」兩份清單，以及預估的閱讀時間。
+- 人類的理由（Q1–Q4 摘要）：人工審查的主要價值在於強迫自己理解系統細節與 critical impact，而不只是抓錯；目前的錯誤都由自動檢查、subagent 回報或 auditor 抓到。
+- 後果與風險：抽查可能漏掉 oracle 與 lab 共用同一個錯誤假設的情境（共模失效）。緩解方式：每個 milestone 至少有一項變異測試（故意弄壞 lab，確認 oracle 會失敗）列入驗證清單；auditor 審查時固定抽查 3 個情境。
+
 ## ADR-006：§6 資料模型的增補
 - 日期：2026-11-02 · Milestone：MS0 · 相關：SPEC §6、§4、FR-12
 - 背景：SPEC §6 規定改動欄位需 ADR。§6 只列模組交換的核心模型，沒有各階段的輸出容器與報告根物件。
@@ -244,3 +253,15 @@ D2–D4 由 architect 決定並記錄於此。
 ### ADR-019 補記：MS1 lab 稽核（2026-11-03）
 - P1-5「RPC 內的寫入在 log 中看不到」**經實測不成立於掃描器的呼叫方式**：PostgREST 以唯讀交易執行 GET，VOLATILE 函式內的 INSERT 回 `25006 cannot execute INSERT in a read-only transaction`（HTTP 405）；STABLE 函式本身不能含 INSERT（`0A000`）。L07 `accounts` 列數維持 2。掃描器的 RPC 一律 GET／HEAD（ADR-014 #3、ADR-020 #2），所以 NFR-01 不受影響。觸發器只在寫入時執行，寫入本身已被記錄。
 - oracle 強化（T-081）：被拒的寫入必須是 401／403／42501，或者 UPDATE／DELETE 得到 2xx 但被 RLS 過濾成沒有變化；讀取的錯誤一律算失敗，不算 denied；新增正向對照（policy 允許的身分必須看得到植入列）；預期範圍改由 oracle 直接讀 `gt.policy` 判定，不再匯入 `rlsentry.policy`。驗證方式：故意把 C04 改成 `USING (false)`、把 L05 的 RLS 關掉，oracle 都會失敗（C04：正向對照；L05：10 個 denied 案例全部失敗）。
+
+## ADR-021：人類新增的流程規則：`docs/system_overview.html`
+- 日期：2026-11-03 · Milestone：MS1（審查中）· 相關：ADR-015、ADR-005 補記；SPEC §11 紀錄與交付
+- 背景：人類的審查與學習速度跟不上產出，要求 architect 維護一份以系統設計角度、可視化方式說明設計理念的總覽；每個 milestone 完成時，以模組化的視覺方式呈現完成的進度（只給 overview，細節由人類自己看 docs）。
+- 與 ADR-015 的分工：`progress.html` 是由程式產生的「有哪些函式、分支在哪裡」（what），`system_overview.html` 是 architect 撰寫的「為什麼這樣設計、各部分如何互動、哪裡最容易出錯」（why／how）。
+- 決定：
+  1. `docs/system_overview.html` 是單一自包含檔（內嵌 SVG 與 CSS，不載入任何外部腳本或字型，離線可開），內容為繁體中文。
+  2. 固定章節：一句話定位、系統架構圖（標示各模組完成狀態）、核心設計理念、一個請求的旅程（safety 層）、lab 與驗證架構、開發流程、milestone 進度地圖、本 milestone 的過程（ticket、失敗與由誰抓到）、最大風險、閱讀路線。
+  3. **何時更新**：每個 milestone 收尾（§4 第 5 步 push 之前）。若某個 ADR 改變了架構圖上的任何一個方塊或箭頭，在同一個 commit 中更新圖。
+  4. 每份驗證清單加一項：開啟 overview，確認「本 milestone」一節與架構圖的狀態色和實際一致。
+- 理由：圖與理念是人類建立 mental model 的入口；用文字描述的 ADR 一多就難以看出彼此的關係。
+- 後果與風險：overview 是手寫的，可能與程式漂移。緩解方式：狀態、數字一律引用 PRODUCTION_LOG 與 tickets；每個 milestone 由 architect 對照 `progress.html` 檢查一次。CLAUDE.md 為凍結檔，本規則只記在此 ADR，建議你在 MS1 核准意見中重述，讓下一個 session 一定會讀到。
