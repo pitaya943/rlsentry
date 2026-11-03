@@ -1,0 +1,6 @@
+{
+  "description": "T-110 init draft",
+  "prompt": "Ticket: T-110\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-110.md and follow it.",
+  "subagent_type": "probe-dev",
+  "isolation": "worktree"
+}

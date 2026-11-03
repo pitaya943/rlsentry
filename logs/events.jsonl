@@ -862,3 +862,26 @@
 {"ts": "2026-11-03T11:28:21", "kind": "stop_blocked", "attempt": 5, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T11:28:42", "kind": "stop_blocked", "attempt": 6, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T11:31:21", "kind": "ticket_accepted", "ticket": "T-100", "commit": "a586272fc9fe6b951614502cacbac07dbafbfef9", "files": ["rlsentry/discovery/openapi.py"]}
+{"ts": "2026-11-03T11:38:53", "kind": "ticket_start", "ticket": "T-103", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-03T11:39:01", "kind": "ticket_start", "ticket": "T-108", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-03T11:39:09", "kind": "ticket_start", "ticket": "T-110", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-03T11:39:30", "kind": "dispatch", "id": "04d67ca5", "agent": "probe-dev", "ticket": "T-103", "review": null, "body": "logs/messages/04d67ca5-dispatch.json"}
+{"ts": "2026-11-03T11:39:31", "kind": "dispatch", "id": "03e28383", "agent": "probe-dev", "ticket": "T-108", "review": null, "body": "logs/messages/03e28383-dispatch.json"}
+{"ts": "2026-11-03T11:39:32", "kind": "dispatch", "id": "0cc2e494", "agent": "probe-dev", "ticket": "T-110", "review": null, "body": "logs/messages/0cc2e494-dispatch.json"}
+{"ts": "2026-11-03T11:39:33", "kind": "subagent_start", "id": "b9dd11b6", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:39:33", "kind": "report", "id": "85b074a9", "agent": "probe-dev", "ticket": "T-108", "review": null, "body": "logs/messages/85b074a9-report.json"}
+{"ts": "2026-11-03T11:39:33", "kind": "report", "id": "b02af4c0", "agent": "probe-dev", "ticket": "T-103", "review": null, "body": "logs/messages/b02af4c0-report.json"}
+{"ts": "2026-11-03T11:39:33", "kind": "subagent_start", "id": "f63a01cc", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:39:34", "kind": "subagent_start", "id": "57fb3bf3", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:39:34", "kind": "report", "id": "534f3d7a", "agent": "probe-dev", "ticket": "T-110", "review": null, "body": "logs/messages/534f3d7a-report.json"}
+{"ts": "2026-11-03T11:39:47", "kind": "ticket_start", "ticket": "T-102", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-03T11:39:55", "kind": "dispatch", "id": "f74e4303", "agent": "probe-dev", "ticket": "T-102", "review": null, "body": "logs/messages/f74e4303-dispatch.json"}
+{"ts": "2026-11-03T11:39:57", "kind": "report", "id": "27741181", "agent": "probe-dev", "ticket": "T-102", "review": null, "body": "logs/messages/27741181-report.json"}
+{"ts": "2026-11-03T11:39:57", "kind": "subagent_start", "id": "6063ebb1", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:40:04", "kind": "subagent_stop", "id": "2eeefcb7", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:40:15", "kind": "subagent_stop", "id": "f3532d18", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:40:17", "kind": "stop_blocked", "attempt": 7, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:40:22", "kind": "subagent_stop", "id": "8f07fecc", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:40:30", "kind": "stop_blocked", "attempt": 8, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:40:33", "kind": "subagent_stop", "id": "40f33e2b", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:43:01", "kind": "ticket_accepted", "ticket": "T-105", "commit": "f8b9e5efe25938f51c260982bca502cc5a3cb35f", "files": ["rlsentry/probe/cross_tenant.py", "rlsentry/probe/paths.py"]}

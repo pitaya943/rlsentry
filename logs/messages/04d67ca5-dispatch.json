@@ -1,0 +1,6 @@
+{
+  "description": "T-103 session",
+  "prompt": "Ticket: T-103\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-103.md and follow it.",
+  "subagent_type": "probe-dev",
+  "isolation": "worktree"
+}
