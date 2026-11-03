@@ -226,3 +226,17 @@ D2–D4 由 architect 決定並記錄於此。
 - 理由：歸屬仍由 log 前綴的資料庫使用者決定（ADR-014 #2 不變）；關鍵字分類以實測的 PostgREST 語句格式驗證，且 `tests/lab/test_shared.py` 同時測「寫入被抓到」與「讀取不被誤算」。
 - 偏離 SPEC：§8「log_statement = mod 即可留下所有寫入」的前提不成立；改為上述組合。
 - 後果與風險：關鍵字分類是文字比對；若未來 PostgREST 改變語句格式，`test_postgrest_writes_are_attributed_and_reads_are_not` 會失敗而不是靜默放過。字串常值中的關鍵字理論上可能造成誤報（多算寫入），方向是保守的。
+
+## ADR-020：MS1 safety 稽核的處理（fail-closed、RPC 路徑正規化、授權綁定延到 MS6）
+- 日期：2026-11-03 · Milestone：MS1 · 相關：NFR-01、NFR-02、NFR-04、NFR-09；ADR-014 #3、ADR-017；MS1 auditor part 1
+- 背景：auditor 找到 1 個 P1、5 個 P2。
+- 決定：
+  1. **P2-1 fail-closed**：`profile` 不是 Profile 成員（字串 `"AUDIT"`、None）時一律拒絕，連 GET 也拒絕（原本會落到「localhost 允許」）。
+  2. **P2-2 RPC 路徑**：先反覆 percent-decode 到穩定、轉小寫、合併連續斜線，再比對 `/rest/v1/rpc/`。Kong／PostgREST 是否會解碼並未實測；這裡採保守做法，假設它們會解碼。
+  3. **P2-3 預設埠**：`write_hosts` 中的 `:80`、`:443` 項目載入時就報錯，因為 httpx 送出的 URL 不會含預設埠，這種項目永遠比對不到。
+  4. **P2-4**：HTTP client `trust_env=False`（不讀 proxy 環境變數，NFR-09），也不保留 cookie。
+  5. **P2-5**：`rps` 必須是有限正數。
+  6. **P1-1（SafeClient 未綁定授權紀錄）延到 MS6**：唯一建立 SafeClient 的地方是 `pipeline.run_scan`，它在 `authorize()` 之後才建立。MS6 的 pipeline ticket 必須附兩個測試：(a) 靜態測試：`SafeClient(` 只出現在 `rlsentry/pipeline.py`；(b) 未授權時 `run_scan` 一個請求都不送出（以 MockTransport 計數）。
+  7. **P2-6（登入 POST 會送到任何設定的目標）**：照 ADR-014 #1 的設計保留；登入的密碼只來自使用者自己設定的 test_users。
+- 理由（第 6 點）：現在把建構子改成必須傳入 AuthorizationRecord，會讓已驗收的 `tests/safety/test_http.py` 與實作必須同時修改，否則兩張 ticket 都過不了驗收閘門。放到 pipeline 統一處理，加上靜態測試，同樣能保證「沒有授權就沒有連線」。
+- 後果與風險：在 MS6 之前，任何新模組都可以不經授權就自建 SafeClient。MS2–MS5 的模組只接受由呼叫端傳入的 client，不自行建立。這條規則寫進各 milestone 的 ticket，並由 MS6 的靜態測試把關。
