@@ -18,3 +18,23 @@
 - `gate.py`：`confirmed_by` 以去除空白後的值記錄（subagent 回報的唯一模糊處，architect 同意）。
 
 驗證：`python3 -m pytest -q -m safety tests/safety` → 全部通過；holdout 見 PRODUCTION_LOG。
+
+## T-083、T-084 稽核修正（類別 1、2）
+| ticket | 連結 |
+| --- | --- |
+| T-083 mode：未知 profile、RPC 路徑正規化 | https://github.com/pitaya943/rlsentry/compare/review/T-083-base...review/T-083 |
+| T-084 http／ratelimit：trust_env、cookie、rps 有限 | https://github.com/pitaya943/rlsentry/compare/review/T-084-base...review/T-084 |
+
+## Lab（類別 5：植入漏洞與對照組；類別 2：labctl 的 DB 連線與寫入）
+連結格式：`https://github.com/pitaya943/rlsentry/compare/review/T-0NN-base...review/T-0NN`，適用的 ticket 有：
+- T-060、T-077、T-080、T-085（labctl）
+- T-061–T-067、T-069、T-070、T-072（L 情境）
+- T-073–T-076（C 對照組）
+
+L08（T-068）不屬高風險，L11 由 T-080 交付。
+
+審查重點：
+- 每個 `migration.sql` 對照該情境 `expected.yaml` 的 `plant`。
+- labctl 的 `_RESET_SQL`（情境之間的清除）與 `db_writes_since`（ADR-019）。
+
+驗證：`python3 -m pytest -q tests/lab/test_<id>.py`，以及驗證清單第 3 段的變異測試。

@@ -110,3 +110,38 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | T-078 第 1 次失敗：把尚無實作的新測試加進已驗收的 `tests/lab/test_shared.py`（重犯 MS0 T-026） | 改放 `tests/lab/test_shared_writes.py` |
 | T-060 回報：Supabase 對 supabase_auth_admin／storage_admin 設了 role 層級 `log_statement=none` | labctl `ensure_up` 重設並重連；首次重連後第一次登入可能 500（已知限制） |
 | 驗收順序污染：T-061、T-065 在 T-077 驗收前通過，依賴 T-077 第 1 次測試殘留在 lab 的 role 設定 | T-077 驗收後 `supabase stop` 冷啟動重跑 L01–L06＋shared：79 passed |
+
+### Tickets（37 張；36 done、1 blocked；T-077、T-078 各 2 次，其餘 1 次）
+| ticket | agent | 結果 |
+| --- | --- | --- |
+| T-040–T-045 packaging、合約、safety 可見測試、lab oracle＋16 個情境測試 | architect | 全部 accepted |
+| T-050–T-054 safety gate／mode／mask／ratelimit／http ⚠ | recon-dev | 全部 accepted（第 1 次） |
+| T-060 共用 lab（labctl） | lab-dev | accepted |
+| T-061–T-070、T-072–T-076 情境 ⚠ | lab-dev | accepted；T-061、T-065 回報 ADR-019 盲點（停下回報、未繞過） |
+| T-071 L11 | lab-dev | **blocked**：labctl 未清 storage policy 而驗收失敗；改由 T-080 交付 |
+| T-077 labctl ADR-019 | lab-dev | 第 1 次失敗（`type: ignore`），第 2 次 accepted |
+| T-078、T-079、T-081、T-082 稽核／回報修正 | architect | accepted（T-078 第 1 次失敗，見上） |
+| T-080 labctl storage＋L11、T-085 log 前綴 | lab-dev | accepted |
+| T-083、T-084 safety 稽核修正 ⚠ | recon-dev | accepted |
+
+### 稽核
+第 1 次 auditor 在 30 回合上限時中止，沒有產出報告；改為拆成 safety、lab 兩部分各自審查（各 ≤15 次工具呼叫）。
+- safety：P1-1 延後（ADR-020 #6）；P2-1–P2-5 已修（T-082–T-084）。
+- lab：
+  - P1-1–P1-4、P2-3–P2-5 已修（T-081）。
+  - P1-5 經實測不成立（ADR-019 補記）。
+  - P2-1 已修（T-085）。
+  - P2-2 列為已知限制。
+- 追溯表：`docs/verification/traceability.md` MS1 段。
+
+### ADR
+016（spec.py fence）、017（write_hosts）、018（lab 架構）、019（DB log 盲點與關鍵字分類）、020（safety 稽核處理）
+
+### 指標
+- 回歸測試 602 passed（lab 177，冷啟動連跑兩次相同）；holdout 17 passed；safety 90 passed；acceptance `--no-vc` ALL PASSED。
+- 變異檢查：C04 `USING (false)` → 正向對照失敗；L05 關閉 RLS → 11 failed。
+- subagent tokens（約）：
+  - recon-dev 每張 17k–20k
+  - lab-dev 情境每張 17k–36k
+  - labctl：T-060 41k、T-077 32k＋26k、T-080 34k
+  - auditor：133k（中止）、66k、53k
