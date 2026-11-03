@@ -731,3 +731,8 @@
 {"ts": "2026-11-03T08:04:22", "kind": "ticket_accepted", "ticket": "T-082", "commit": "7a02bfc668ddee8335042f634aee84cb24f5e088", "files": ["docs/DECISIONS.md", "rlsentry/contracts/policy.py", "rlsentry/contracts/safety.py", "tests/safety/test_hardening.py"]}
 {"ts": "2026-11-03T08:04:34", "kind": "ticket_start", "ticket": "T-083", "agent": "recon-dev", "attempt": 1}
 {"ts": "2026-11-03T08:04:37", "kind": "ticket_start", "ticket": "T-081", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-03T08:04:41", "kind": "dispatch", "id": "585b1b17", "agent": "recon-dev", "ticket": "T-083", "review": null, "body": "logs/messages/585b1b17-dispatch.json"}
+{"ts": "2026-11-03T08:04:42", "kind": "subagent_start", "id": "ea1c96fe", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T08:04:42", "kind": "report", "id": "df36f981", "agent": "recon-dev", "ticket": "T-083", "review": null, "body": "logs/messages/df36f981-report.json"}
+{"ts": "2026-11-03T08:05:09", "kind": "subagent_stop", "id": "220cd47d", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T08:06:33", "kind": "ticket_accepted", "ticket": "T-083", "commit": "6659d10a9ada53806e7f09e8c6a444e253cedcbe", "files": ["rlsentry/safety/mode.py"]}
