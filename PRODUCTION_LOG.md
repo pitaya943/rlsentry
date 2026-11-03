@@ -109,3 +109,4 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | T-061（L01）、T-065（L05）lab-dev 各自回報：寫入生效，但 DB log 找不到 PostgREST 寫入 | architect 實測確認 `log_statement = mod` 與 pgaudit session 都依外層 `WITH … SELECT` 分類而漏記；ADR-019、T-078（合約＋測試）、T-077（labctl）。這是 SPEC §8 驗證方法本身的盲點，對 NFR-01 是 P0 |
 | T-078 第 1 次失敗：把尚無實作的新測試加進已驗收的 `tests/lab/test_shared.py`（重犯 MS0 T-026） | 改放 `tests/lab/test_shared_writes.py` |
 | T-060 回報：Supabase 對 supabase_auth_admin／storage_admin 設了 role 層級 `log_statement=none` | labctl `ensure_up` 重設並重連；首次重連後第一次登入可能 500（已知限制） |
+| 驗收順序污染：T-061、T-065 在 T-077 驗收前通過，依賴 T-077 第 1 次測試殘留在 lab 的 role 設定 | T-077 驗收後 `supabase stop` 冷啟動重跑 L01–L06＋shared：79 passed |
