@@ -1,0 +1,269 @@
+"""Lab controller (T-060): start, reset and inspect the one local Supabase lab (ADR-018).
+
+Lab code is test infrastructure and talks only to localhost (the Supabase CLI pulls images).
+Why docker exec for SQL: no psql is required on the host, and `log_statement` can only be
+set by supabase_admin inside the db container.
+"""
+from __future__ import annotations
+
+import fcntl
+import json
+import os
+import re
+import subprocess
+import threading
+import time
+from collections.abc import Iterator
+from contextlib import AbstractContextManager, contextmanager
+from datetime import UTC, datetime
+from pathlib import Path
+
+import httpx
+
+from rlsentry.contracts.ground_truth import LAB_USERS
+from rlsentry.contracts.lab import (
+    LAB_DEFAULT_PASSWORDS,
+    LAB_EXCLUDED_SERVICES,
+    LAB_LOCK_FILE,
+    LAB_PROJECT_DIR,
+    LAB_PROJECT_ID,
+    WRITE_COMMANDS,
+    DbWrite,
+    LabInfo,
+)
+from rlsentry.contracts.models import Role
+
+_REPO = Path(__file__).resolve().parents[2]
+_DB = f"supabase_db_{LAB_PROJECT_ID}"
+_LOCK_STATE = threading.local()
+_INFO_CACHE: list[LabInfo] = []
+_LOG_RE = re.compile(
+    r"^(?:\S+\s+)?\d{4}-\d\d-\d\d \S+ \S+ \[\d+\] (?P<user>[^@\s]*)@\S* LOG:\s+"
+    r"(?:statement|execute [^:]*): (?P<sql>.*)$"
+)
+
+_RESET_SQL = """
+DO $$ DECLARE s text; BEGIN
+  FOR s IN SELECT nspname FROM pg_namespace
+           WHERE pg_get_userbyid(nspowner) = 'postgres'
+             AND nspname NOT IN ('public', 'extensions', '_realtime')
+             AND nspname NOT LIKE 'pg\\_%' LOOP
+    EXECUTE format('DROP SCHEMA %I CASCADE', s);
+  END LOOP;
+END $$;
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON SCHEMA public TO postgres;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
+SET LOCAL storage.allow_delete_query = 'true';
+DELETE FROM storage.objects;
+DELETE FROM storage.buckets;
+DELETE FROM auth.users;
+ALTER ROLE authenticator RESET pgrst.openapi_mode;
+"""
+
+_LOGGING_SQL = """
+ALTER SYSTEM SET log_statement = 'mod';
+SELECT pg_reload_conf();
+ALTER ROLE supabase_auth_admin RESET log_statement;
+ALTER ROLE supabase_storage_admin RESET log_statement;
+"""
+
+_USER_SQL = """
+INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+    confirmation_token, recovery_token, email_change_token_new, email_change,
+    email_change_token_current, phone_change, phone_change_token, reauthentication_token)
+VALUES ('00000000-0000-0000-0000-000000000000', :'id'::uuid, 'authenticated', 'authenticated', :'email',
+    extensions.crypt(:'pw', extensions.gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"]}', '{}', now(), now(),
+    '', '', '', '', '', '', '', '')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at,
+    created_at, updated_at)
+VALUES (:'id', :'id'::uuid, jsonb_build_object('sub', :'id', 'email', :'email',
+    'email_verified', true), 'email', now(), now(), now())
+ON CONFLICT DO NOTHING;
+"""
+
+
+def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+         check: bool = True) -> subprocess.CompletedProcess[str]:
+    try:
+        proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+    except FileNotFoundError as exc:
+        raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+    if check and proc.returncode != 0:
+        tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+        raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+    return proc
+
+
+def _psql(sql: str, *, user: str = "postgres", args: tuple[str, ...] = (),
+          variables: dict[str, str] | None = None) -> str:
+    cmd = ["docker", "exec", "-i", _DB, "psql", "-U", user, "-d", "postgres", "-X", "-q",
+           "-v", "ON_ERROR_STOP=1", "-At", *args]
+    for k, v in (variables or {}).items():
+        cmd += ["-v", f"{k}={v}"]
+    return _run(cmd, stdin=sql).stdout
+
+
+def _cli(*args: str) -> subprocess.CompletedProcess[str]:
+    return _run(["supabase", *args], cwd=_REPO / LAB_PROJECT_DIR)
+
+
+def _running() -> bool:
+    proc = _run(["docker", "ps", "--format", "{{.Names}}"], check=False)
+    names = set(proc.stdout.split())
+    return all(f"supabase_{s}_{LAB_PROJECT_ID}" in names for s in ("db", "kong", "auth", "rest"))
+
+
+def _info() -> LabInfo:
+    data = json.loads(_cli("status", "-o", "json").stdout)
+    return LabInfo(api_url=data["API_URL"], db_url=data["DB_URL"], anon_key=data["ANON_KEY"],
+                   service_role_key=data["SERVICE_ROLE_KEY"])
+
+
+def _info_cached() -> LabInfo:
+    if not _INFO_CACHE:
+        _INFO_CACHE.append(_info())
+    return _INFO_CACHE[0]
+
+
+def lab_password(role: Role) -> str:
+    """Password of a lab account: env override first so CI can rotate it."""
+    return os.environ.get(LAB_USERS[role]["password_env"]) or LAB_DEFAULT_PASSWORDS[role]
+
+
+def _create_users() -> None:
+    for role, user in LAB_USERS.items():
+        _psql(_USER_SQL, variables={"id": user["id"], "email": user["email"],
+                                    "pw": lab_password(role)})
+
+
+def _users_ok() -> bool:
+    want = ",".join(f"'{u['id']}'" for u in LAB_USERS.values())
+    got = query(f"select count(*) from auth.users where id in ({want})")
+    return got == [(str(len(LAB_USERS)),)]
+
+
+def ensure_up() -> LabInfo:
+    """Start the lab if needed and make logging and test accounts correct; idempotent."""
+    with lock():
+        if not _running():
+            _INFO_CACHE.clear()
+            _cli("start", "-x", ",".join(LAB_EXCLUDED_SERVICES))
+        stale = _psql("SELECT count(*) FROM pg_db_role_setting s JOIN pg_roles r ON r.oid = s.setrole "
+                      "WHERE r.rolname IN ('supabase_auth_admin', 'supabase_storage_admin') "
+                      "AND s.setconfig::text LIKE '%log_statement%'", user="supabase_admin")
+        _psql(_LOGGING_SQL, user="supabase_admin")
+        if stale.strip() != "0":  # pooled sessions keep the old per-role setting until reconnect
+            _psql("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename IN "
+                  "('supabase_auth_admin', 'supabase_storage_admin')", user="supabase_admin")
+            time.sleep(1.5)
+        if not _users_ok():
+            _create_users()
+        return _info_cached()
+
+
+def scenario_dir(scenario: str) -> Path:
+    """The single lab/<scenario>_<slug>/ directory, else ValueError."""
+    matches = sorted(p for p in (_REPO / "lab").glob(f"{scenario}_*") if p.is_dir())
+    if len(matches) != 1:
+        raise ValueError(f"scenario {scenario!r}: expected exactly one lab/{scenario}_*/, "
+                         f"got {len(matches)}")
+    return matches[0]
+
+
+def _wait_postgrest(info: LabInfo, deadline: float) -> None:
+    while time.monotonic() < deadline:
+        try:
+            r = httpx.get(f"{info.api_url}/rest/v1/", headers={"apikey": info.anon_key}, timeout=2)
+            if r.status_code < 500:
+                return
+        except httpx.HTTPError:
+            pass
+        time.sleep(0.2)
+    raise RuntimeError("PostgREST did not serve the new schema within 10 s")
+
+
+def apply(scenario: str) -> None:
+    """Replace whatever scenario is loaded with `scenario` (see contract for the steps)."""
+    d = scenario_dir(scenario)
+    with lock():
+        _psql("BEGIN;" + _RESET_SQL + "COMMIT;")
+        _create_users()
+        for name in ("migration.sql", "seed.sql"):
+            _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+        _psql("NOTIFY pgrst, 'reload schema'; NOTIFY pgrst, 'reload config';")
+        deadline = time.monotonic() + 10
+        time.sleep(0.3)
+        _wait_postgrest(_info_cached(), deadline)
+
+
+def query(sql: str) -> list[tuple[str, ...]]:
+    """Run one read-only statement as postgres; rows as text tuples (NULL -> '')."""
+    out = _psql(sql, args=("-F", "\x1f"))
+    return [tuple(line.split("\x1f")) for line in out.splitlines() if line != ""]
+
+
+def db_log_marker() -> str:
+    """Timestamp usable with `docker logs --since` (UTC, microseconds)."""
+    time.sleep(0.05)
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def _command_of(sql: str) -> str:
+    best: tuple[int, str] | None = None
+    for kw in WRITE_COMMANDS:
+        m = re.search(rf"\b{kw}\b", sql, re.IGNORECASE)
+        if m and (best is None or m.start() < best[0]):
+            best = (m.start(), kw)
+    if best:
+        return best[1]
+    m = re.search(r"[A-Za-z]+", sql)
+    return m.group(0).upper() if m else "UNKNOWN"
+
+
+def db_writes_since(marker: str) -> list[DbWrite]:
+    """Data-modifying (and DDL) statements logged after `marker`; only role and command kept."""
+    time.sleep(0.3)  # let the log flush
+    proc = _run(["docker", "logs", "--since", marker, _DB], check=False)
+    entries: list[list[str]] = []
+    for line in (proc.stdout + proc.stderr).splitlines():
+        m = _LOG_RE.match(line)
+        if m:
+            entries.append([m.group("user"), m.group("sql")])
+        elif line.startswith(("\t", " ")) and entries:
+            entries[-1][1] += " " + line.strip()
+        elif entries:
+            entries.append(["", ""])  # another log record ends the previous statement
+    return [DbWrite(role=u, command=_command_of(s)) for u, s in entries if u and s]
+
+
+@contextmanager
+def _lock_cm() -> Iterator[None]:
+    depth = getattr(_LOCK_STATE, "depth", 0)
+    if depth:
+        _LOCK_STATE.depth = depth + 1
+        try:
+            yield
+        finally:
+            _LOCK_STATE.depth -= 1
+        return
+    with open(LAB_LOCK_FILE, "a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        _LOCK_STATE.depth = 1
+        try:
+            yield
+        finally:
+            _LOCK_STATE.depth = 0
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
+def lock() -> AbstractContextManager[None]:
+    """Exclusive, process-reentrant lab lock."""
+    return _lock_cm()
