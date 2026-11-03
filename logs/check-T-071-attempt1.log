@@ -1,0 +1,307 @@
+All checks passed!
+EEEEEEE                                                                  [100%]
+==================================== ERRORS ====================================
+________________________ ERROR at setup of test_schema _________________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+request = <SubRequest 'scenario' for <Function test_schema>>
+
+    @pytest.fixture(scope="module")
+    def scenario(lab_info: LabInfo, request: pytest.FixtureRequest) -> Scenario:
+        """The scenario named by the test module's SID, freshly applied."""
+>       return Scenario.load(lab_info, request.module.SID)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/lab/conftest.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/lab/oracle.py:72: in load
+    sc.reapply()
+tests/lab/oracle.py:76: in reapply
+    labctl.apply(self.sid)
+lab/_shared/labctl.py:226: in apply
+    _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+lab/_shared/labctl.py:113: in _psql
+    return _run(cmd, stdin=sql).stdout
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmd = ['docker', 'exec', '-i', 'supabase_db_rlsentry-lab', 'psql', '-U', ...]
+cwd = None
+stdin = "BEGIN;\n-- L11: bucket private-docs is public (planted); private-ok is private with an owner-scoped SELECT policy.\nI...ge.objects FOR SELECT TO authenticated\n  USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text);\n\nCOMMIT;"
+check = True
+
+    def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+             check: bool = True) -> subprocess.CompletedProcess[str]:
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+        if check and proc.returncode != 0:
+            tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+>           raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+E           RuntimeError: docker exec -i failed (exit 3):
+E           ERROR:  policy "private-ok owner read" for table "objects" already exists
+
+lab/_shared/labctl.py:103: RuntimeError
+_________________________ ERROR at setup of test_rows __________________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+request = <SubRequest 'scenario' for <Function test_schema>>
+
+    @pytest.fixture(scope="module")
+    def scenario(lab_info: LabInfo, request: pytest.FixtureRequest) -> Scenario:
+        """The scenario named by the test module's SID, freshly applied."""
+>       return Scenario.load(lab_info, request.module.SID)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/lab/conftest.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/lab/oracle.py:72: in load
+    sc.reapply()
+tests/lab/oracle.py:76: in reapply
+    labctl.apply(self.sid)
+lab/_shared/labctl.py:226: in apply
+    _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+lab/_shared/labctl.py:113: in _psql
+    return _run(cmd, stdin=sql).stdout
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmd = ['docker', 'exec', '-i', 'supabase_db_rlsentry-lab', 'psql', '-U', ...]
+cwd = None
+stdin = "BEGIN;\n-- L11: bucket private-docs is public (planted); private-ok is private with an owner-scoped SELECT policy.\nI...ge.objects FOR SELECT TO authenticated\n  USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text);\n\nCOMMIT;"
+check = True
+
+    def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+             check: bool = True) -> subprocess.CompletedProcess[str]:
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+        if check and proc.returncode != 0:
+            tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+>           raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+E           RuntimeError: docker exec -i failed (exit 3):
+E           ERROR:  policy "private-ok owner read" for table "objects" already exists
+
+lab/_shared/labctl.py:103: RuntimeError
+_______________________ ERROR at setup of test_discovery _______________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+request = <SubRequest 'scenario' for <Function test_schema>>
+
+    @pytest.fixture(scope="module")
+    def scenario(lab_info: LabInfo, request: pytest.FixtureRequest) -> Scenario:
+        """The scenario named by the test module's SID, freshly applied."""
+>       return Scenario.load(lab_info, request.module.SID)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/lab/conftest.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/lab/oracle.py:72: in load
+    sc.reapply()
+tests/lab/oracle.py:76: in reapply
+    labctl.apply(self.sid)
+lab/_shared/labctl.py:226: in apply
+    _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+lab/_shared/labctl.py:113: in _psql
+    return _run(cmd, stdin=sql).stdout
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmd = ['docker', 'exec', '-i', 'supabase_db_rlsentry-lab', 'psql', '-U', ...]
+cwd = None
+stdin = "BEGIN;\n-- L11: bucket private-docs is public (planted); private-ok is private with an owner-scoped SELECT policy.\nI...ge.objects FOR SELECT TO authenticated\n  USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text);\n\nCOMMIT;"
+check = True
+
+    def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+             check: bool = True) -> subprocess.CompletedProcess[str]:
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+        if check and proc.returncode != 0:
+            tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+>           raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+E           RuntimeError: docker exec -i failed (exit 3):
+E           ERROR:  policy "private-ok owner read" for table "objects" already exists
+
+lab/_shared/labctl.py:103: RuntimeError
+_____________________ ERROR at setup of test_case[L11-V1] ______________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+request = <SubRequest 'scenario' for <Function test_schema>>
+
+    @pytest.fixture(scope="module")
+    def scenario(lab_info: LabInfo, request: pytest.FixtureRequest) -> Scenario:
+        """The scenario named by the test module's SID, freshly applied."""
+>       return Scenario.load(lab_info, request.module.SID)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/lab/conftest.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/lab/oracle.py:72: in load
+    sc.reapply()
+tests/lab/oracle.py:76: in reapply
+    labctl.apply(self.sid)
+lab/_shared/labctl.py:226: in apply
+    _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+lab/_shared/labctl.py:113: in _psql
+    return _run(cmd, stdin=sql).stdout
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmd = ['docker', 'exec', '-i', 'supabase_db_rlsentry-lab', 'psql', '-U', ...]
+cwd = None
+stdin = "BEGIN;\n-- L11: bucket private-docs is public (planted); private-ok is private with an owner-scoped SELECT policy.\nI...ge.objects FOR SELECT TO authenticated\n  USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text);\n\nCOMMIT;"
+check = True
+
+    def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+             check: bool = True) -> subprocess.CompletedProcess[str]:
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+        if check and proc.returncode != 0:
+            tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+>           raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+E           RuntimeError: docker exec -i failed (exit 3):
+E           ERROR:  policy "private-ok owner read" for table "objects" already exists
+
+lab/_shared/labctl.py:103: RuntimeError
+_____________________ ERROR at setup of test_case[L11-V2] ______________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+request = <SubRequest 'scenario' for <Function test_schema>>
+
+    @pytest.fixture(scope="module")
+    def scenario(lab_info: LabInfo, request: pytest.FixtureRequest) -> Scenario:
+        """The scenario named by the test module's SID, freshly applied."""
+>       return Scenario.load(lab_info, request.module.SID)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/lab/conftest.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/lab/oracle.py:72: in load
+    sc.reapply()
+tests/lab/oracle.py:76: in reapply
+    labctl.apply(self.sid)
+lab/_shared/labctl.py:226: in apply
+    _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+lab/_shared/labctl.py:113: in _psql
+    return _run(cmd, stdin=sql).stdout
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmd = ['docker', 'exec', '-i', 'supabase_db_rlsentry-lab', 'psql', '-U', ...]
+cwd = None
+stdin = "BEGIN;\n-- L11: bucket private-docs is public (planted); private-ok is private with an owner-scoped SELECT policy.\nI...ge.objects FOR SELECT TO authenticated\n  USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text);\n\nCOMMIT;"
+check = True
+
+    def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+             check: bool = True) -> subprocess.CompletedProcess[str]:
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+        if check and proc.returncode != 0:
+            tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+>           raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+E           RuntimeError: docker exec -i failed (exit 3):
+E           ERROR:  policy "private-ok owner read" for table "objects" already exists
+
+lab/_shared/labctl.py:103: RuntimeError
+_____________________ ERROR at setup of test_case[L11-S1] ______________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+request = <SubRequest 'scenario' for <Function test_schema>>
+
+    @pytest.fixture(scope="module")
+    def scenario(lab_info: LabInfo, request: pytest.FixtureRequest) -> Scenario:
+        """The scenario named by the test module's SID, freshly applied."""
+>       return Scenario.load(lab_info, request.module.SID)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/lab/conftest.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/lab/oracle.py:72: in load
+    sc.reapply()
+tests/lab/oracle.py:76: in reapply
+    labctl.apply(self.sid)
+lab/_shared/labctl.py:226: in apply
+    _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+lab/_shared/labctl.py:113: in _psql
+    return _run(cmd, stdin=sql).stdout
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmd = ['docker', 'exec', '-i', 'supabase_db_rlsentry-lab', 'psql', '-U', ...]
+cwd = None
+stdin = "BEGIN;\n-- L11: bucket private-docs is public (planted); private-ok is private with an owner-scoped SELECT policy.\nI...ge.objects FOR SELECT TO authenticated\n  USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text);\n\nCOMMIT;"
+check = True
+
+    def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+             check: bool = True) -> subprocess.CompletedProcess[str]:
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+        if check and proc.returncode != 0:
+            tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+>           raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+E           RuntimeError: docker exec -i failed (exit 3):
+E           ERROR:  policy "private-ok owner read" for table "objects" already exists
+
+lab/_shared/labctl.py:103: RuntimeError
+_____________________ ERROR at setup of test_case[L11-S2] ______________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+request = <SubRequest 'scenario' for <Function test_schema>>
+
+    @pytest.fixture(scope="module")
+    def scenario(lab_info: LabInfo, request: pytest.FixtureRequest) -> Scenario:
+        """The scenario named by the test module's SID, freshly applied."""
+>       return Scenario.load(lab_info, request.module.SID)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/lab/conftest.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/lab/oracle.py:72: in load
+    sc.reapply()
+tests/lab/oracle.py:76: in reapply
+    labctl.apply(self.sid)
+lab/_shared/labctl.py:226: in apply
+    _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+lab/_shared/labctl.py:113: in _psql
+    return _run(cmd, stdin=sql).stdout
+           ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cmd = ['docker', 'exec', '-i', 'supabase_db_rlsentry-lab', 'psql', '-U', ...]
+cwd = None
+stdin = "BEGIN;\n-- L11: bucket private-docs is public (planted); private-ok is private with an owner-scoped SELECT policy.\nI...ge.objects FOR SELECT TO authenticated\n  USING (bucket_id = 'private-ok' AND owner_id = auth.uid()::text);\n\nCOMMIT;"
+check = True
+
+    def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
+             check: bool = True) -> subprocess.CompletedProcess[str]:
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"cannot run {cmd[0]}: {exc}") from exc
+        if check and proc.returncode != 0:
+            tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-15:])
+>           raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {proc.returncode}):\n{tail}")
+E           RuntimeError: docker exec -i failed (exit 3):
+E           ERROR:  policy "private-ok owner read" for table "objects" already exists
+
+lab/_shared/labctl.py:103: RuntimeError
+=========================== short test summary info ============================
+ERROR tests/lab/test_l11.py::test_schema - RuntimeError: docker exec -i faile...
+ERROR tests/lab/test_l11.py::test_rows - RuntimeError: docker exec -i failed ...
+ERROR tests/lab/test_l11.py::test_discovery - RuntimeError: docker exec -i fa...
+ERROR tests/lab/test_l11.py::test_case[L11-V1] - RuntimeError: docker exec -i...
+ERROR tests/lab/test_l11.py::test_case[L11-V2] - RuntimeError: docker exec -i...
+ERROR tests/lab/test_l11.py::test_case[L11-S1] - RuntimeError: docker exec -i...
+ERROR tests/lab/test_l11.py::test_case[L11-S2] - RuntimeError: docker exec -i...
+7 errors in 1.91s
+make: *** [Makefile:14: check] Error 1
