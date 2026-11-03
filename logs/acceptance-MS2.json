@@ -22,17 +22,17 @@
   {
     "check": "tests",
     "ok": true,
-    "detail": "........................................................................ [  9%]\n........................................................................ [ 18%]\n........................................................................ [ 28%]\n........................................................................ [ 37%]\n........................................................................ [ 47%]\n........................................................................ [ 56%]\n........................................................................ [ 66%]\n........................................................................ [ 75%]\n........................................................................ [ 85%]\n........................................................................ [ 94%]\n......................................                                   [100%]\n758 passed in 632.34s (0:10:32)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
+    "detail": "........................................................................ [  9%]\n........................................................................ [ 18%]\n........................................................................ [ 27%]\n........................................................................ [ 37%]\n........................................................................ [ 46%]\n........................................................................ [ 55%]\n........................................................................ [ 64%]\n........................................................................ [ 74%]\n........................................................................ [ 83%]\n........................................................................ [ 92%]\n..........................................................               [100%]\n778 passed in 489.83s (0:08:09)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
   },
   {
     "check": "holdout",
     "ok": true,
-    "detail": ".........................                                                [100%]\n=============================== warnings summary ===============================\n../../../tmp/tmplbwfp9b7/MS2/test_holdout_lab_mutations.py:22\n  /tmp/tmplbwfp9b7/MS2/test_holdout_lab_mutations.py:22: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    pytestmark = pytest.mark.safety\n\n../../../tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:64\n  /tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:64: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n../../../tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:89\n  /tmp/tmplbwfp9b7/MS2/test_holdout_probe.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n25 passed, 3 warnings in 16.98s\n"
+    "detail": ".........................                                                [100%]\n=============================== warnings summary ===============================\n../../../tmp/tmp1i9_glqs/MS2/test_holdout_lab_mutations.py:22\n  /tmp/tmp1i9_glqs/MS2/test_holdout_lab_mutations.py:22: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    pytestmark = pytest.mark.safety\n\n../../../tmp/tmp1i9_glqs/MS2/test_holdout_probe.py:64\n  /tmp/tmp1i9_glqs/MS2/test_holdout_probe.py:64: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n../../../tmp/tmp1i9_glqs/MS2/test_holdout_probe.py:89\n  /tmp/tmp1i9_glqs/MS2/test_holdout_probe.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n25 passed, 3 warnings in 18.16s\n"
   },
   {
     "check": "safety invariants",
     "ok": true,
-    "detail": "........................................................................ [ 56%]\n.......................................................                  [100%]\n127 passed, 631 deselected in 223.17s (0:03:43)\n"
+    "detail": "........................................................................ [ 48%]\n........................................................................ [ 97%]\n...                                                                      [100%]\n147 passed, 631 deselected in 275.09s (0:04:35)\n"
   },
   {
     "check": "mutation",
@@ -42,6 +42,6 @@
   {
     "check": "checklist sync",
     "ok": true,
-    "detail": "CHECKLIST.md up to date"
+    "detail": "CHECKLIST.md was stale and has been regenerated"
   }
 ]
