@@ -27,7 +27,8 @@ from rlsentry.contracts.lab import (
     LAB_LOCK_FILE,
     LAB_PROJECT_DIR,
     LAB_PROJECT_ID,
-    WRITE_COMMANDS,
+    POSTGREST_ROLES,
+    WRITE_KEYWORD_RE,
     DbWrite,
     LabInfo,
 )
@@ -70,6 +71,7 @@ ALTER SYSTEM SET log_statement = 'mod';
 SELECT pg_reload_conf();
 ALTER ROLE supabase_auth_admin RESET log_statement;
 ALTER ROLE supabase_storage_admin RESET log_statement;
+ALTER ROLE authenticator SET log_statement = 'all';
 """
 
 _USER_SQL = """
@@ -156,14 +158,20 @@ def ensure_up() -> LabInfo:
         if not _running():
             _INFO_CACHE.clear()
             _cli("start", "-x", ",".join(LAB_EXCLUDED_SERVICES))
-        stale = _psql("SELECT count(*) FROM pg_db_role_setting s JOIN pg_roles r ON r.oid = s.setrole "
-                      "WHERE r.rolname IN ('supabase_auth_admin', 'supabase_storage_admin') "
-                      "AND s.setconfig::text LIKE '%log_statement%'", user="supabase_admin")
+        pending = _psql(
+            "SELECT count(*) FROM pg_roles r WHERE (r.rolname IN ('supabase_auth_admin', "
+            "'supabase_storage_admin') AND EXISTS (SELECT 1 FROM pg_db_role_setting s WHERE "
+            "s.setrole = r.oid AND s.setconfig::text LIKE '%log_statement%')) OR "
+            "(r.rolname = 'authenticator' AND NOT EXISTS (SELECT 1 FROM pg_db_role_setting s "
+            "WHERE s.setrole = r.oid AND s.setconfig::text LIKE '%log_statement=all%'))",
+            user="supabase_admin")
         _psql(_LOGGING_SQL, user="supabase_admin")
-        if stale.strip() != "0":  # pooled sessions keep the old per-role setting until reconnect
+        if pending.strip() != "0":  # pooled sessions keep the old per-role setting until reconnect
             _psql("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename IN "
-                  "('supabase_auth_admin', 'supabase_storage_admin')", user="supabase_admin")
+                  "('supabase_auth_admin', 'supabase_storage_admin', 'authenticator')",
+                  user="supabase_admin")
             time.sleep(1.5)
+            _wait_services(_info_cached(), time.monotonic() + 15)
         if not _users_ok():
             _create_users()
         return _info_cached()
@@ -188,6 +196,24 @@ def _wait_postgrest(info: LabInfo, deadline: float) -> None:
             pass
         time.sleep(0.2)
     raise RuntimeError("PostgREST did not serve the new schema within 10 s")
+
+
+def _wait_services(info: LabInfo, deadline: float) -> None:
+    """Poll until PostgREST answers and GoTrue accepts a lab login (no 5xx)."""
+    user = next(iter(LAB_USERS.items()))
+    while time.monotonic() < deadline:
+        try:
+            h = {"apikey": info.anon_key}
+            rest = httpx.get(f"{info.api_url}/rest/v1/", headers=h, timeout=2)
+            auth = httpx.post(f"{info.api_url}/auth/v1/token?grant_type=password", headers=h,
+                              json={"email": user[1]["email"], "password": lab_password(user[0])},
+                              timeout=3)
+            if rest.status_code < 500 and auth.status_code < 500:
+                return
+        except httpx.HTTPError:
+            pass
+        time.sleep(0.3)
+    raise RuntimeError("GoTrue/PostgREST did not recover within 15 s after reconnecting")
 
 
 def apply(scenario: str) -> None:
@@ -217,19 +243,20 @@ def db_log_marker() -> str:
 
 
 def _command_of(sql: str) -> str:
-    best: tuple[int, str] | None = None
-    for kw in WRITE_COMMANDS:
-        m = re.search(rf"\b{kw}\b", sql, re.IGNORECASE)
-        if m and (best is None or m.start() < best[0]):
-            best = (m.start(), kw)
-    if best:
-        return best[1]
-    m = re.search(r"[A-Za-z]+", sql)
-    return m.group(0).upper() if m else "UNKNOWN"
+    """First word of the first write keyword; else the statement's first keyword (DDL)."""
+    m = WRITE_KEYWORD_RE.search(sql)
+    if m:
+        return m.group(0).split()[0].upper()
+    first = re.search(r"[A-Za-z]+", sql)
+    return first.group(0).upper() if first else "UNKNOWN"
 
 
 def db_writes_since(marker: str) -> list[DbWrite]:
-    """Data-modifying (and DDL) statements logged after `marker`; only role and command kept."""
+    """Writes logged after `marker`; only role and command kept (ADR-019).
+
+    Why keyword matching: PostgREST wraps writes in a CTE that Postgres classifies as SELECT, so
+    authenticator logs everything and we keep statements containing a write keyword. Other roles
+    only log what log_statement = mod selects, so all of theirs are writes or DDL."""
     time.sleep(0.3)  # let the log flush
     proc = _run(["docker", "logs", "--since", marker, _DB], check=False)
     entries: list[list[str]] = []
@@ -241,7 +268,8 @@ def db_writes_since(marker: str) -> list[DbWrite]:
             entries[-1][1] += " " + line.strip()
         elif entries:
             entries.append(["", ""])  # another log record ends the previous statement
-    return [DbWrite(role=u, command=_command_of(s)) for u, s in entries if u and s]
+    return [DbWrite(role=u, command=_command_of(q)) for u, q in entries
+            if u and q and (u not in POSTGREST_ROLES or WRITE_KEYWORD_RE.search(q))]
 
 
 @contextmanager
