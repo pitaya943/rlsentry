@@ -573,3 +573,11 @@
 {"ts": "2026-11-03T07:08:53", "kind": "ticket_start", "ticket": "T-045", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-03T07:09:06", "kind": "ticket_accepted", "ticket": "T-045", "commit": "49307785798bf8751b28aeb93d07492b01738cf7", "files": ["tests/lab/test_c01.py", "tests/lab/test_c02.py", "tests/lab/test_c03.py", "tests/lab/test_c04.py", "tests/lab/test_l01.py", "tests/lab/test_l02.py", "tests/lab/test_l03.py", "tests/lab/test_l04.py", "tests/lab/test_l05.py", "tests/lab/test_l06.py", "tests/lab/test_l07.py", "tests/lab/test_l08.py", "tests/lab/test_l09.py", "tests/lab/test_l10.py", "tests/lab/test_l11.py", "tests/lab/test_l12.py"]}
 {"ts": "2026-11-03T07:09:18", "kind": "ticket_start", "ticket": "T-060", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:09:21", "kind": "dispatch", "id": "bfe90f8a", "agent": "lab-dev", "ticket": "T-060", "review": null, "body": "logs/messages/bfe90f8a-dispatch.json"}
+{"ts": "2026-11-03T07:09:22", "kind": "report", "id": "96ebe0ea", "agent": "lab-dev", "ticket": "T-060", "review": null, "body": "logs/messages/96ebe0ea-report.json"}
+{"ts": "2026-11-03T07:09:22", "kind": "subagent_start", "id": "1c0b7399", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:09:29", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
+{"ts": "2026-11-03T07:10:13", "kind": "stop_blocked", "attempt": 2, "state": "active", "milestone": "MS1"}
+{"ts": "2026-11-03T07:10:26", "kind": "stop_blocked", "attempt": 3, "state": "active", "milestone": "MS1"}
+{"ts": "2026-11-03T07:13:03", "kind": "subagent_stop", "id": "91ff0e0e", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:13:09", "kind": "ticket_accepted", "ticket": "T-060", "commit": "c3c79c46a224afa31d4f066724ba9c1b5ee86b22", "files": ["lab/_shared/labctl.py", "lab/_shared/supabase/.gitignore", "lab/_shared/supabase/config.toml"]}
