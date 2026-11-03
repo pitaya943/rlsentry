@@ -29,6 +29,7 @@ from rlsentry.contracts.lab import (
     LAB_PROJECT_ID,
     LOG_LINE_PREFIX,
     POSTGREST_ROLES,
+    SQL_STRING_LITERAL_RE,
     WRITE_KEYWORD_RE,
     DbWrite,
     LabInfo,
@@ -128,8 +129,8 @@ def _run(cmd: list[str], *, cwd: Path | None = None, stdin: str | None = None,
 
 
 def _psql(sql: str, *, user: str = "postgres", args: tuple[str, ...] = (),
-          variables: dict[str, str] | None = None) -> str:
-    cmd = ["docker", "exec", "-i", _DB, "psql", "-U", user, "-d", "postgres", "-X", "-q",
+          variables: dict[str, str] | None = None, env: tuple[str, ...] = ()) -> str:
+    cmd = ["docker", "exec", "-i", *(a for e in env for a in ("-e", e)), _DB, "psql", "-U", user, "-d", "postgres", "-X", "-q",
            "-v", "ON_ERROR_STOP=1", "-At", *args]
     for k, v in (variables or {}).items():
         cmd += ["-v", f"{k}={v}"]
@@ -274,8 +275,26 @@ def apply(scenario: str) -> None:
 
 def query(sql: str) -> list[tuple[str, ...]]:
     """Run one read-only statement as postgres; rows as text tuples (NULL -> '')."""
-    out = _psql(sql, args=("-F", "\x1f"))
+    out = _psql(sql, args=("-F", "\x1f"), env=("PGOPTIONS=-c default_transaction_read_only=on",))
     return [tuple(line.split("\x1f")) for line in out.splitlines() if line != ""]
+
+
+def execute(sql: str) -> None:
+    """Run `sql` as postgres in one transaction, then reload PostgREST's schema and wait for it.
+
+    Why: mutation tests (ADR-022 #3) break a loaded scenario on purpose; -1 with ON_ERROR_STOP
+    leaves nothing behind on error."""
+    with lock():
+        _psql(sql, args=("-1", "-f", "-"))
+        _psql("NOTIFY pgrst, 'reload schema';")
+        deadline = time.monotonic() + 10
+        time.sleep(0.3)
+        _wait_postgrest(_info_cached(), deadline)
+
+
+def _strip_literals(sql: str) -> str:
+    """Replace string literals with '' so keywords inside data are not mistaken for commands (ADR-024)."""
+    return SQL_STRING_LITERAL_RE.sub("''", sql)
 
 
 def db_log_marker() -> str:
@@ -286,6 +305,7 @@ def db_log_marker() -> str:
 
 def _command_of(sql: str) -> str:
     """First word of the first write keyword; else the statement's first keyword (DDL)."""
+    sql = _strip_literals(sql)
     m = WRITE_KEYWORD_RE.search(sql)
     if m:
         return m.group(0).split()[0].upper()
@@ -311,7 +331,7 @@ def db_writes_since(marker: str) -> list[DbWrite]:
         elif entries:
             entries.append(["", ""])  # another log record ends the previous statement
     return [DbWrite(role=u, command=_command_of(q)) for u, q in entries
-            if u and q and (u not in POSTGREST_ROLES or WRITE_KEYWORD_RE.search(q))]
+            if u and q and (u not in POSTGREST_ROLES or WRITE_KEYWORD_RE.search(_strip_literals(q)))]
 
 
 @contextmanager
