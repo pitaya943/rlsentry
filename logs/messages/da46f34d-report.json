@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "ac30916b4f9c4b9ed",
+  "description": "T-107 verdict",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-107\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-107.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/505ebaef-3fa1-5dce-8359-2913693d1ef6/tasks/ac30916b4f9c4b9ed.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

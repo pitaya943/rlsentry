@@ -831,3 +831,25 @@
 {"ts": "2026-11-03T11:13:17", "kind": "subagent_stop", "id": "e7a01bbf", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T11:13:22", "kind": "report", "id": "16d9d9f7", "agent": "lab-dev", "ticket": "T-092", "review": null, "body": "logs/messages/16d9d9f7-report.json"}
 {"ts": "2026-11-03T11:15:28", "kind": "ticket_accepted", "ticket": "T-092", "commit": "9cfe3bbe9b45609a9b2368446894b7916ec030a4", "files": ["lab/_shared/labctl.py"]}
+{"ts": "2026-11-03T11:15:52", "kind": "dispatch", "id": "b6221a67", "agent": "probe-dev", "ticket": "T-100", "review": null, "body": "logs/messages/b6221a67-dispatch.json"}
+{"ts": "2026-11-03T11:15:53", "kind": "dispatch", "id": "b3dc0a9c", "agent": "probe-dev", "ticket": "T-101", "review": null, "body": "logs/messages/b3dc0a9c-dispatch.json"}
+{"ts": "2026-11-03T11:15:54", "kind": "dispatch", "id": "22ef1011", "agent": "probe-dev", "ticket": "T-104", "review": null, "body": "logs/messages/22ef1011-dispatch.json"}
+{"ts": "2026-11-03T11:15:55", "kind": "dispatch", "id": "c285a9b8", "agent": "probe-dev", "ticket": "T-105", "review": null, "body": "logs/messages/c285a9b8-dispatch.json"}
+{"ts": "2026-11-03T11:15:56", "kind": "dispatch", "id": "dce3ac23", "agent": "probe-dev", "ticket": "T-107", "review": null, "body": "logs/messages/dce3ac23-dispatch.json"}
+{"ts": "2026-11-03T11:15:59", "kind": "report", "id": "35dd5c96", "agent": "probe-dev", "ticket": "T-101", "review": null, "body": "logs/messages/35dd5c96-report.json"}
+{"ts": "2026-11-03T11:15:59", "kind": "subagent_start", "id": "12fc6468", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:15:59", "kind": "subagent_start", "id": "ed96db68", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:15:59", "kind": "report", "id": "9da09150", "agent": "probe-dev", "ticket": "T-104", "review": null, "body": "logs/messages/9da09150-report.json"}
+{"ts": "2026-11-03T11:15:59", "kind": "report", "id": "4a8dceeb", "agent": "probe-dev", "ticket": "T-105", "review": null, "body": "logs/messages/4a8dceeb-report.json"}
+{"ts": "2026-11-03T11:15:59", "kind": "subagent_start", "id": "d18b2051", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:15:59", "kind": "subagent_start", "id": "46c28413", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:15:59", "kind": "report", "id": "da46f34d", "agent": "probe-dev", "ticket": "T-107", "review": null, "body": "logs/messages/da46f34d-report.json"}
+{"ts": "2026-11-03T11:15:59", "kind": "report", "id": "e241a112", "agent": "probe-dev", "ticket": "T-100", "review": null, "body": "logs/messages/e241a112-report.json"}
+{"ts": "2026-11-03T11:15:59", "kind": "subagent_start", "id": "8f2c8b22", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:16:13", "kind": "ticket_start", "ticket": "T-093", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-03T11:16:38", "kind": "subagent_stop", "id": "92afbf7a", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:16:43", "kind": "subagent_stop", "id": "8d3f8572", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:16:45", "kind": "subagent_stop", "id": "1f8ab8e4", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:16:53", "kind": "subagent_stop", "id": "7a38941e", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:17:08", "kind": "subagent_stop", "id": "cc28c3c7", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:19:28", "kind": "ticket_accepted", "ticket": "T-093", "commit": "af08e9f897962b9600546f48ff96eebb3aaf8f7b", "files": ["tests/lab/test_design_assumptions.py", "tests/lab/test_oracle_mutations.py"]}
