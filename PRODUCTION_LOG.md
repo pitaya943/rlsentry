@@ -80,3 +80,24 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 - 測試 302 passed；holdout 12 passed；safety 9 passed；acceptance `--no-vc` ALL PASSED。
 - ground truth：P0 漏洞案例 32、safe 案例 72、inconclusive 案例 7（L11 為 P2，另有漏洞 2、safe 2，不計分）。
 - subagent tokens：T-021 約 18k、T-022 約 17k、T-023 約 17k、T-032 約 14k、auditor 約 132k。
+
+## MS1（Lab benchmark + Safety）
+
+### 開始前檢查（人類指示，全部通過）
+非 shallow（`git rev-parse --is-shallow-repository` = false）；`spec.py "6"` 含 tables／defaults／fail_on／`rlsentry init`（refreeze `ddedd60`）；相依以 pip 個別安裝；status current=MS1。
+
+### MS0 核准意見 → MS1 處理
+| 意見 | 處理 |
+| --- | --- |
+| pyproject flat-layout 安裝缺陷 | T-040（乾淨 venv 中 `pip install -e ".[dev]"` 成功；Debian 內建 setuptools 68 無法建 wheel，dev 加 `setuptools>=75`） |
+| spec.py 標題解析 bug（人類修正 `ddedd60`） | ADR-016（影響範圍 SPEC.md:342-365） |
+| #1 audit 允許登入 POST | 已記於 ADR-014 補記；寫入 `contracts/safety.py` 規則 3，T-051 測試 |
+| #2 NFR-01 只計 PostgREST 角色 | `contracts/lab.py` `POSTGREST_ROLES`；T-044 lab 測試 |
+| #4 ci 可寫遠端（write_hosts） | ADR-017；T-041 合約；T-050、T-051 實作 |
+
+### Holdout hashes（派工前記錄）
+| 檔案 | sha256 |
+| --- | --- |
+| MS1/test_holdout_safety.py | `304a5c374b6a6469de388329f20a73a13650d0aa7212d07e2aa4566836154f6b` |
+
+內容：gate、mode（12 格矩陣）、mask、ratelimit、http 的不同輸入。派工前以 scratchpad 參考實作確認可見＋holdout 共 96 個測試可滿足（參考實作未提交，已刪除；本次以 `PYTHONDONTWRITEBYTECODE` 避免 MS0 的 .pyc 誤帶）。
