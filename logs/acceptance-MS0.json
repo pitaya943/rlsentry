@@ -1,0 +1,47 @@
+[
+  {
+    "check": "tickets & checklist",
+    "ok": false,
+    "detail": "no verification checklist docs/verification/MS0-vN.md"
+  },
+  {
+    "check": "provenance",
+    "ok": true,
+    "detail": "every product-code commit is a genuine accept merge (scope and cheat checks recomputed)"
+  },
+  {
+    "check": "ruff",
+    "ok": true,
+    "detail": "All checks passed!\n"
+  },
+  {
+    "check": "mypy",
+    "ok": true,
+    "detail": "Success: no issues found in 3 source files\n"
+  },
+  {
+    "check": "tests",
+    "ok": true,
+    "detail": ".                                                                        [100%]\n1 passed in 0.01s\n"
+  },
+  {
+    "check": "holdout",
+    "ok": false,
+    "detail": "\n==================================== ERRORS ====================================\n___________________ ERROR collecting test_holdout_policy.py ____________________\nImportError while importing test module '/tmp/tmp1twijr7x/MS0/test_holdout_policy.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/local/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n/tmp/tmp1twijr7x/MS0/test_holdout_policy.py:4: in <module>\n    from rlsentry.contracts.models import Op, Profile, Role\nE   ModuleNotFoundError: No module named 'rlsentry.contracts.models'\n=========================== short test summary info ============================\nERROR test_holdout_policy.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.07s\n"
+  },
+  {
+    "check": "safety invariants",
+    "ok": true,
+    "detail": "no safety-marked tests among accepted tickets yet"
+  },
+  {
+    "check": "mutation",
+    "ok": true,
+    "detail": "mutation testing skipped (set MUTATION=1 to run)"
+  },
+  {
+    "check": "checklist sync",
+    "ok": true,
+    "detail": "CHECKLIST.md up to date"
+  }
+]

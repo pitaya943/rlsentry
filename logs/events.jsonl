@@ -369,3 +369,5 @@
 {"ts": "2026-11-02T16:10:46", "kind": "stop_blocked", "attempt": 29, "state": "active", "milestone": "MS0"}
 {"ts": "2026-11-02T16:10:52", "kind": "stop_blocked", "attempt": 30, "state": "active", "milestone": "MS0"}
 {"ts": "2026-11-02T16:11:12", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 31}
+{"ts": "2026-11-03T05:22:27", "kind": "acceptance_run", "scope": "MS0", "failed": ["tickets & checklist", "holdout"]}
+{"ts": "2026-11-03T05:22:50", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 32}
