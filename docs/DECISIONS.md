@@ -140,3 +140,29 @@ D2–D4 由 architect 決定並記錄於此。
   11. **已知列語意**（G6）：被拒絕的 INSERT 以「看得到的讀者確認 canary 不存在」算 1 個已知列。
 - 未採納或延後：K3（每格只有一個 outcome，混合範圍的格子語意）、K4（UPDATE 新舊列都要允許的規則目前只在測試中）延到 MS2 設計 probe 時以 ADR 決定；O1（所有 lab 表都是 uuid `id`）與 O3（L01 佔 32 個漏洞案例中的 12 個）列為已知限制；F6（Probe 介面缺 refresh token 與 DB 連線）延到 MS3。
 - 補記：ADR-009 也把 SPEC §8 範例的 case 鍵 `table:` 改名為 `target:`（因為也涵蓋 view、RPC、bucket）（G8）。
+
+### ADR-014 補記：人類的決定（2026-11-03，於 session 中確認）
+- #1 同意：audit 允許唯一一個非 GET 請求，即測試帳號登入。
+- #2 同意：NFR-01 的資料庫 log 只計算 PostgREST 角色（anon、authenticated、authenticator）的寫入；GoTrue 寫入 `auth.*` 另列，不計入。
+- #4 **改為開放**：ci 可以寫入遠端的 preview DB（SPEC §2）。規則（MS1 實作 `safety/mode.py` 時寫進合約，並另以 ADR 記錄欄位）：
+  1. 只有 ci 可以寫入遠端；dev 仍只限 localhost，audit 一律不寫；
+  2. 遠端主機必須列在設定檔新增的明確清單中（暫名 `write_hosts`），完全比對 host，不支援萬用字元；
+  3. 必須同時符合 `authorized: true`（或 CLI 確認）；
+  4. 寫入內容仍只限 canary 與植入列，並以讀回驗證、自動清理。
+  最壞情況：使用者把正式環境的主機誤列進清單，ci 掃描就會在正式資料庫植入、修改、刪除測試列。緩解：清單必須逐一列出、report 開頭列出本次允許寫入的主機、清理失敗時 exit code 非 0。
+
+## ADR-015：人類新增的流程規則：progress.html 與分支紀錄
+- 日期：2026-11-03 · Milestone：MS0（審查中）· 相關：SPEC §11 紀錄與交付
+- 背景：專案負責人要求：(1) 在每個 milestone 結束、每張關鍵 ticket 完成、以及每次暫停等待審核或提問時，維護一個列出已完成函式、其目的與結構的檔案；(2) 記錄分支如何合併、最新分支走到哪裡、哪些 active、哪些 finished。
+- 考慮過的選項：
+  1. architect 手寫（缺點：會與程式碼漂移，而且每輪都花 token）
+  2. 只看 git log（缺點：看不出函式的目的、也看不出分支與 ticket 的對應）
+  3. 由程式從權威來源產生（採用）
+- 決定：
+  - `docs/tools/progress.py` 產生兩個檔案：
+    - `docs/progress.html`：(A) `rlsentry/**` 中每個公開函式與類別的結構（簽名、欄位、方法）、目的（docstring 第一段）、由哪張 ticket 加入、哪些測試檔涵蓋；(B) 分支現況（active、受保護、review-only、finished、未合併）與合併方向；
+    - `docs/branch-log.md`：由 `logs/events.jsonl` 產生的 ticket 開始、驗收合併、驗收失敗時間表。
+  - **何時執行**（architect 必須遵守）：每個 milestone 收尾（§4 第 5 步 push 之前）、每張高風險 ticket（ADR-005 的 6 類）驗收後、每次暫停等你審核或提問之前。執行後與其他文件一起 commit、push。
+  - 每份驗證清單加一項：`python3 docs/tools/progress.py && git diff --stat docs/progress.html docs/branch-log.md` 必須沒有差異（代表檔案是最新的）。
+- 理由：產生的內容與程式碼必然一致，重跑即可驗證，也不需要 architect 記住要更新哪些地方。
+- 後果與風險：「目的」只和 docstring 一樣好（CLAUDE.md 已要求 public 函式寫 docstring）；腳本 import 凍結的 harness（唯讀）；檔案是衍生資料，不要手改。CLAUDE.md 是凍結檔，本規則只記在此 ADR；建議專案負責人在 MS0 核准意見中重述，讓下一個 session 一定會讀到。

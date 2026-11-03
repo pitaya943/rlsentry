@@ -11,7 +11,7 @@ MS0 產出。每個 milestone 開始時 architect 會依此計畫寫出正式 ti
 | ⚠(5) L01–L12、C01–C04 各一張：migration + seed + 最小前端，依 expected.yaml 的 `plant`／`schema`／`rows` | lab-dev | `lab/<id>/**`（不含 expected.yaml） | lab 共用設定 |
 | lab 驗證測試：每個 case 的 `expect` 對實際 lab 成立（architect 測試，需 Docker） | architect | `tests/lab/**` | 各情境 |
 | ⚠(1) `safety/gate.py` 授權閘門（NFR-02） | recon-dev | `rlsentry/safety/gate.py` | — |
-| ⚠(1)(2) `safety/mode.py` `require_write_allowed`（audit 一律拒絕、只允許 localhost） | recon-dev | `rlsentry/safety/mode.py` | — |
+| ⚠(1)(2) `safety/mode.py` `require_write_allowed`（audit 一律拒絕；登入例外；dev 只限 localhost；ci 另可寫 `write_hosts` 明列的主機，ADR-014 補記） | recon-dev | `rlsentry/safety/mode.py` | 合約加 `write_hosts`（architect） |
 | ⚠(1)(3) `safety/mask.py`（前 6 後 4） | recon-dev | `rlsentry/safety/mask.py` | — |
 | ⚠(1) `safety/ratelimit.py`（semaphore + token bucket） | recon-dev | `rlsentry/safety/ratelimit.py` | — |
 | `safety/http.py`：唯一的 HTTP client（User-Agent、限速、寫入閘門） | recon-dev | `rlsentry/safety/http.py` | mode、ratelimit |
