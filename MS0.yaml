@@ -1,0 +1,16 @@
+milestone: MS0
+checklist: docs/verification/MS0-v1.md
+checklist_sha256: bbcfc36b27bc1b3aa9948609a75d1ee4495c6f8d4381b5c08b03b9565b09033e
+decision: approve
+reviewer: Kuei
+date: 2026-11-03 14:31
+notes: |
+  pyproject 的 flat-layout 安裝缺陷；
+  spec.py 的標題解析 bug（凍結檔，要你自己修）；
+  #1 同意：audit 允許唯一一個非 GET 請求，即測試帳號登入。
+  #2 同意：NFR-01 的資料庫 log 只計算 PostgREST 角色（anon、authenticated、authenticator）的寫入；GoTrue 寫入 auth.* 另列，不計入。
+  #4 改為開放：ci 可以寫入遠端的 preview DB（SPEC §2）。規則（MS1 實作 safety/mode.py 時寫進合約，並另以 ADR 記錄欄位）：
+  只有 ci 可以寫入遠端；dev 仍只限 localhost，audit 一律不寫；
+  遠端主機必須列在設定檔新增的明確清單中（暫名 write_hosts），完全比對 host，不支援萬用字元；
+  必須同時符合 authorized: true（或 CLI 確認）；
+  寫入內容仍只限 canary 與植入列，並以讀回驗證、自動清理。 最壞情況：使用者把正式環境的主機誤列進清單，ci 掃描就會在正式資料庫植入、修改、刪除測試列。緩解：清單必須逐一列出、report 開頭列出本次允許寫入的主機、清理失敗時 exit code 非 0。
