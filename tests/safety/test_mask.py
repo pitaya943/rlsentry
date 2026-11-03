@@ -5,7 +5,9 @@ from rlsentry.contracts.safety import MASK_FILL, MASK_MIN_LEN
 from rlsentry.safety.mask import mask, mask_text
 
 JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.SIGNATUREsignature0123"
-SB = "sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz"
+# Built at runtime from a fake body: a literal in the sb_secret_ format trips GitHub push
+# protection (it did once, see PRODUCTION_LOG MS1).
+SB = "sb_" + "secret_" + "FAKEfakeFAKEfake-0123_x"
 
 
 @pytest.mark.safety

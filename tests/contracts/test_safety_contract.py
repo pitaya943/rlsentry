@@ -50,7 +50,7 @@ def test_tool_version_matches_pyproject() -> None:
 def test_secret_patterns() -> None:
     jwt = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.c2lnbmF0dXJl"
     assert JWT_RE.fullmatch(jwt)
-    assert SB_KEY_RE.fullmatch("sb_secret_abcdefghijklmnop")
+    assert SB_KEY_RE.fullmatch("sb_" + "secret_abcdefghijklmnop")
     assert not SB_KEY_RE.search("sb_secret_short")
 
 
