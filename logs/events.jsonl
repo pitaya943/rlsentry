@@ -620,3 +620,10 @@
 {"ts": "2026-11-03T07:19:45", "kind": "ticket_start", "ticket": "T-078", "agent": "architect", "attempt": 2}
 {"ts": "2026-11-03T07:20:00", "kind": "ticket_accepted", "ticket": "T-078", "commit": "6040e5220309cac8287cdedee98a84767f4aeacd", "files": ["docs/DECISIONS.md", "rlsentry/contracts/lab.py", "tests/lab/test_shared_writes.py"]}
 {"ts": "2026-11-03T07:20:12", "kind": "ticket_start", "ticket": "T-077", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:20:16", "kind": "dispatch", "id": "3e058772", "agent": "lab-dev", "ticket": "T-077", "review": null, "body": "logs/messages/3e058772-dispatch.json"}
+{"ts": "2026-11-03T07:20:17", "kind": "subagent_start", "id": "403d280e", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:20:17", "kind": "report", "id": "2027195b", "agent": "lab-dev", "ticket": "T-077", "review": null, "body": "logs/messages/2027195b-report.json"}
+{"ts": "2026-11-03T07:22:42", "kind": "guard_block", "agent": "lab-dev", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
+{"ts": "2026-11-03T07:22:59", "kind": "subagent_stop", "id": "27d5f91a", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:23:11", "kind": "ticket_fail", "ticket": "T-077", "reason": "forbidden patterns added: return re.match(r\"[A-Za-z]+\", m.group(0)).group(0).upper() if m else None  # type: ignore[union-attr]", "attempts": 1}
+{"ts": "2026-11-03T07:23:44", "kind": "ticket_accepted", "ticket": "T-061", "commit": "35e21b1fff3cc34cffef9db831d1aa6cb3bfbd71", "files": ["lab/L01_rls_disabled/frontend/assets/app.js", "lab/L01_rls_disabled/frontend/index.html", "lab/L01_rls_disabled/migration.sql", "lab/L01_rls_disabled/seed.sql"]}
