@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 41/53 · 進行中 2 · blocked 0
+自動產生，請勿手改 · 完成 42/55 · 進行中 2 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -52,16 +52,18 @@
 - [x] T-064 Lab L04：跨租戶讀取（lab-dev，done，1 次）
 - [ ] T-065 Lab L05：跨租戶修改（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓
 - [x] T-066 Lab L06：SECURITY DEFINER view（lab-dev，done，1 次）
-- [ ] T-067 Lab L07：SECURITY DEFINER RPC（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-068 Lab L08：service_role 進 bundle（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-069 Lab L09：INSERT 寬鬆（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-070 Lab L10：敏感欄位外洩（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-071 Lab L11：公開 Storage bucket（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-072 Lab L12：OpenAPI 被限制（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-073 Lab C01：對照組：owner-scoped（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-074 Lab C02：對照組：公開表（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-075 Lab C03：對照組：空表（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
-- [ ] T-076 Lab C04：對照組：無資料的使用者（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓
+- [ ] T-067 Lab L07：SECURITY DEFINER RPC（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-068 Lab L08：service_role 進 bundle（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-069 Lab L09：INSERT 寬鬆（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-070 Lab L10：敏感欄位外洩（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-071 Lab L11：公開 Storage bucket（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-072 Lab L12：OpenAPI 被限制（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-073 Lab C01：對照組：owner-scoped（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-074 Lab C02：對照組：公開表（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-075 Lab C03：對照組：空表（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-076 Lab C04：對照組：無資料的使用者（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077…
+- [ ] T-077 labctl：讓 PostgREST 的寫入出現在 DB log（ADR-019）（lab-dev，todo，0 次） ← 依賴 T-060✓ T-078✓
+- [x] T-078 合約與測試：DB log 寫入判定改為關鍵字分類（ADR-019）（architect，done，2 次）
 
 ## [ ] MS2 M2 Discovery + M3 讀取（鎖定）
 
