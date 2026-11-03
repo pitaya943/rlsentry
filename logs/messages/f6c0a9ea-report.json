@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a117653af482f01f8",
+  "description": "Audit MS1",
+  "resolvedModel": "claude-opus-5-5",
+  "prompt": "Review: MS1\nBase: c01d68c611a21587cc6b2057f8c150832d14e969\nFocus: lab scenarios really plant the bug and controls are safe (tests/lab/oracle*.py is the architect's verifier — check it is not too weak); safety gates (rlsentry/safety/**) block audit writes and unauthorized runs; ADR-016–019. Docker lab is available (`python3 -c \"from lab._shared import labctl; labctl.ensure_up()\"`). Terse output: traceability table + findings with file:line + hand-check items.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/a117653af482f01f8.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

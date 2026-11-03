@@ -1,0 +1,47 @@
+[
+  {
+    "check": "tickets & checklist",
+    "ok": true,
+    "detail": "tickets valid, checklist consistent"
+  },
+  {
+    "check": "provenance",
+    "ok": true,
+    "detail": "every product-code commit is a genuine accept merge (scope and cheat checks recomputed)"
+  },
+  {
+    "check": "ruff",
+    "ok": true,
+    "detail": "All checks passed!\n"
+  },
+  {
+    "check": "mypy",
+    "ok": true,
+    "detail": "Success: no issues found in 20 source files\n"
+  },
+  {
+    "check": "tests",
+    "ok": true,
+    "detail": "........................................................................ [ 12%]\n........................................................................ [ 25%]\n........................................................................ [ 37%]\n........................................................................ [ 50%]\n........................................................................ [ 63%]\n........................................................................ [ 75%]\n........................................................................ [ 88%]\n...................................................................      [100%]\n571 passed in 95.23s (0:01:35)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
+  },
+  {
+    "check": "holdout",
+    "ok": true,
+    "detail": ".................                                                        [100%]\n17 passed in 0.15s\n"
+  },
+  {
+    "check": "safety invariants",
+    "ok": true,
+    "detail": ".................................................................        [100%]\n65 passed, 506 deselected in 5.14s\n"
+  },
+  {
+    "check": "mutation",
+    "ok": true,
+    "detail": "mutation testing skipped (set MUTATION=1 to run)"
+  },
+  {
+    "check": "checklist sync",
+    "ok": true,
+    "detail": "CHECKLIST.md up to date"
+  }
+]

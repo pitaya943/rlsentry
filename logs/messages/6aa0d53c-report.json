@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "ab154425585db8ad4",
+  "description": "Audit MS1 safety",
+  "resolvedModel": "claude-opus-5-5",
+  "prompt": "Review: MS1\nBase: c01d68c611a21587cc6b2057f8c150832d14e969\nScope (part 1 of 2): ONLY rlsentry/safety/**, rlsentry/contracts/safety.py, write_hosts in contracts/policy.py+models.py, tests/safety/**, ADR-016/017 in docs/DECISIONS.md. Budget: ≤15 tool calls, then report. Output: traceability table (SPEC item → file:line → test), findings P0/P1/P2 with file:line, ≤5 hand-check items with command + expected result.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/ab154425585db8ad4.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}
