@@ -15,7 +15,7 @@ INSERT_B = (f"insert into public.announcements (id, owner_id) values ('{B_ROW}',
 @pytest.mark.safety
 def test_query_refuses_writes(lab_info: LabInfo) -> None:
     labctl.apply("C03")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="read-only transaction"):
         labctl.query(INSERT_B)
     assert labctl.query("select count(*) from public.announcements") == [("0",)]
 
@@ -52,7 +52,9 @@ def test_execute_change_is_served_at_once_and_apply_restores(lab_info: LabInfo) 
 @pytest.mark.safety
 def test_openapi_fetch_logs_no_write(lab_info: LabInfo) -> None:
     """ADR-024: PostgREST's OpenAPI query has 'TRUNCATE' inside a string literal; not a write.
-    A real write right after it must still be found (string stripping must not hide writes)."""
+    A real PATCH right after it must still be found end to end. (PostgREST sends the body as a
+    bind parameter, so this does not exercise the quote handling itself: that is
+    tests/lab/test_shared_classify.py, MS2 audit F1.)"""
     labctl.apply("L04")
     h = {"apikey": lab_info.anon_key, "Authorization": f"Bearer {lab_info.anon_key}"}
     marker = labctl.db_log_marker()

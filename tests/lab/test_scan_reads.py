@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from pathlib import Path
 
 import httpx
 import pytest
@@ -124,9 +123,12 @@ def traffic_problems(gt: GroundTruth, rec: Recording) -> list[str]:
             continue
         if method not in ("GET", "HEAD"):
             errs.append(f"{method} {path}")
-        elif method == "HEAD" and body:
-            errs.append(f"HEAD {path} returned a body")
-        elif method == "GET" and path.startswith("/rest/v1/") and path != "/rest/v1/" and status == 200:
+        # HEAD bodies are never read by httpx, so only the method allowlist and the GET
+        # bodies below can prove "no download" (MS2 audit F5).
+        elif method == "GET" and path != "/rest/v1/" and 200 <= status < 300:
+            if not path.startswith("/rest/v1/"):
+                errs.append(f"GET {path}: only PostgREST is read in MS2")
+                continue
             name = path.removeprefix("/rest/v1/").removeprefix("rpc/")
             rows = json.loads(body)
             keys = {k for r in rows for k in r} if isinstance(rows, list) else {"<not a list>"}
@@ -136,6 +138,7 @@ def traffic_problems(gt: GroundTruth, rec: Recording) -> list[str]:
 
 
 @pytest.mark.safety
+# L11 has no PostgREST target (Storage only, P2); Storage probing is not in MS2 (ADR-023).
 @pytest.mark.parametrize("sid", [s for s in SCENARIO_IDS if s != "L11"])
 def test_audit_reads_match_ground_truth(lab_info: LabInfo, sid: str) -> None:
     gt = load_gt(sid)
@@ -147,4 +150,3 @@ def test_audit_reads_match_ground_truth(lab_info: LabInfo, sid: str) -> None:
     problems = judge(gt, targets, matrix, findings) + traffic_problems(gt, rec)
     assert not writes, f"{sid}: PostgREST roles wrote during an audit scan: {writes}"
     assert not problems, f"{sid}: " + "; ".join(problems)
-    assert Path(scenario_path(sid)).is_dir()

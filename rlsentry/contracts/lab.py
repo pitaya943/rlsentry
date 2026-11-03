@@ -80,17 +80,27 @@ WRITE_KEYWORD_RE = re.compile(
 """ADR-019: a logged statement is a write iff this matches anywhere in its text. PostgREST
 sends writes as `WITH pgrst_source AS (INSERT INTO …) SELECT …`, which Postgres classifies as
 SELECT, so neither log_statement = mod nor pgaudit's session mode logs them. ADR-024: "its text"
-means the statement with every SQL_STRING_LITERAL_RE match replaced by '' (keywords inside
-string literals are data, not commands). DbWrite.command is
+means the statement as normalised by write_command (quoted parts neutralised, SQL_QUOTED_RE).
+DbWrite.command is
 the first word of the first match, upper-case (INSERT, UPDATE, …); for DDL logged by
 log_statement = mod without such a keyword, it is the statement's first keyword (CREATE, …)."""
 
+SQL_QUOTED_RE = re.compile(r"""'(?:[^']|'')*'|"(?:[^"]|"")*"|\$((?:[A-Za-z_]\w*)?)\$.*?\$\1\$""",
+                           re.DOTALL)
+"""Quoted parts of a logged statement, matched left to right (ADR-024, 補記 after the MS2 audit
+F1/F2): a single-quoted string literal ('' escapes a quote), a double-quoted identifier (""
+escapes), or a dollar-quoted string ($$…$$ or $tag$…$tag$). Scanning them in one pass is what
+makes an apostrophe inside an identifier ("o'x") or a dollar-quoted body unable to open a fake
+literal that would swallow a following write keyword. E'…' backslash escapes and -- comments
+are not handled: PostgREST logs neither, and logged continuation lines are joined, so a comment
+has no end.
+
+PostgREST's OpenAPI query contains has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE,
+TRUNCATE, …'); without this step authenticator would log a TRUNCATE on every `GET /rest/v1/`."""
+
 SQL_STRING_LITERAL_RE = re.compile(r"'(?:[^']|'')*'")
-"""A single-quoted SQL string literal ('' is an escaped quote). ADR-024: removed from a logged
-statement before WRITE_KEYWORD_RE is applied, because PostgREST's OpenAPI query contains
-has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, …') and would otherwise be
-reported as a TRUNCATE by authenticator on every `GET /rest/v1/` (found by MS2's lab scan test).
-E'…' strings with backslash-escaped quotes are not handled; PostgREST does not log any."""
+"""First version of ADR-024 (single-quoted literals only). Superseded by SQL_QUOTED_RE and
+write_command after the MS2 audit (F2); kept only so code accepted before T-113 still imports."""
 
 
 class LabCtl(Protocol):
@@ -154,18 +164,32 @@ class LabCtl(Protocol):
         while running. Never used by rlsentry itself (lab code is not product code)."""
         ...
 
+    def write_command(self, sql: str) -> str | None:
+        """Pure classification of one logged statement (ADR-019, ADR-024). Replace every
+        SQL_QUOTED_RE match, in one left-to-right pass, by: '' for a single-quoted literal,
+        "x" for a double-quoted identifier, '' for a dollar-quoted string. Then return the
+        upper-cased first word of the first WRITE_KEYWORD_RE match (INSERT, UPDATE, DELETE,
+        MERGE, TRUNCATE, COPY), or None when there is none. No I/O."""
+        ...
+
     def db_log_marker(self) -> str:
         """An opaque marker for 'now' in the Postgres log (e.g. a timestamp)."""
         ...
 
     def db_writes_since(self, marker: str) -> list[DbWrite]:
-        """Writes logged after `marker`, in order, for every role (filter with POSTGREST_ROLES):
-        every logged statement matching WRITE_KEYWORD_RE (this catches PostgREST's CTE-wrapped
-        writes, ADR-019), plus DDL logged by log_statement = mod. Statements without a write
-        keyword (the reads authenticator now logs) are NOT returned; keywords inside single-quoted
-        string literals do not count (SQL_STRING_LITERAL_RE, ADR-024), so `GET /rest/v1/`
-        (OpenAPI) logs no write. An UPDATE/DELETE that RLS
-        filters down to 0 rows is still returned: NFR-01 counts write attempts, not effects."""
+        """Writes logged after `marker`, in order, for every role (filter with POSTGREST_ROLES).
+        For a PostgREST role, a logged statement is returned iff write_command(statement) is
+        not None (this catches PostgREST's CTE-wrapped writes, ADR-019, and ignores keywords
+        inside quoted parts, ADR-024, so `GET /rest/v1/` logs no write); command = that value.
+        For any other role every logged statement is returned (log_statement = mod logs only
+        writes and DDL), command = write_command(statement) or its first keyword (CREATE, …).
+        An UPDATE/DELETE that RLS filters down to 0 rows is still returned: NFR-01 counts write
+        attempts, not effects.
+        Flush (MS2 audit F6): before reading, emit a unique sentinel to the server log as
+        postgres (`DO $$BEGIN RAISE LOG 'rlsentry-flush-<uuid4>'; END$$;`) and read the log
+        until that sentinel appears (≤ 10 s, else RuntimeError). Only records before the
+        sentinel record are considered; the sentinel and anything after it are never
+        returned. A fixed sleep alone is not enough to prove the log is complete."""
         ...
 
     def scenario_dir(self, scenario: str) -> Path:
