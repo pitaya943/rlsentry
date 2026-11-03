@@ -286,10 +286,10 @@ def verify_signature(text: str, signature: str) -> bool:
     principal = lines[0].split()[0]
     with tempfile.TemporaryDirectory() as tmp:
         sig_path = Path(tmp) / "a.sig"
-        sig_path.write_text(signature)
+        sig_path.write_text(signature, newline="\n")
         r = subprocess.run(["ssh-keygen", "-Y", "verify", "-f", str(C.allowed_signers()), "-I", principal,
                             "-n", C.APPROVAL_NAMESPACE, "-s", str(sig_path)],
-                           input=text, capture_output=True, text=True)
+                           input=text.encode("utf-8"), capture_output=True)
     return r.returncode == 0
 
 
