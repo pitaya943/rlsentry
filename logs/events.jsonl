@@ -629,3 +629,8 @@
 {"ts": "2026-11-03T07:23:44", "kind": "ticket_accepted", "ticket": "T-061", "commit": "35e21b1fff3cc34cffef9db831d1aa6cb3bfbd71", "files": ["lab/L01_rls_disabled/frontend/assets/app.js", "lab/L01_rls_disabled/frontend/index.html", "lab/L01_rls_disabled/migration.sql", "lab/L01_rls_disabled/seed.sql"]}
 {"ts": "2026-11-03T07:24:26", "kind": "ticket_accepted", "ticket": "T-065", "commit": "74301dcd87342005b2b2086e92bb2945c914c856", "files": ["lab/L05_cross_tenant_write/frontend/assets/app.js", "lab/L05_cross_tenant_write/frontend/index.html", "lab/L05_cross_tenant_write/migration.sql", "lab/L05_cross_tenant_write/seed.sql"]}
 {"ts": "2026-11-03T07:24:46", "kind": "ticket_start", "ticket": "T-077", "agent": "lab-dev", "attempt": 2}
+{"ts": "2026-11-03T07:24:49", "kind": "dispatch", "id": "bae90b68", "agent": "lab-dev", "ticket": "T-077", "review": null, "body": "logs/messages/bae90b68-dispatch.json"}
+{"ts": "2026-11-03T07:24:50", "kind": "report", "id": "e1cb5eeb", "agent": "lab-dev", "ticket": "T-077", "review": null, "body": "logs/messages/e1cb5eeb-report.json"}
+{"ts": "2026-11-03T07:24:50", "kind": "subagent_start", "id": "282fe6b8", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:26:16", "kind": "subagent_stop", "id": "b48ceb89", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:32:04", "kind": "ticket_accepted", "ticket": "T-077", "commit": "4047e4e84e33a9fc0fc1fdb4ff4e64830042351a", "files": ["lab/_shared/labctl.py"]}
