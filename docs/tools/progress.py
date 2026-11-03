@@ -120,16 +120,23 @@ def branches(evs: list[dict]) -> list[dict]:
         seen.add(short)
         merged = subprocess.run(["git", "merge-base", "--is-ancestor", sha, head], cwd=ROOT,
                                 check=False).returncode == 0
+        if short == current:
+            # Anchor to the last accept commit, not the moving tip, so the output is stable
+            # across the bookkeeping commits that follow a run (idempotent freshness check).
+            last = T.ledger()[-1]["commit"] if T.ledger() else head
+            sha, date = last, git("log", "-1", "--format=%cs", last)
         if short in PROTECTED:
             cat, note = "受保護", {"main": "只由人類 merge（session 分支 → main）",
                                 "rlsentry-approvals": "人類 SSH 簽章核准，architect 不可寫",
                                 "rlsentry-holdout": "holdout 測試，由 harness 寫入"}[short]
             if short == "main":
-                ahead = git("rev-list", "--count", f"{sha}..{head}")
-                note += f"；session 分支領先 {ahead} 個 commit，等待你 merge"
+                last = T.ledger()[-1]["commit"] if T.ledger() else head
+                ahead = git("rev-list", "--count", f"{sha}..{last}")
+                note += f"；截至最後一個 accept，session 分支領先 {ahead} 個 commit，等待你 merge"
         elif short == current or short.startswith("claude/"):
             cat = "active" if short == current else "其他 session"
-            note = "目前的 session 分支（ticket 經 accept 合併到這裡）" if short == current else ""
+            note = ("目前的 session 分支（ticket 經 accept 合併到這裡；tip 顯示最後一個 accept commit）"
+                    if short == current else "")
         elif short.startswith("review/"):
             cat, note = "review-only", "高風險 ticket 的審查分支，永不合併（ADR-005）"
         else:
