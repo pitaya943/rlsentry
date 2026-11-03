@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 47/55 · 進行中 4 · blocked 0
+自動產生，請勿手改 · 完成 48/55 · 進行中 3 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -55,7 +55,7 @@
 - [x] T-067 Lab L07：SECURITY DEFINER RPC（lab-dev，done，1 次）
 - [ ] T-068 Lab L08：service_role 進 bundle（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
 - [x] T-069 Lab L09：INSERT 寬鬆（lab-dev，done，1 次）
-- [ ] T-070 Lab L10：敏感欄位外洩（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
+- [x] T-070 Lab L10：敏感欄位外洩（lab-dev，done，1 次）
 - [ ] T-071 Lab L11：公開 Storage bucket（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
 - [ ] T-072 Lab L12：OpenAPI 被限制（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
 - [ ] T-073 Lab C01：對照組：owner-scoped（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077✓
