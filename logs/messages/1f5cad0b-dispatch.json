@@ -1,0 +1,6 @@
+{
+  "description": "T-052 safety mask",
+  "prompt": "Ticket: T-052\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-052.md and follow it.",
+  "subagent_type": "recon-dev",
+  "isolation": "worktree"
+}

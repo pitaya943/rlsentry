@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a150b47c460168112",
+  "description": "T-050 safety gate",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-050\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-050.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/a150b47c460168112.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

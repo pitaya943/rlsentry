@@ -542,3 +542,20 @@
 {"ts": "2026-11-03T07:02:46", "kind": "ticket_start", "ticket": "T-052", "agent": "recon-dev", "attempt": 1}
 {"ts": "2026-11-03T07:02:49", "kind": "ticket_start", "ticket": "T-053", "agent": "recon-dev", "attempt": 1}
 {"ts": "2026-11-03T07:04:27", "kind": "stop_blocked", "attempt": 1, "state": "active", "milestone": "MS1"}
+{"ts": "2026-11-03T07:04:35", "kind": "dispatch", "id": "9a8d508f", "agent": "recon-dev", "ticket": "T-050", "review": null, "body": "logs/messages/9a8d508f-dispatch.json"}
+{"ts": "2026-11-03T07:04:37", "kind": "dispatch", "id": "5178c22b", "agent": "recon-dev", "ticket": "T-051", "review": null, "body": "logs/messages/5178c22b-dispatch.json"}
+{"ts": "2026-11-03T07:04:38", "kind": "dispatch", "id": "1f5cad0b", "agent": "recon-dev", "ticket": "T-052", "review": null, "body": "logs/messages/1f5cad0b-dispatch.json"}
+{"ts": "2026-11-03T07:04:39", "kind": "dispatch", "id": "0157981d", "agent": "recon-dev", "ticket": "T-053", "review": null, "body": "logs/messages/0157981d-dispatch.json"}
+{"ts": "2026-11-03T07:04:41", "kind": "subagent_start", "id": "af7677f1", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:04:41", "kind": "report", "id": "9408d320", "agent": "recon-dev", "ticket": "T-051", "review": null, "body": "logs/messages/9408d320-report.json"}
+{"ts": "2026-11-03T07:04:41", "kind": "subagent_start", "id": "2a29d595", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:04:41", "kind": "report", "id": "7104e095", "agent": "recon-dev", "ticket": "T-053", "review": null, "body": "logs/messages/7104e095-report.json"}
+{"ts": "2026-11-03T07:04:41", "kind": "subagent_start", "id": "c7f92bb6", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:04:41", "kind": "report", "id": "0e0a70a9", "agent": "recon-dev", "ticket": "T-052", "review": null, "body": "logs/messages/0e0a70a9-report.json"}
+{"ts": "2026-11-03T07:04:41", "kind": "subagent_start", "id": "dcda8dd7", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:04:41", "kind": "report", "id": "3e18ea3d", "agent": "recon-dev", "ticket": "T-050", "review": null, "body": "logs/messages/3e18ea3d-report.json"}
+{"ts": "2026-11-03T07:05:08", "kind": "subagent_stop", "id": "6eb2129d", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:05:13", "kind": "subagent_stop", "id": "242574e5", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:05:16", "kind": "subagent_stop", "id": "aca34216", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:05:16", "kind": "subagent_stop", "id": "fb691634", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:05:44", "kind": "ticket_accepted", "ticket": "T-050", "commit": "912e40f821f91f10be994672bc6ff8877bee50e7", "files": ["rlsentry/safety/gate.py"]}
