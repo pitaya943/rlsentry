@@ -98,15 +98,21 @@ class LabCtl(Protocol):
         """Load scenario `scenario` (e.g. "L04") into the running lab, replacing whatever was
         loaded before, so results never depend on the previous scenario:
         1. drop and recreate schema public with Supabase's standard grants; drop functions and
-           views the previous scenario created; delete all storage objects and buckets;
+           views the previous scenario created; delete all storage objects and buckets; drop
+           every RLS policy on storage.objects and storage.buckets that is not part of a fresh
+           Supabase install (scenarios such as L11 create them), so applying any scenario twice,
+           or after any other scenario, gives the same state;
         2. delete all auth.users and recreate LAB_USERS (fixed ids and emails from
            rlsentry.contracts.ground_truth.LAB_USERS, passwords from lab_password, confirmed
            email, empty user_metadata) so each test user can log in with
            POST /auth/v1/token?grant_type=password;
         3. reset role-level PostgREST settings scenarios may change
            (ALTER ROLE authenticator RESET pgrst.openapi_mode);
-        4. run lab/<scenario>_*/migration.sql then seed.sql as postgres, each in one
-           transaction (ON_ERROR_STOP);
+        4. run lab/<scenario>_*/migration.sql as postgres in one transaction (ON_ERROR_STOP);
+           then, if the scenario has a storage/ folder, upload every file
+           storage/<bucket>/<path> to <bucket> at <path> through the local Storage API with the
+           service_role key (upsert) (ADR-018 #6); then run seed.sql the same way as the
+           migration (seed may UPDATE storage.objects, e.g. owner_id);
         5. NOTIFY pgrst 'reload schema' and 'reload config', then wait (≤ 10 s) until
            PostgREST serves the new schema.
         Unknown scenario → ValueError. Must hold lock() while running."""
