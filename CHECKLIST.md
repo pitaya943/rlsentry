@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 25/53 · 進行中 0 · blocked 0
+自動產生，請勿手改 · 完成 26/53 · 進行中 0 · blocked 0
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -34,8 +34,8 @@
 - 驗證清單：docs/verification/MS0-v1.md（v1）
 
 ## [ ] MS1 Lab benchmark + Safety（進行中）
-- [ ] T-040 pyproject：限定 package discovery，讓 pip install -e .[dev] 在乾淨環境可用（architect，todo，0 次）
-- [ ] T-041 合約：safety 層、ci write_hosts、lab 工具；ADR-016–018（architect，todo，0 次） ← 依賴 T-040…
+- [x] T-040 pyproject：限定 package discovery，讓 pip install -e .[dev] 在乾淨環境可用（architect，done，1 次）
+- [ ] T-041 合約：safety 層、ci write_hosts、lab 工具；ADR-016–018（architect，todo，0 次） ← 依賴 T-040✓
 - [ ] T-042 可見測試：safety gate、mode、mask（architect，todo，0 次） ← 依賴 T-041…
 - [ ] T-043 可見測試：ratelimit、http client（architect，todo，0 次） ← 依賴 T-042…
 - [ ] T-044 Lab 驗證測試基礎：conftest、oracle、共用 lab 測試（architect，todo，0 次） ← 依賴 T-041…
