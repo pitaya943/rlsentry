@@ -853,3 +853,4 @@
 {"ts": "2026-11-03T11:16:53", "kind": "subagent_stop", "id": "7a38941e", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T11:17:08", "kind": "subagent_stop", "id": "cc28c3c7", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T11:19:28", "kind": "ticket_accepted", "ticket": "T-093", "commit": "af08e9f897962b9600546f48ff96eebb3aaf8f7b", "files": ["tests/lab/test_design_assumptions.py", "tests/lab/test_oracle_mutations.py"]}
+{"ts": "2026-11-03T11:22:12", "kind": "ticket_accepted", "ticket": "T-104", "commit": "473189f4d97af73373b09996923aa463aa5f16d7", "files": ["rlsentry/probe/evidence.py"]}
