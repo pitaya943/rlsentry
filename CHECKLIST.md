@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 78/80 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 78/80 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -91,7 +91,7 @@
 - [x] T-110 policy/init.py：rlsentry init 草稿（FR-15）（probe-dev，done，1 次）
 - [x] T-111 Lab 整合測試：audit 掃描對照 ground truth（MS2 讀取）（architect，done，1 次）
 - [x] T-112 稽核修正（架構師）：寫入分類合約、變異測試理由片語、掃描測試流量檢查、RPC 前提（architect，done，1 次）
-- [ ] T-113 labctl：write_command、識別字與 $$ 感知的常值移除、log flush sentinel（ADR-024 補記）（lab-dev，todo，0 次） ← 依賴 T-112✓
+- [ ] T-113 labctl：write_command、識別字與 $$ 感知的常值移除、log flush sentinel（ADR-024 補記）（lab-dev，in_progress，1 次） ← 依賴 T-112✓
 
 ## [ ] MS3 M3 寫入（鎖定）
 
