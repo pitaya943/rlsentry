@@ -897,3 +897,5 @@
 {"ts": "2026-11-03T12:01:36", "kind": "stop_blocked", "attempt": 10, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T12:01:54", "kind": "stop_blocked", "attempt": 11, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T12:04:25", "kind": "ticket_accepted", "ticket": "T-102", "commit": "8e94dbcda243c60b1cb35a5340b2d6ece50ee279", "files": ["rlsentry/discovery/discover.py", "rlsentry/discovery/merge.py"]}
+{"ts": "2026-11-03T12:12:16", "kind": "stop_blocked", "attempt": 12, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T12:25:11", "kind": "ticket_accepted", "ticket": "T-106", "commit": "d47738ec2af5391db523c1112c37b0a7a400227c", "files": ["rlsentry/probe/read.py"]}
