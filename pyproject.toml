@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "rlsentry"
 version = "0.0.0"
@@ -9,7 +13,13 @@ dependencies = [
 ]                          # more are added by the milestone that first needs them (ADR-012)
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pyyaml>=6", "ruff", "mypy", "mutmut", "types-PyYAML"]
+dev = ["pytest>=8", "pyyaml>=6", "ruff", "mypy", "mutmut", "types-PyYAML", "setuptools>=75"]
+
+[tool.setuptools.packages.find]
+# Flat layout: the repo root also holds lab/, harness/, logs/, host/, cloud/. Without this,
+# setuptools' automatic discovery refuses to build ("Multiple top-level packages"). Only the
+# product package is distributed (MS0 approval note #1, T-040).
+include = ["rlsentry*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
