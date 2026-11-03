@@ -674,3 +674,7 @@
 {"ts": "2026-11-03T07:40:56", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "copying files between branches bypasses the acceptance gate"}
 {"ts": "2026-11-03T07:41:21", "kind": "ticket_start", "ticket": "T-080", "agent": "lab-dev", "attempt": 1}
 {"ts": "2026-11-03T07:42:21", "kind": "ticket_accepted", "ticket": "T-068", "commit": "22094bf77ff62a93711b4a0c430d63bfafd970b1", "files": ["lab/L08_service_role_bundle/frontend/assets/app.js", "lab/L08_service_role_bundle/frontend/index.html", "lab/L08_service_role_bundle/migration.sql", "lab/L08_service_role_bundle/seed.sql"]}
+{"ts": "2026-11-03T07:42:38", "kind": "ticket_start", "ticket": "T-073", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:42:40", "kind": "ticket_start", "ticket": "T-074", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:42:43", "kind": "ticket_start", "ticket": "T-075", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:42:45", "kind": "ticket_start", "ticket": "T-076", "agent": "lab-dev", "attempt": 1}

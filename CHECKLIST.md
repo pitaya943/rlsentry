@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 51/57 · 進行中 1 · blocked 1
+自動產生，請勿手改 · 完成 51/57 · 進行中 5 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -58,10 +58,10 @@
 - [x] T-070 Lab L10：敏感欄位外洩（lab-dev，done，1 次）
 - [ ] T-071 Lab L11：公開 Storage bucket（lab-dev，blocked，1 次） ⚠ blocked：labctl 缺陷（storage policy 未重設）使驗收失敗；情境檔改由 T-080 連同 labctl 修正一起交付
 - [x] T-072 Lab L12：OpenAPI 被限制（lab-dev，done，1 次）
-- [ ] T-073 Lab C01：對照組：owner-scoped（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077✓
-- [ ] T-074 Lab C02：對照組：公開表（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077✓
-- [ ] T-075 Lab C03：對照組：空表（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077✓
-- [ ] T-076 Lab C04：對照組：無資料的使用者（lab-dev，todo，0 次） ← 依賴 T-045✓ T-060✓ T-077✓
+- [ ] T-073 Lab C01：對照組：owner-scoped（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
+- [ ] T-074 Lab C02：對照組：公開表（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
+- [ ] T-075 Lab C03：對照組：空表（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
+- [ ] T-076 Lab C04：對照組：無資料的使用者（lab-dev，in_progress，1 次） ← 依賴 T-045✓ T-060✓ T-077✓
 - [x] T-077 labctl：讓 PostgREST 的寫入出現在 DB log（ADR-019）（lab-dev，done，2 次）
 - [x] T-078 合約與測試：DB log 寫入判定改為關鍵字分類（ADR-019）（architect，done，2 次）
 - [x] T-079 合約與測試：apply 重設 storage policy、上傳 storage/ 檔案（architect，done，1 次）
