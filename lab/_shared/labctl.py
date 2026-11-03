@@ -13,6 +13,7 @@ import re
 import subprocess
 import threading
 import time
+import uuid
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from datetime import UTC, datetime
@@ -29,7 +30,7 @@ from rlsentry.contracts.lab import (
     LAB_PROJECT_ID,
     LOG_LINE_PREFIX,
     POSTGREST_ROLES,
-    SQL_STRING_LITERAL_RE,
+    SQL_QUOTED_RE,
     WRITE_KEYWORD_RE,
     DbWrite,
     LabInfo,
@@ -292,9 +293,16 @@ def execute(sql: str) -> None:
         _wait_postgrest(_info_cached(), deadline)
 
 
-def _strip_literals(sql: str) -> str:
-    """Replace string literals with '' so keywords inside data are not mistaken for commands (ADR-024)."""
-    return SQL_STRING_LITERAL_RE.sub("''", sql)
+def write_command(sql: str) -> str | None:
+    """Pure classification of one logged statement (ADR-019, ADR-024).
+
+    Why one pass: quoted parts are neutralised left to right, so an apostrophe inside an
+    identifier or a dollar-quoted body cannot open a fake literal that hides a write."""
+    def neutral(m: re.Match[str]) -> str:
+        return '"x"' if m.group(0).startswith('"') else "''"
+
+    found = WRITE_KEYWORD_RE.search(SQL_QUOTED_RE.sub(neutral, sql))
+    return found.group(0).split()[0].upper() if found else None
 
 
 def db_log_marker() -> str:
@@ -304,25 +312,22 @@ def db_log_marker() -> str:
 
 
 def _command_of(sql: str) -> str:
-    """First word of the first write keyword; else the statement's first keyword (DDL)."""
-    sql = _strip_literals(sql)
-    m = WRITE_KEYWORD_RE.search(sql)
-    if m:
-        return m.group(0).split()[0].upper()
-    first = re.search(r"[A-Za-z]+", sql)
+    """write_command, else the statement's first keyword (DDL logged by log_statement = mod)."""
+    cmd = write_command(sql)
+    if cmd:
+        return cmd
+    first = re.search(r"[A-Za-z]+", SQL_QUOTED_RE.sub("''", sql))
     return first.group(0).upper() if first else "UNKNOWN"
 
 
-def db_writes_since(marker: str) -> list[DbWrite]:
-    """Writes logged after `marker`; only role and command kept (ADR-019).
-
-    Why keyword matching: PostgREST wraps writes in a CTE that Postgres classifies as SELECT, so
-    authenticator logs everything and we keep statements containing a write keyword. Other roles
-    only log what log_statement = mod selects, so all of theirs are writes or DDL."""
-    time.sleep(0.3)  # let the log flush
+def _read_log_until(marker: str, sentinel: str) -> list[list[str]] | None:
+    """Statement records before the sentinel record, or None while it has not appeared yet."""
     proc = _run(["docker", "logs", "--since", marker, _DB], check=False)
+    sentinel_re = re.compile(r"LOG:\s+" + re.escape(sentinel) + r"\s*$")
     entries: list[list[str]] = []
     for line in (proc.stdout + proc.stderr).splitlines():
+        if sentinel_re.search(line):
+            return entries
         m = _LOG_RE.match(line)
         if m:
             entries.append([m.group("user"), m.group("sql")])
@@ -330,8 +335,28 @@ def db_writes_since(marker: str) -> list[DbWrite]:
             entries[-1][1] += " " + line.strip()
         elif entries:
             entries.append(["", ""])  # another log record ends the previous statement
+    return None
+
+
+def db_writes_since(marker: str) -> list[DbWrite]:
+    """Writes logged after `marker`; only role and command kept (ADR-019).
+
+    Why a sentinel: the server log is asynchronous, so a fixed sleep cannot prove it is
+    complete. We emit a unique RAISE LOG record and read until it shows up (MS2 audit F6).
+    Why keyword matching: PostgREST wraps writes in a CTE that Postgres classifies as SELECT, so
+    authenticator logs everything and we keep statements where write_command finds a write.
+    Other roles only log what log_statement = mod selects, so all of theirs are writes or DDL."""
+    sentinel = f"rlsentry-flush-{uuid.uuid4()}"
+    _psql(f"DO $$BEGIN RAISE LOG '{sentinel}'; END$$;")
+    deadline = time.monotonic() + 10
+    entries = _read_log_until(marker, sentinel)
+    while entries is None:
+        if time.monotonic() >= deadline:
+            raise RuntimeError("Postgres log flush sentinel did not appear within 10 s")
+        time.sleep(0.1)
+        entries = _read_log_until(marker, sentinel)
     return [DbWrite(role=u, command=_command_of(q)) for u, q in entries
-            if u and q and (u not in POSTGREST_ROLES or WRITE_KEYWORD_RE.search(_strip_literals(q)))]
+            if u and q and (u not in POSTGREST_ROLES or write_command(q) is not None)]
 
 
 @contextmanager
