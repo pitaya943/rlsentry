@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a722c23b0f5d65a08",
+  "description": "T-067 lab L07",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-067\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-067.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/a722c23b0f5d65a08.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

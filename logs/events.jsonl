@@ -640,3 +640,28 @@
 {"ts": "2026-11-03T07:34:10", "kind": "ticket_start", "ticket": "T-070", "agent": "lab-dev", "attempt": 1}
 {"ts": "2026-11-03T07:34:13", "kind": "ticket_start", "ticket": "T-071", "agent": "lab-dev", "attempt": 1}
 {"ts": "2026-11-03T07:34:15", "kind": "ticket_start", "ticket": "T-072", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-03T07:34:19", "kind": "dispatch", "id": "e941e2a9", "agent": "lab-dev", "ticket": "T-067", "review": null, "body": "logs/messages/e941e2a9-dispatch.json"}
+{"ts": "2026-11-03T07:34:19", "kind": "dispatch", "id": "2aee26bb", "agent": "lab-dev", "ticket": "T-069", "review": null, "body": "logs/messages/2aee26bb-dispatch.json"}
+{"ts": "2026-11-03T07:34:19", "kind": "dispatch", "id": "f788bce8", "agent": "lab-dev", "ticket": "T-072", "review": null, "body": "logs/messages/f788bce8-dispatch.json"}
+{"ts": "2026-11-03T07:34:19", "kind": "dispatch", "id": "0d4541e5", "agent": "lab-dev", "ticket": "T-068", "review": null, "body": "logs/messages/0d4541e5-dispatch.json"}
+{"ts": "2026-11-03T07:34:19", "kind": "dispatch", "id": "f9f5488b", "agent": "lab-dev", "ticket": "T-070", "review": null, "body": "logs/messages/f9f5488b-dispatch.json"}
+{"ts": "2026-11-03T07:34:19", "kind": "dispatch", "id": "d35f6d6b", "agent": "lab-dev", "ticket": "T-071", "review": null, "body": "logs/messages/d35f6d6b-dispatch.json"}
+{"ts": "2026-11-03T07:34:20", "kind": "report", "id": "e21d8bac", "agent": "lab-dev", "ticket": "T-068", "review": null, "body": "logs/messages/e21d8bac-report.json"}
+{"ts": "2026-11-03T07:34:20", "kind": "subagent_start", "id": "7f044d71", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:34:20", "kind": "report", "id": "671626d5", "agent": "lab-dev", "ticket": "T-070", "review": null, "body": "logs/messages/671626d5-report.json"}
+{"ts": "2026-11-03T07:34:20", "kind": "subagent_start", "id": "83324dee", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:34:20", "kind": "subagent_start", "id": "266694c6", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:34:20", "kind": "report", "id": "373fe7f9", "agent": "lab-dev", "ticket": "T-071", "review": null, "body": "logs/messages/373fe7f9-report.json"}
+{"ts": "2026-11-03T07:34:20", "kind": "subagent_start", "id": "243150e3", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:34:20", "kind": "report", "id": "5224eeef", "agent": "lab-dev", "ticket": "T-069", "review": null, "body": "logs/messages/5224eeef-report.json"}
+{"ts": "2026-11-03T07:34:20", "kind": "subagent_start", "id": "1d9b83cf", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:34:20", "kind": "report", "id": "3d075c7b", "agent": "lab-dev", "ticket": "T-067", "review": null, "body": "logs/messages/3d075c7b-report.json"}
+{"ts": "2026-11-03T07:34:20", "kind": "report", "id": "36527a0d", "agent": "lab-dev", "ticket": "T-072", "review": null, "body": "logs/messages/36527a0d-report.json"}
+{"ts": "2026-11-03T07:34:20", "kind": "subagent_start", "id": "15ab1dbf", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:34:52", "kind": "subagent_stop", "id": "d1fcc873", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:35:15", "kind": "subagent_stop", "id": "79e73f7f", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:35:15", "kind": "subagent_stop", "id": "bda409fd", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:35:19", "kind": "subagent_stop", "id": "9548dfee", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:35:26", "kind": "subagent_stop", "id": "0b049b4d", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:35:27", "kind": "subagent_stop", "id": "0864802b", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T07:36:13", "kind": "ticket_accepted", "ticket": "T-067", "commit": "b4685663b77f5800861c3ebe73d8062fa5121a9b", "files": ["lab/L07_security_definer_rpc/frontend/assets/app.js", "lab/L07_security_definer_rpc/frontend/index.html", "lab/L07_security_definer_rpc/migration.sql", "lab/L07_security_definer_rpc/seed.sql"]}
