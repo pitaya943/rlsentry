@@ -528,3 +528,5 @@
 {"ts": "2026-11-03T06:24:41", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
 {"ts": "2026-11-03T06:58:00", "kind": "ticket_start", "ticket": "T-040", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-03T06:59:09", "kind": "ticket_accepted", "ticket": "T-040", "commit": "c76d540a992969870ca3401443988c42d8b3688e", "files": [".gitignore", "pyproject.toml", "tests/packaging/__init__.py", "tests/packaging/test_pyproject.py"]}
+{"ts": "2026-11-03T06:59:19", "kind": "ticket_start", "ticket": "T-041", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-03T07:00:02", "kind": "ticket_accepted", "ticket": "T-041", "commit": "8e2a483df44523cdfeff6020b8da2312e0c18690", "files": ["docs/DECISIONS.md", "pyproject.toml", "rlsentry/contracts/interfaces.py", "rlsentry/contracts/lab.py", "rlsentry/contracts/models.py", "rlsentry/contracts/policy.py", "rlsentry/contracts/safety.py", "tests/contracts/test_safety_contract.py"]}
