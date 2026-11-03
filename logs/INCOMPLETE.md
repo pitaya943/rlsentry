@@ -4,11 +4,11 @@
 
 ```json
 {
-  "current_milestone": "MS0",
+  "current_milestone": "STAGE0",
   "state": "active",
   "milestones": {
-    "STAGE0": "approved",
-    "MS0": "active",
+    "STAGE0": "active",
+    "MS0": "locked",
     "MS1": "locked",
     "MS2": "locked",
     "MS3": "locked",
@@ -17,11 +17,13 @@
     "MS6": "locked",
     "MS7": "locked"
   },
-  "ready": [],
+  "ready": [
+    "T-000"
+  ],
   "in_progress": [],
   "blocked": {},
   "vc_problems": [
-    "no verification checklist docs/verification/MS0-vN.md"
+    "tickets not terminal: T-000, T-001"
   ],
   "validation_errors": []
 }

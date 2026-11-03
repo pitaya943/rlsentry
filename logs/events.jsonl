@@ -477,3 +477,35 @@
 {"ts": "2026-11-03T05:47:05", "kind": "subagent_stop", "id": "ba15cd69", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-03T05:49:26", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
 {"ts": "2026-11-03T05:49:38", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS0"}
+{"ts": "2026-11-03T06:05:55", "kind": "stop_blocked", "attempt": 1, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:22", "kind": "stop_blocked", "attempt": 2, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:29", "kind": "stop_blocked", "attempt": 3, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:34", "kind": "stop_blocked", "attempt": 4, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:39", "kind": "stop_blocked", "attempt": 5, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:43", "kind": "stop_blocked", "attempt": 6, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:47", "kind": "stop_blocked", "attempt": 7, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:51", "kind": "stop_blocked", "attempt": 8, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:06:56", "kind": "stop_blocked", "attempt": 9, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:07:01", "kind": "stop_blocked", "attempt": 10, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:07:02", "kind": "subagent_stop", "id": "b3db43a9", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-03T06:09:59", "kind": "stop_blocked", "attempt": 11, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:11", "kind": "stop_blocked", "attempt": 12, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:15", "kind": "stop_blocked", "attempt": 13, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:23", "kind": "stop_blocked", "attempt": 14, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:27", "kind": "stop_blocked", "attempt": 15, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:32", "kind": "stop_blocked", "attempt": 16, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:36", "kind": "stop_blocked", "attempt": 17, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:41", "kind": "stop_blocked", "attempt": 18, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:46", "kind": "stop_blocked", "attempt": 19, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:50", "kind": "stop_blocked", "attempt": 20, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:55", "kind": "stop_blocked", "attempt": 21, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:10:59", "kind": "stop_blocked", "attempt": 22, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:04", "kind": "stop_blocked", "attempt": 23, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:09", "kind": "stop_blocked", "attempt": 24, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:14", "kind": "stop_blocked", "attempt": 25, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:18", "kind": "stop_blocked", "attempt": 26, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:23", "kind": "stop_blocked", "attempt": 27, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:27", "kind": "stop_blocked", "attempt": 28, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:32", "kind": "stop_blocked", "attempt": 29, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:37", "kind": "stop_blocked", "attempt": 30, "state": "active", "milestone": "STAGE0"}
+{"ts": "2026-11-03T06:11:53", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 31}
