@@ -106,3 +106,6 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | 問題 | 處理 |
 | --- | --- |
 | GitHub push protection 拒絕推送：commit `448014f` 的 `tests/safety/test_mask.py:8` 含 `sb_secret_…` 字面值（Supabase CLI 本機預設金鑰格式，只對本機 lab 有效） | architect 不得改寫歷史；`401acef` 改為執行時組字串，避免再犯。舊 commit 需人類以 push protection 的 unblock 連結放行後才能推送（暫停並回報） |
+| T-061（L01）、T-065（L05）lab-dev 各自回報：寫入生效，但 DB log 找不到 PostgREST 寫入 | architect 實測確認 `log_statement = mod` 與 pgaudit session 都依外層 `WITH … SELECT` 分類而漏記；ADR-019、T-078（合約＋測試）、T-077（labctl）。這是 SPEC §8 驗證方法本身的盲點，對 NFR-01 是 P0 |
+| T-078 第 1 次失敗：把尚無實作的新測試加進已驗收的 `tests/lab/test_shared.py`（重犯 MS0 T-026） | 改放 `tests/lab/test_shared_writes.py` |
+| T-060 回報：Supabase 對 supabase_auth_admin／storage_admin 設了 role 層級 `log_statement=none` | labctl `ensure_up` 重設並重連；首次重連後第一次登入可能 500（已知限制） |
