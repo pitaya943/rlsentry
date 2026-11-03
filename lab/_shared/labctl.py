@@ -59,6 +59,12 @@ GRANT ALL ON SCHEMA public TO postgres;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
+DO $$ DECLARE p record; BEGIN
+  FOR p IN SELECT schemaname, tablename, policyname FROM pg_policies
+           WHERE schemaname = 'storage' AND tablename IN ('objects', 'buckets') LOOP
+    EXECUTE format('DROP POLICY %I ON %I.%I', p.policyname, p.schemaname, p.tablename);
+  END LOOP;
+END $$;
 SET LOCAL storage.allow_delete_query = 'true';
 DELETE FROM storage.objects;
 DELETE FROM storage.buckets;
@@ -216,14 +222,33 @@ def _wait_services(info: LabInfo, deadline: float) -> None:
     raise RuntimeError("GoTrue/PostgREST did not recover within 15 s after reconnecting")
 
 
+def _upload_storage(root: Path) -> None:
+    """Upload storage/<bucket>/<path> files through the local Storage API (service_role, upsert).
+
+    Why the API and not SQL: real objects exist in the file backend, so public URLs and HEAD
+    probes behave like production (ADR-018 #6)."""
+    if not root.is_dir():
+        return
+    info = _info_cached()
+    headers = {"apikey": info.service_role_key, "Authorization": f"Bearer {info.service_role_key}",
+               "x-upsert": "true", "Content-Type": "application/octet-stream"}
+    for f in sorted(p for p in root.rglob("*") if p.is_file()):
+        bucket, _, path = f.relative_to(root).as_posix().partition("/")
+        r = httpx.post(f"{info.api_url}/storage/v1/object/{bucket}/{path}", headers=headers,
+                       content=f.read_bytes(), timeout=30)
+        if r.status_code >= 300:
+            raise RuntimeError(f"storage upload {bucket}/{path} failed: HTTP {r.status_code} {r.text[:200]}")
+
+
 def apply(scenario: str) -> None:
     """Replace whatever scenario is loaded with `scenario` (see contract for the steps)."""
     d = scenario_dir(scenario)
     with lock():
         _psql("BEGIN;" + _RESET_SQL + "COMMIT;")
         _create_users()
-        for name in ("migration.sql", "seed.sql"):
-            _psql("BEGIN;\n" + (d / name).read_text() + "\nCOMMIT;")
+        _psql("BEGIN;\n" + (d / "migration.sql").read_text() + "\nCOMMIT;")
+        _upload_storage(d / "storage")
+        _psql("BEGIN;\n" + (d / "seed.sql").read_text() + "\nCOMMIT;")
         _psql("NOTIFY pgrst, 'reload schema'; NOTIFY pgrst, 'reload config';")
         deadline = time.monotonic() + 10
         time.sleep(0.3)
