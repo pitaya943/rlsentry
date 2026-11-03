@@ -742,3 +742,4 @@
 {"ts": "2026-11-03T08:06:50", "kind": "subagent_start", "id": "de1c57ea", "agent": "recon-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T08:07:43", "kind": "subagent_stop", "id": "8fa3360c", "agent": "recon-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T08:09:59", "kind": "ticket_accepted", "ticket": "T-084", "commit": "65dc9958f218e9cb626539de120eaa5ddc0fc7e3", "files": ["rlsentry/safety/http.py", "rlsentry/safety/ratelimit.py"]}
+{"ts": "2026-11-03T08:11:45", "kind": "ticket_accepted", "ticket": "T-081", "commit": "fed92b7dcaa53959b6389322a8f6b675c1993af2", "files": ["docs/DECISIONS.md", "rlsentry/contracts/lab.py", "tests/lab/oracle.py", "tests/lab/oracle_cases.py", "tests/lab/test_shared_prefix.py"]}
