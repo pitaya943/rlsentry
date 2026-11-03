@@ -61,4 +61,3 @@ def test_login_writes_only_as_gotrue_and_are_attributed(lab_info: LabInfo) -> No
     assert writes, "login must leave writes in the DB log (log_statement = mod)"
     assert not {w.role for w in writes} & POSTGREST_ROLES
     assert all(w.command.isupper() and w.command.isalpha() for w in writes)
-
