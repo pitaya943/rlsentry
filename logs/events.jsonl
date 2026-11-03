@@ -885,3 +885,10 @@
 {"ts": "2026-11-03T11:40:30", "kind": "stop_blocked", "attempt": 8, "state": "active", "milestone": "MS2"}
 {"ts": "2026-11-03T11:40:33", "kind": "subagent_stop", "id": "40f33e2b", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-03T11:43:01", "kind": "ticket_accepted", "ticket": "T-105", "commit": "f8b9e5efe25938f51c260982bca502cc5a3cb35f", "files": ["rlsentry/probe/cross_tenant.py", "rlsentry/probe/paths.py"]}
+{"ts": "2026-11-03T11:50:44", "kind": "ticket_start", "ticket": "T-106", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-03T11:50:51", "kind": "dispatch", "id": "7b2b2e15", "agent": "probe-dev", "ticket": "T-106", "review": null, "body": "logs/messages/7b2b2e15-dispatch.json"}
+{"ts": "2026-11-03T11:50:53", "kind": "subagent_start", "id": "b9ec4c87", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:50:53", "kind": "report", "id": "cbb511ea", "agent": "probe-dev", "ticket": "T-106", "review": null, "body": "logs/messages/cbb511ea-report.json"}
+{"ts": "2026-11-03T11:51:17", "kind": "stop_blocked", "attempt": 9, "state": "active", "milestone": "MS2"}
+{"ts": "2026-11-03T11:51:39", "kind": "subagent_stop", "id": "dd818150", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-03T11:54:01", "kind": "ticket_accepted", "ticket": "T-110", "commit": "d9a4f8e46a18e765bbcef584727a1f9f308193ae", "files": ["rlsentry/policy/init.py"]}

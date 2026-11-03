@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 70/78 · 進行中 5 · blocked 1
+自動產生，請勿手改 · 完成 71/78 · 進行中 4 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -88,7 +88,7 @@
 - [x] T-107 probe/verdict.py：三態判定（probe-dev，done，1 次）
 - [ ] T-108 rules/severity.py 與 probe/diff.py：規則、嚴重度與差分（FR-10）（probe-dev，in_progress，1 次） ← 依賴 T-091✓
 - [ ] T-109 probe/run.py：Probe 階段（MS2 只做讀取）（probe-dev，todo，0 次） ← 依賴 T-105✓ T-106… T-107✓ T-108…
-- [ ] T-110 policy/init.py：rlsentry init 草稿（FR-15）（probe-dev，in_progress，1 次） ← 依賴 T-091✓
+- [x] T-110 policy/init.py：rlsentry init 草稿（FR-15）（probe-dev，done，1 次）
 - [ ] T-111 Lab 整合測試：audit 掃描對照 ground truth（MS2 讀取）（architect，todo，0 次） ← 依賴 T-092✓ T-102… T-103… T-109…
 
 ## [ ] MS3 M3 寫入（鎖定）
