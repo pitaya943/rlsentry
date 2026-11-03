@@ -157,3 +157,15 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | --- | --- |
 | 本機無 Docker；雲端新 session 驗證了過期的 clone（`25c6374`）且缺相依套件 | 改為 GitHub Actions 獨立驗證（`main` 上的 workflow、輸入 ref）＋本機防竄改＋sha 比對；Actions 結果 `MS1: ALL PASSED`（受測 `6daab21`，與本機 `388d3e5` 除 `logs/` 外相同） |
 | 變異測試要放在哪裡 | 放在 repo 測試、標記 safety、holdout 附變異版本（ADR-022），自 MS2 起實施 |
+
+## MS2 M2 Discovery + M3 讀取（進行中）
+
+### Holdout hashes（派工前記錄）
+| 檔案 | sha256 |
+| --- | --- |
+| MS2/test_holdout_discovery.py | `f66b125e9134366e0e6f3939e8ee58278774481e7d790611ca687302490cfbf7` |
+| MS2/test_holdout_init.py | `745ea534dae8f3322568b696cdb935fb55385a7e88baec4c867ca5ba1c8e5aae` |
+| MS2/test_holdout_lab_mutations.py | `863087565b8c35f43163d188d103eeeb2083e076dee64b67509b70e20b340517` |
+| MS2/test_holdout_probe.py | `73f20ccb43cb05e3a32ca913051e3d91fcf91848c8e0d5e5324ff6b0c5d07024` |
+
+內容：discovery、probe、init 的不同輸入；`test_holdout_lab_mutations.py` 是 ADR-022 要求的變異版本（L02、C02、L06 的 oracle 變異，以及 C01 關閉 RLS、C04 補上 B 的資料後掃描器的判定變化）。派工前以 scratchpad 參考實作確認：可見單元測試 125 passed、lab 新測試 16 passed、`test_scan_reads.py` 15 passed、holdout 25 passed（參考實作未提交）。
