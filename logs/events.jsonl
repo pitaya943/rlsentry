@@ -509,3 +509,5 @@
 {"ts": "2026-11-03T06:11:32", "kind": "stop_blocked", "attempt": 29, "state": "active", "milestone": "STAGE0"}
 {"ts": "2026-11-03T06:11:37", "kind": "stop_blocked", "attempt": 30, "state": "active", "milestone": "STAGE0"}
 {"ts": "2026-11-03T06:11:53", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 31}
+{"ts": "2026-11-03T06:11:56", "kind": "subagent_stop", "id": "2f8fcd15", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-03T06:13:03", "kind": "stop_allowed", "reason": "budget_exhausted", "attempts": 32}
