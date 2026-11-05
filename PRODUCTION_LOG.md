@@ -240,3 +240,10 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 ### 事件引用
 holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accepted／holdout_added）。
 
+
+## MS4 M4 Whitebox（進行中）
+
+### Holdout（派工前紀錄，§2）
+| 檔案 | sha256 |
+| --- | --- |
+| rlsentry-holdout:MS4/test_holdout_whitebox.py | c33e3d6b4fdb6ccbdbca1c85dea96a1e0ff65869c2361c19994e4c733abefeac |
