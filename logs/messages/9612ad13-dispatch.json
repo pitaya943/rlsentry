@@ -1,0 +1,6 @@
+{
+  "description": "T-130 probe run wiring",
+  "prompt": "Ticket: T-130\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-130.md and follow it.\n\nCritical guidance (previous attempts ran out of turns on the slow lab suite without committing):\n- Implement rlsentry/probe/run.py's dev/ci write path per rlsentry/contracts/probe.py probe() docstring and ADR-029 (+ 補記).\n- Iterate ONLY on the FAST test `python3 -m pytest -q tests/probe/test_run_writes.py tests/probe/test_write_requests.py` (no Docker). Do NOT run the full lab suite while iterating.\n- As soon as those two fast files pass, `git add -A && git commit` immediately, then report the Branch and Commit — even if you have not run the lab tests. Commit first, report second. Do not spend remaining turns on the lab suite.\n- Keep edits to rlsentry/probe/run.py only.",
+  "subagent_type": "probe-dev",
+  "isolation": "worktree"
+}

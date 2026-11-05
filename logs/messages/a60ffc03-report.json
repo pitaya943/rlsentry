@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a8fdc1b5383b740d0",
+  "description": "T-130 probe run wiring",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-130\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-130.md and follow it.\n\nCritical guidance (previous attempts ran out of turns on the slow lab suite without committing):\n- Implement rlsentry/probe/run.py's dev/ci write path per rlsentry/contracts/probe.py probe() docstring and ADR-029 (+ 補記).\n- Iterate ONLY on the FAST test `python3 -m pytest -q tests/probe/test_run_writes.py tests/probe/test_write_requests.py` (no Docker). Do NOT run the full lab suite while iterating.\n- As soon as those two fast files pass, `git add -A && git commit` immediately, then report the Branch and Commit — even if you have not run the lab tests. Commit first, report second. Do not spend remaining turns on the lab suite.\n- Keep edits to rlsentry/probe/run.py only.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/a6a09a13-8503-5249-8edd-eee75450f8b3/tasks/a8fdc1b5383b740d0.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}
