@@ -137,7 +137,8 @@ async def send_write(client: SafeClientContract, supabase_url: str, anon_key: st
         if plan.text_column is not None:
             body[plan.text_column] = CANARY_PREFIX + uuid.uuid4().hex
         owner_id = sessions.user_ids.get(plan.new_owner, "") if plan.new_owner else ""
-        extra = fill_required(target, owner_id, body.keys())
+        fill_id = sessions.user_ids.get(plan.actor) or owner_id
+        extra = fill_required(target, fill_id, body.keys())
         if extra is None:
             return WriteAttempt(status=None, curl="")
         body.update(extra)
