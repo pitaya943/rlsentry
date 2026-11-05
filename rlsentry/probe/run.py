@@ -10,6 +10,7 @@ from rlsentry.contracts.policy import ExpectedPolicy
 from rlsentry.contracts.probe import (
     AUDIT_WRITE_REASON,
     CANARY_PREFIX,
+    FILL_TEXT_FORMATS,
     PROBE_ROLES,
     WRITE_NO_OWNER_REASON,
     WRITE_NOT_FORBIDDEN_REASON,
@@ -38,10 +39,19 @@ def _not_tested(target: str, role: Role, op: Op, reason: str) -> ProbeResult:
                        known_rows_checked=0, reason=reason, evidence_curl="")
 
 
-def _text_column(target: Target, owner: str | None, public: str | None) -> str | None:
-    """Best-effort mutable column: the first one that is not pk, owner or public."""
-    skip = {*target.primary_key, owner, public}
-    return next((c for c in target.columns if c not in skip), None)
+def pick_text_column(target: Target, owner_column: str | None,
+                     public_column: str | None) -> str | None:
+    """Why: the canary marker must go into a text column; a string in a uuid column (L05
+    created_by) fails with 400 and the work row is never seeded. Columns without type
+    information stay eligible (MS3 behaviour)."""
+    skip = {*target.primary_key, owner_column, public_column}
+    for c in target.columns:
+        if c in skip:
+            continue
+        fmt = target.column_formats.get(c)
+        if fmt is None or fmt in FILL_TEXT_FORMATS:
+            return c
+    return None
 
 
 async def _write_target(client: SafeClientContract, supabase_url: str, anon_key: str,
@@ -56,7 +66,7 @@ async def _write_target(client: SafeClientContract, supabase_url: str, anon_key:
     if target.kind != "table" or len(target.primary_key) != 1 or owner is None:
         return [_not_tested(name, r, op, WRITE_NO_OWNER_REASON)
                 for r in PROBE_ROLES for op in WRITE_OPS], findings
-    text_column = _text_column(target, owner, public)
+    text_column = pick_text_column(target, owner, public)
     expected = {(op, r): resolve_expected(policy, name, op, r, cols)
                 for op in WRITE_OPS for r in PROBE_ROLES}
     plans = plan_writes(expected, sessions.user_ids, sessions.tokens, text_column)
