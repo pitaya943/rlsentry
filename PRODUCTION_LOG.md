@@ -200,3 +200,17 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 - acceptance `--no-vc`：ALL PASSED（MS2 holdout 25 passed；回歸、safety、provenance、ruff、mypy 通過）。
 - lab 整合：15 個情境以 audit 掃描，所有 audit SELECT case 都符合 ground truth。confirmed 誤報為 0；PostgREST 角色寫入為 0；GET 只下載主鍵。
 - subagent tokens（約）：probe-dev 每張 16k–26k；lab-dev T-092 23k、T-113 30k；auditor 43k、48k。
+
+## MS3 M3 寫入（進行中）
+
+### Holdout（派工前紀錄，§2）
+| 檔案 | sha256 |
+| --- | --- |
+| rlsentry-holdout:MS3/test_holdout_writes.py | 6fba499e4f9531e739bafd7e5cddd0ab9eaaec05b75ab4808cfa58920da301ca |
+
+### 失敗與修正（進行中）
+| 問題 | 修正 |
+| --- | --- |
+| T-121 的 test_import.py 以 importlib.reload 模擬無 fcntl，在完整回歸時與 tests/lab/conftest 的 session flock 死鎖（T-123 驗收卡住） | T-131：改以子行程檢查無 fcntl；reopen T-121 缺陷 |
+| 被中止的 T-123 驗收留下已暫存的 merge，誤併入 T-131 start commit（a091975 成為 arch/T-123 的 merge）。contracts/ 屬 architect 路徑，provenance 不觸發；T-123 改以一個真實的 docstring 修正（arch/T-123b）重新走驗收閘門 | 已記錄，內容正確且已整合 |
+| 原寫入設計共用單一 canary，跨租戶 DELETE／轉移會造成後續探測偽陽性與清理不全 | T-132：每個破壞性探測各自新植入 work row（ADR-029 補記） |
