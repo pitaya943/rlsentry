@@ -15,7 +15,14 @@
 - auditor（base bd79ce0）：無 P0；P1 ×1（NFR-01 DB log 流量證據缺失）已由 T-140 補上；P2 見第 5 段。詳見 docs/verification/traceability.md 的 MS3 段。
 
 ## 3. 請你親手驗證（逐項打勾）
-**Codespaces 準備（ADR-025）**：在 `claude/busy-darwin-asvox3` 開 Codespace；`pip install -e ".[dev]"`、安裝 Supabase CLI、依 CLAUDE.md 啟動 Docker；確認 `git rev-parse HEAD` 等於本機 sha（不一致時 `git diff --stat <本機 sha> HEAD -- . ':!logs'` 須為空）。測完一律 `git restore .`、不提交、不推送，刪除 Codespace。
+**Codespaces 準備（ADR-025；完整指令見 `docs/verification_steps.html` 步驟 4.5）**：在 `claude/busy-darwin-asvox3` 開 Codespace，依序執行：
+```
+pip install -e ".[dev]"
+curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | sudo tar -xz -C /usr/local/bin supabase
+docker info >/dev/null 2>&1 || (sudo dockerd >/tmp/dockerd.log 2>&1 &); sleep 5; docker info >/dev/null 2>&1 && echo DOCKER_OK
+python3 -c "from lab._shared import labctl; print(labctl.ensure_up().api_url)"   # 第一次拉映像約數分鐘，預期印出 http://127.0.0.1:54321
+```
+確認 `git rev-parse HEAD` 等於本機 sha（不一致時 `git diff --stat <本機 sha> HEAD -- . ':!logs'` 須為空）。測完一律 `git restore .`、不提交、不推送，刪除 Codespace。
 
 - [ ] 【本機】＋【Actions 涵蓋】在容器內執行 `make verify-milestone MS=MS3`，依 ADR-022 三段信任鏈：(a) 本機 `host/review.sh` 第 1、2 步（同步＋防竄改，須 `✓ no changes to frozen files`）；(b) Actions `verify-milestone` ref=claude/busy-darwin-asvox3（最後一行 `MS3: ALL PASSED`，Actions 只證明通過不顯示細節）；(c) `git diff --stat <本機 sha> <Actions sha> -- . ':!logs'` 無輸出。
 - [ ] 【Codespaces 必做變異】**（簽章前提，ADR-026）** 把 `rlsentry/probe/verdict.py:103` 的 `Outcome.INCONCLUSIVE` 改成 `Outcome.DENIED`，執行 `python3 -m pytest -q tests/probe/test_write_status.py`。預期 `test_non_auth_failure_is_inconclusive_never_denied` 失敗。意義：INSERT 因非授權原因（如 400 NOT NULL）失敗時，若被判 denied 等於把「其實可能不安全」說成安全；此變異證明該防線有效。完成後 `git restore rlsentry/probe/verdict.py`。

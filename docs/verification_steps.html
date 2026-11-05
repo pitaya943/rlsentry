@@ -125,13 +125,33 @@ git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'
 
 <div class="step">
 <h3>步驟 4.5　Codespaces 準備 <span class="tag t-cs">Codespaces</span></h3>
-<p>清單第 3 段開頭的「Codespaces 準備」會寫出本次的安裝指令。固定流程：</p>
+<p>以下指令與 <code>.github/workflows/verify-milestone.yml</code>（Actions 用的、你控制的安裝步驟）一致，所以 Codespaces 與 Actions 裝的是同一套。每份清單第 3 段開頭的「Codespaces 準備」只會補充該 milestone 的特例，其餘照這裡做。</p>
 <ol>
-  <li>GitHub repo → Code → Codespaces → 在 <code>claude/busy-darwin-asvox3</code> 建立一個新的 Codespace。</li>
-  <li>依清單安裝（Python 相依套件、Supabase CLI），並依 CLAUDE.md 啟動 Docker。</li>
-  <li><code>git rev-parse HEAD</code> 必須等於步驟 2 的本機 sha。不一致時（中間多了只改 logs/ 的 commit），<code>git diff --stat &lt;本機 sha&gt; HEAD -- . ':!logs'</code> 必須沒有輸出。</li>
-  <li>做完所有【Codespaces 必做】與【Codespaces 必做變異】的項目，每一項變異都要依清單還原。</li>
-  <li><b>不要從 Codespaces 提交或推送</b>，也不要把簽章金鑰放進去。測完先 <code>git restore .</code>，再刪除這個 Codespace。</li>
+  <li>GitHub repo → Code → Codespaces → 在 <code>claude/busy-darwin-asvox3</code> 建立一個新的 Codespace（它本身就是一個含 Docker 的 Linux 容器）。</li>
+  <li><b>安裝 Python 專案與開發相依套件</b>（含 pytest、ruff、mypy、httpx 等；定義在 <code>pyproject.toml</code> 的 <code>[dev]</code>）：
+<pre>cd /workspaces/rlsentry          # Codespace 內的 repo 路徑
+pip install -e ".[dev]"</pre></li>
+  <li><b>安裝 Supabase CLI</b>（與 workflow 同一行；lab 以它啟動本機 Supabase）：
+<pre>curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+  | sudo tar -xz -C /usr/local/bin supabase
+supabase --version</pre>
+    需要與 CI 完全相同的版本時，把 <code>latest/download</code> 換成 <code>download/v&lt;版本&gt;</code>（版本以 Actions log 的 <code>supabase --version</code> 為準）。</li>
+  <li><b>確認 Docker 可用</b>（Codespaces 通常已內建；若 <code>docker info</code> 失敗，依 CLAUDE.md 啟動）：
+<pre>docker info &gt;/dev/null 2>&amp;1 || (sudo dockerd &gt;/tmp/dockerd.log 2>&amp;1 &amp;); sleep 5; docker info &gt;/dev/null 2>&amp;1 &amp;&amp; echo DOCKER_OK</pre></li>
+  <li><b>啟動本機 Supabase lab</b>（第一次會拉映像，約數分鐘；需要 Docker 的測試都靠它）：
+<pre>python3 -c "from lab._shared import labctl; print(labctl.ensure_up().api_url)"
+# 預期印出 http://127.0.0.1:54321</pre></li>
+  <li><b>確認驗的是同一份程式碼</b>：<code>git rev-parse HEAD</code> 必須等於步驟 2 的本機 sha；不一致時（中間多了只改 logs/ 的紀錄 commit），下面這個必須沒有輸出：
+<pre>git rev-parse HEAD
+git diff --stat &lt;本機 sha&gt; HEAD -- . ':!logs'</pre></li>
+  <li>依清單第 3 段逐項執行【Codespaces 必做】與【Codespaces 必做變異】。清單每一項都附完整指令與預期輸出；變異項做完一定要依該項指示 <code>git restore &lt;檔案&gt;</code> 還原。整套可用的參考指令：
+<pre># 不需 Docker 的快速單元測試（以 MS3 為例）
+python3 -m pytest -q tests/probe/test_write_status.py tests/probe/test_write_verdict.py tests/probe/test_run_writes.py
+# 需要 Docker 的 lab 測試（標記 safety）
+python3 -m pytest -q -m safety tests/lab/test_scan_writes.py tests/lab/test_write_mutations.py
+# 一次跑完該 milestone 的所有自動檢查（與 Actions 相同）
+make verify-milestone MS=MSx</pre></li>
+  <li><b>不要從 Codespaces 提交或推送</b>，也不要把簽章金鑰放進去。測完先 <code>git restore .</code>（還原任何變異），再刪除這個 Codespace。</li>
 </ol>
 </div>
 
