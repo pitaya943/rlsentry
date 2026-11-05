@@ -17,12 +17,12 @@ from rlsentry.contracts.models import (
     DiscoveryResult,
     Finding,
     Profile,
-    ReconResult,
     ScanReport,
     Target,
 )
 from rlsentry.contracts.policy import ExpectedPolicy, ScanConfig
 from rlsentry.contracts.probe import Sessions
+from rlsentry.contracts.recon import ReconOutput
 from rlsentry.contracts.safety import SafeClientContract
 
 
@@ -64,9 +64,11 @@ class Mask(Protocol):
 
 
 class Recon(Protocol):
-    """recon/ (M1)."""
+    """recon/ (M1). ADR-023/ADR-036: SafeClient first (GET only, same origin as target_url).
+    Returns the report part (ReconResult, key findings) and, in memory only, the bundle texts
+    for M2 and the raw anon key. Full rules: rlsentry.contracts.recon.recon."""
 
-    async def __call__(self, target_url: str) -> ReconResult: ...
+    async def __call__(self, client: SafeClientContract, target_url: str) -> ReconOutput: ...
 
 
 class Discover(Protocol):

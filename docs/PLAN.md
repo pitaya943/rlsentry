@@ -46,7 +46,7 @@ MS0 產出。每個 milestone 開始時 architect 會依此計畫寫出正式 ti
 | ⚠(4) bench runner 與計分（ADR-011） | whitebox-dev | `bench/**` |
 | 依實測填入 `splinter_expected` | architect | `lab/**/expected.yaml` |
 
-## MS5 M1 Recon（D2 於此決定）
+## MS5 M1 Recon（D2 於此決定；實際 ticket 見 docs/tickets/T-180–T-195）
 | 預計 ticket | agent | 檔案 |
 | --- | --- | --- |
 | HTML／chunk 抓取（Next.js、Vite、CRA fixture；FR-01） | recon-dev | `recon/fetch.py` |
@@ -69,6 +69,15 @@ MS0 產出。每個 milestone 開始時 architect 會依此計畫寫出正式 ti
 | ⚠(1) MS3 核准意見第 1 點：遠端 dev／ci 寫入被拒（`WriteRefused`）轉為 inconclusive 寫入 cell 並記入報告，不讓掃描崩潰 | whitebox-dev | `pipeline.py`／`probe/run.py` |
 | SPEC §5 M4 第 2 點：pipeline 以 `read_policies` 填入 `ScanReport.policies`，並把設定檔的曝露 schema 傳給 M4（`db_schemas`；MS4 稽核） | whitebox-dev | `pipeline.py` |
 | MS3 核准意見第 1 點：L01／L05 寫入植入覆蓋（MS4 以 OpenAPI 欄位型別處理，ADR-034；若仍有缺口於此補齊並更新 benchmark） | probe-dev | `probe/**` |
+| ⚠(4) MS4 核准意見第 5 點、稽核 P2 (a)：任一角色在某物件取得資料時，不得抑制**其他角色**的 SECURITY DEFINER 警告（correlate 依 (物件, 角色) 判斷）。**須以測試證明**：一個角色有 confirmed、另一角色只有 lint 的案例仍產生該角色的 SECURITY_DEFINER_EXECUTABLE | whitebox-dev | `whitebox/correlate.py` |
+| ⚠(4) MS4 核准意見第 5 點、稽核 P2 (b)：SECURITY_DEFINER_RPC_DATA 只用於確實是 SECURITY DEFINER 的函式；其他 RPC 越權讀取改用正確的規則名稱（新規則需 ADR 與 rule catalog）。**須以測試證明**：SECURITY INVOKER 的 RPC 越權讀取不再標為 SECURITY_DEFINER_RPC_DATA | probe-dev | `rules/severity.py`、`probe/**` |
+| ⚠(2) MS4 核准意見第 5 點、稽核 P2 (c)：`splinter_status` 不得寫死 `public`；pipeline 把設定檔的曝露 schema 傳給 M4（`db_schemas`），並與「以 read_policies 填入 ScanReport.policies」一起完成。**須以測試證明**：非 public schema 的 lint 被正確計入，且 ScanReport.policies 有內容 | whitebox-dev | `bench/score.py`、`pipeline.py` |
+| ⚠(2) MS4 核准意見第 5 點、稽核 P2 (d)：`read_policies` 補上以 DB log 驗證唯讀的 lab 測試。**須以測試證明**：執行期間 DB log 沒有任何寫入 | architect | `tests/lab/**` |
+| MS4 核准意見第 3 點：展示情境 L04 的報告附**重現指令**（curl，key 遮罩）與**修補 SQL**（owner-scoped policy），以 lab 驗證修補後重掃為無漏洞 | whitebox-dev | `report/**` |
+| MS4 核准意見第 2 點：runtime 改善——同一身分的多筆主鍵查詢合併為**單一請求**（`id=in.(…)`）以減少請求數；**不得調高預設 rps**（NFR-04、ADR-033）。完成後重新量測 audit、rps 5 下 **5／20／50 張表**；仍未達 50 張 < 60 s 就在 BENCHMARK_REPORT 如實揭露 | probe-dev | `probe/read.py`、`probe/cross_tenant.py` |
 
 ## MS7 整合與交付
 `make acceptance` 修正、`BENCHMARK_REPORT.md`（五項指標附原始數量）、`USAGE.md`（dev、ci、audit 各一個 doctest）、demo。
+
+- MS4 核准意見第 1 點：MS5（M1）與 MS6（L03 串接等）完成後，於 MS7 **重新跑完整 benchmark**（`python -m rlsentry.bench`），在 BENCHMARK_REPORT 更新 TP／FN／FP／TN 等**原始數量**與 runtime；原始 JSON 存 `docs/benchmark/MS7-bench.json`。
+- MS4 核准意見第 2 點：若 MS6 的請求合併未完成，於 MS7 完成並重新量測 5／20／50 張表（同上，不得調高預設 rps）。
