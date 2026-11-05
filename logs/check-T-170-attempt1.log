@@ -1,0 +1,55 @@
+All checks passed!
+........................................................................ [  7%]
+........................................................................ [ 15%]
+........................................................................ [ 23%]
+........................................................................ [ 30%]
+........F............................................................... [ 38%]
+........................................................................ [ 46%]
+........................................................................ [ 53%]
+........................................................................ [ 61%]
+........................................................................ [ 69%]
+........................................................................ [ 76%]
+........................................................................ [ 84%]
+........................................................................ [ 92%]
+..........................................F............................. [ 99%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+________________________ test_spec_section_8_specifics _________________________
+
+    def test_spec_section_8_specifics() -> None:
+        g = _all()
+        assert {c.rule for c in g["L07"].vulnerable_cases} == {"SECURITY_DEFINER_RPC_DATA"}
+        assert [c.rule for c in g["L07"].warning_cases] == ["SECURITY_DEFINER_EXECUTABLE"]
+        assert [(c.kind, c.key_kind) for c in g["L08"].vulnerable_cases] == [(CaseKind.KEY, "secret")]
+        assert any(c.kind is CaseKind.KEY and c.key_kind == "publishable" for c in g["L08"].safe_cases)
+        assert g["L11"].priority == "P2"
+        assert not g["L12"].openapi
+        assert ("diary_entries", "inferred") in {(d.target, d.confidence) for d in g["L12"].discovery_cases}
+        assert g["C03"].inconclusive_cases and g["C04"].inconclusive_cases   # SPEC §8 C01–C04 row
+>       assert all(x.splinter_expected == "measure" for x in g.values())     # filled in at MS4
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert False
+E        +  where False = all(<generator object test_spec_section_8_specifics.<locals>.<genexpr> at 0x7f419b3a7100>)
+
+tests/ground_truth/test_gt_complete.py:44: AssertionError
+_____________________________ test_splinter_fields _____________________________
+
+    def test_splinter_fields() -> None:
+        lints = [lint("rls_disabled_in_public", "customers"), lint("auth_rls_initplan", "customers", "PERFORMANCE")]
+        g = gt("L01")
+        assert splinter_status(g, lints) == "reported"
+        assert lint_labels(lints) == ["rls_disabled_in_public:customers"]
+        assert lint_labels([lint("extension_in_public", None)]) == ["extension_in_public:"]
+        r = score_scenario(g, Profile.DEV, matrix(), [], 0.0, lints=lints)
+>       assert (r.splinter, r.splinter_lints, r.splinter_match) == ("reported", ["rls_disabled_in_public:customers"], None)
+E       AssertionError: assert ('reported', ...omers'], True) == ('reported', ...omers'], None)
+E         
+E         At index 2 diff: True != None
+E         Use -v to get more diff
+
+tests/bench/test_score.py:112: AssertionError
+=========================== short test summary info ============================
+FAILED tests/ground_truth/test_gt_complete.py::test_spec_section_8_specifics
+FAILED tests/bench/test_score.py::test_splinter_fields - AssertionError: asse...
+2 failed, 936 passed in 723.02s (0:12:03)
+make: *** [Makefile:15: check] Error 1
