@@ -1043,3 +1043,11 @@
 {"ts": "2026-11-05T04:48:43", "kind": "report", "id": "483aa737", "agent": "probe-dev", "ticket": "T-127", "review": null, "body": "logs/messages/483aa737-report.json"}
 {"ts": "2026-11-05T04:54:56", "kind": "ticket_accepted", "ticket": "T-127", "commit": "334414c0a80d95020204ce00f355f920d291a008", "files": ["rlsentry/probe/write.py"]}
 {"ts": "2026-11-05T04:56:04", "kind": "ticket_start", "ticket": "T-130", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-05T04:56:20", "kind": "dispatch", "id": "c5e741d2", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/c5e741d2-dispatch.json"}
+{"ts": "2026-11-05T04:56:24", "kind": "subagent_start", "id": "8423ccca", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:56:24", "kind": "report", "id": "8ea6b2af", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/8ea6b2af-report.json"}
+{"ts": "2026-11-05T04:56:56", "kind": "holdout_added", "milestone": "MS3", "commit": "af51549638176a6f43fc76dad951c59a52f235ae", "files": {"MS3/test_holdout_writes.py": "94680aedc763b81d32b3c3c9683a2207aa1fdcbd9178fccc7d627c68d9a9c824"}}
+{"ts": "2026-11-05T05:08:37", "kind": "dispatch", "id": "b92dbc76", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/b92dbc76-dispatch.json"}
+{"ts": "2026-11-05T05:08:41", "kind": "report", "id": "5a2659b7", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/5a2659b7-report.json"}
+{"ts": "2026-11-05T05:08:41", "kind": "subagent_start", "id": "c586fe2f", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T05:21:14", "kind": "ticket_start", "ticket": "T-134", "agent": "architect", "attempt": 1}
