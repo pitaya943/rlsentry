@@ -32,4 +32,4 @@ vulnerable_cases:
   - {id: L01-V11, target: customers, op: delete, role: user_a, rows: [c_b1], expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
   - {id: L01-V12, target: customers, op: delete, role: user_b, rows: [c_a1], expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
 safe_cases: []          # 12 個格子全部是漏洞
-splinter_expected: measure
+splinter_expected: reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

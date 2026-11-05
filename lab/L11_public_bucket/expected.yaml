@@ -22,4 +22,4 @@ vulnerable_cases:
 safe_cases:
   - {id: L11-S1, kind: storage, target: private-ok, op: select, role: anon, rows: [obj_b1], expect: denied}
   - {id: L11-S2, kind: storage, target: private-ok, op: select, role: user_a, rows: [obj_b1], expect: denied}
-splinter_expected: measure
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

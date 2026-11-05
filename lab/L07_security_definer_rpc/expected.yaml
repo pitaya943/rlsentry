@@ -40,4 +40,4 @@ inconclusive_cases:
   - {id: L07-I1, target: ping_definer, op: select, role: anon, expect: inconclusive}
 warning_cases:
   - {id: L07-W1, target: ping_definer, op: select, role: anon, expect: inconclusive, rule: SECURITY_DEFINER_EXECUTABLE, evidence: config_warning, severity: low}
-splinter_expected: measure
+splinter_expected: reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）
