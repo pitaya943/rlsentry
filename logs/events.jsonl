@@ -1246,3 +1246,6 @@
 {"ts": "2026-11-05T21:08:37", "kind": "subagent_stop", "id": "97a92161", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T21:08:40", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS4"}
 {"ts": "2026-11-05T21:09:23", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS4"}
+{"ts": "2026-11-05T21:09:26", "kind": "subagent_stop", "id": "8afb1a0e", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-05T21:09:59", "kind": "subagent_stop", "id": "a8e3faf5", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-05T21:12:24", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS4"}
