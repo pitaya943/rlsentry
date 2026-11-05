@@ -1,0 +1,7 @@
+{
+  "description": "T-137 verdict status classification",
+  "prompt": "Ticket: T-137\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-137.md and follow it. This is a small change to one function (rlsentry/probe/verdict.py: write_cell). The fast tests need no Docker.",
+  "subagent_type": "probe-dev",
+  "run_in_background": false,
+  "isolation": "worktree"
+}
