@@ -94,6 +94,8 @@ class Target(_Strict):
     kind: str = Field(pattern=r"^(table|view|rpc)$")
     columns: list[str] = []
     primary_key: list[str] = []
+    required: list[str] = []          # ADR-034: NOT NULL columns without default (OpenAPI)
+    column_formats: dict[str, str] = {}  # ADR-034: column → OpenAPI `format` (uuid, text, …)
     discovered_by: str = Field(pattern=r"^(openapi|bundle|policy)$")
     confidence: str = Field(pattern=r"^(confirmed|inferred|unknown)$")
 
@@ -202,6 +204,21 @@ class AuthorizationRecord(_Strict):
     write_hosts: list[str] = []      # ADR-017: remote hosts this run may write to (ci only)
 
 
+class PolicyRow(_Strict):
+    """M4: one pg_policies entry (SPEC §5 M4 第 2 點; ADR-032). Policy DDL text, never row data."""
+
+    schema_: str = Field(alias="schema")
+    table: str
+    name: str
+    command: str                      # ALL | SELECT | INSERT | UPDATE | DELETE
+    roles: list[str]
+    permissive: bool
+    using: str | None = None          # pg_policies.qual
+    with_check: str | None = None
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+
 class ScanReport(_Strict):
     """The JSON report (FR-12). M5 renders HTML/SARIF from this object only."""
 
@@ -215,3 +232,4 @@ class ScanReport(_Strict):
     discovery: DiscoveryResult | None = None
     matrix: AccessMatrix = AccessMatrix()
     findings: list[Finding] = []
+    policies: list[PolicyRow] = []    # M4 (SPEC §5 M4 第 2 點; ADR-032): pg_policies conditions

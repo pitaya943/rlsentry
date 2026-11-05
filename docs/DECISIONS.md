@@ -467,3 +467,25 @@ D2–D4 由 architect 決定並記錄於此。
   2. 每份驗證清單保留自檢項：`python3 docs/tools/progress.py && git diff --stat docs/progress.html docs/branch-log.md`，預期沒有輸出（若 accept 之後 harness 又寫入 logs/，以清單標頭的 sha 為準）。
 - 理由：衍生文件只要重跑就一致，漏跑才是問題；把它和 push 綁在一起，就不需要記得。
 - 後果與風險：branch-log.md 來自 logs/events.jsonl，harness 在 Stop hook 時仍會追加事件，所以清單標頭之後的事件不會出現在該版 branch-log.md，這是預期的。
+
+## ADR-032：M4 Whitebox 設計：固定版本 splinter、唯讀連線、以 target 層級交叉比對
+- 日期：2026-11-05 · Milestone：MS4 · 相關：SPEC §5 M4、FR-11、§8「splinter 必須實測」；ADR-005 第 2、4 類
+- 背景：M4 要把靜態 lint（splinter）與 M3 動態實測對照。MS4 焦點：probe-only 案例必須真實；SECURITY DEFINER 只有在實測取得受保護資料時才是漏洞，否則是 Configuration warning。architect 已在本機 lab 以 psql 實跑固定版本 splinter 於 16 個情境（實測摘要：L01 `rls_disabled_in_public`、L03 `rls_references_user_metadata`、L05／L09 `rls_policy_always_true`、L06 `security_definer_view`、L07 兩個函式皆有 `anon_／authenticated_security_definer_function_executable`、L12 `audit_log` 有 `rls_enabled_no_policy`；L02、L04、L08、L10、L11、C01–C04 沒有 SECURITY 類 lint）。
+- 考慮過的選項：
+  1. 執行期從 GitHub 下載最新 splinter（缺點：結果隨上游變動，benchmark 不可重現；掃描時多一個對外連線）
+  2. vendor 固定 tag 的 `splinter.sql`，以 sha256 鎖定（採用）
+  3. 自己重寫 lint（缺點：失去「與官方 linter 對照」的意義）
+- 決定：
+  1. **固定版本**：supabase/splinter tag `2026.09.1`（commit `e74a9e3`），`rlsentry/whitebox/splinter.sql` 逐位元組相同，sha256 `d8d558ba…9349` 寫在合約；雜湊不符拒絕執行。授權為 PostgreSQL License（著作權聲明記在合約 docstring）。升級版本＝新 ADR＋重新實測所有情境的 `splinter_expected`。
+  2. **唯讀**：連線帶 `default_transaction_read_only=on`，psycopg 也設 `read_only=True`；每個交易最後一律 rollback，M4 從不 commit。所以 M4 可在 audit 執行。已實測：此連線上 `CREATE TABLE` 回 SQLSTATE 25006。
+  3. **SET LOCAL pgrst.db_schemas**：以參數化的 `set_config('pgrst.db_schemas', %s, true)`（等同 SET LOCAL）設定，避免字串組 SQL；schema 名稱先以 IDENT_RE 驗證。另設 `statement_timeout`。
+  4. **只取 SECURITY 類別**：PERFORMANCE 等 lint（如 `auth_rls_initplan`）與授權無關，不參與比對。
+  5. **比對粒度＝target（物件名）**：lint 與 M3 finding 都落在同一個 PostgREST 物件名上即為 `confirmed`；只有 lint → `lint_only`；只有實測 → `probe_only`。
+  6. **SECURITY DEFINER**：`*_security_definer_function_executable` 且實測沒有在該物件取得受保護資料 → `SECURITY_DEFINER_EXECUTABLE`（config_warning，Low），**不是** confirmed；實測有取得資料 → 保留 M3 的 confirmed finding（`SECURITY_DEFINER_RPC_DATA` 等），標 `confirmed`，不再另加警告。
+  7. **M4 絕不產生 confirmed finding**：只註記 M3 finding、另加非漏洞警告（LINT_ONLY、SECURITY_DEFINER_EXECUTABLE），所以 M4 本身無法改變 recall／precision／FPR。
+  8. `pg_policies` 的條件式（DDL 文字，不含資料）放進 `ScanReport.policies`，由 MS6 報告呈現。
+- 理由：固定版本＋雜湊讓 benchmark 可重現，也讓「splinter 沒報」成為可驗證的陳述；target 層級比對簡單、可解釋，且不需要理解每條 lint 的內部邏輯。
+- 後果與風險：
+  - target 層級比對可能過寬：例如 L05 `projects` 的 lint 是關於 UPDATE 的 `WITH CHECK (true)`，若同表另有 SELECT 漏洞也會標 `confirmed`。報告會附 lint 名稱，讓人判斷。
+  - splinter 0024 依設計不檢查 SELECT `USING (true)`、0023 只檢查未啟用 RLS 的表（見 splinter 原始碼註解），所以 L02、L04 等成為 probe-only 是兩種工具回答不同問題，不是 splinter 的缺陷（SPEC §5 M4 解讀）。
+  - 新增相依 `psycopg[binary]`（ADR-012 的「需要時才加」）。
