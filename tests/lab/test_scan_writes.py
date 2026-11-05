@@ -18,7 +18,7 @@ import pytest
 
 from lab._shared import labctl
 from rlsentry.contracts.ground_truth import LAB_USERS, SCENARIO_IDS, Case, CaseKind, GroundTruth
-from rlsentry.contracts.lab import LabInfo
+from rlsentry.contracts.lab import POSTGREST_ROLES, LabInfo
 from rlsentry.contracts.models import AccessMatrix, Evidence, Finding, Op, Outcome, ProbeResult, Profile, Role
 from rlsentry.contracts.policy import TestUser
 from rlsentry.contracts.rules import RULES
@@ -135,14 +135,50 @@ def cleanup_problems(gt: GroundTruth, findings: list[Finding]) -> list[str]:
     return errs
 
 
+def seed_snapshot(gt: GroundTruth) -> dict[str, dict[str, str]]:
+    """Full contents (as jsonb text) of every seeded row, read with the DB connection. Used to
+    prove the scan modified no real row (NFR-01): the scanner must only ever touch its canaries."""
+    snap: dict[str, dict[str, str]] = {}
+    for table, pk in base_tables(gt).items():
+        if len(pk) != 1:
+            continue
+        want = seed_pks(gt, table)
+        rows = labctl.query(f"select {pk[0]}::text, to_jsonb(t)::text from public.{table} t")
+        snap[table] = {r[0]: r[1] for r in rows if r[0] in want}
+    return snap
+
+
+def traffic_problems(gt: GroundTruth, marker: str, before: dict[str, dict[str, str]]) -> list[str]:
+    """NFR-01 independent evidence, read from the DB itself (not the scanner's self-report): the
+    scan modified no seeded (real) row, and the only data writes the Postgres log attributes to
+    a PostgREST role are INSERT/UPDATE/DELETE on the scanner's own canaries. db_writes_since
+    keeps only role+command (never values, NFR-03), so auth-session writes by supabase_auth_admin
+    (the FR-07 login) are expected and ignored here; the canary-only guarantee rests on the
+    seed-row snapshot below plus cleanup_problems. audit's zero-write property is proven
+    separately in tests/lab/test_scan_reads.py."""
+    errs: list[str] = []
+    pgrst_writes = [w for w in labctl.db_writes_since(marker) if w.role in POSTGREST_ROLES]
+    bad_cmd = {w.command for w in pgrst_writes} - {"INSERT", "UPDATE", "DELETE"}
+    if bad_cmd:
+        errs.append(f"unexpected PostgREST write commands during the scan: {sorted(bad_cmd)}")
+    after = seed_snapshot(gt)
+    for table, rows in before.items():
+        if after.get(table) != rows:
+            errs.append(f"{table}: a seeded (real) row changed during the scan")
+    return errs
+
+
 @pytest.mark.safety
 @pytest.mark.parametrize("sid", [s for s in SCENARIO_IDS if s != "L11"])
 def test_dev_writes_match_ground_truth(lab_info: LabInfo, sid: str) -> None:
     gt = load_gt(sid)
     labctl.apply(sid)
     try:
+        before = seed_snapshot(gt)
+        marker = labctl.db_log_marker()
         matrix, findings = scan(lab_info, sid, gt)
-        problems = judge(gt, matrix, findings) + cleanup_problems(gt, findings)
+        problems = (judge(gt, matrix, findings) + cleanup_problems(gt, findings)
+                    + traffic_problems(gt, marker, before))
         assert not problems, f"{sid}: " + "; ".join(problems)
     finally:
         labctl.apply(sid)   # discard any canary / escalation residue for the next scenario
