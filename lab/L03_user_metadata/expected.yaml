@@ -26,4 +26,4 @@ vulnerable_cases:
 safe_cases:
   - {id: L03-S1, target: reports, op: select, role: anon, rows: [r_a1, r_b1], expect: denied}
   - {id: L03-S2, target: reports, op: insert, role: user_a, new_owner: user_a, expect: denied, profiles: [dev, ci]}
-splinter_expected: measure
+splinter_expected: reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

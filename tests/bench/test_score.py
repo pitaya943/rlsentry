@@ -104,7 +104,7 @@ def test_p2_is_not_scored() -> None:
 
 def test_splinter_fields() -> None:
     lints = [lint("rls_disabled_in_public", "customers"), lint("auth_rls_initplan", "customers", "PERFORMANCE")]
-    g = gt("L01")
+    g = gt("L01", splinter_expected="measure")       # splinter_match is None only while "measure"
     assert splinter_status(g, lints) == "reported"
     assert lint_labels(lints) == ["rls_disabled_in_public:customers"]
     assert lint_labels([lint("extension_in_public", None)]) == ["extension_in_public:"]

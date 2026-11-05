@@ -23,4 +23,4 @@ safe_cases:
   - {id: L08-S1, kind: key, target: "jwt:anon", key_kind: publishable}
   - {id: L08-S2, target: orders, op: select, role: anon, rows: [o_a1, o_b1], expect: denied}
   - {id: L08-S3, target: orders, op: select, role: user_b, rows: [o_a1], expect: denied}
-splinter_expected: measure
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

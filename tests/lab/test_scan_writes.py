@@ -67,10 +67,8 @@ def seed_pks(gt: GroundTruth, table: str) -> set[str]:
     return {r.pk for r in gt.rows.values() if r.target == table}
 
 
-# Vulnerable write cases the scanner may legitimately be unable to seed (a non-text NOT NULL
-# column it cannot populate without types): the cell is then not_tested/inconclusive, never a
-# false "safe". These are a documented limitation (ADR-029 補記 2), not a missed detection.
-UNSEEDABLE = {Outcome.NOT_TESTED, Outcome.INCONCLUSIVE}
+# MS4 (ADR-034): with OpenAPI-typed seeding every vulnerable write case of the lab can be seeded,
+# so a not_tested/inconclusive vulnerable write cell is now a failure (the MS3 tolerance is gone).
 
 
 def judge(gt: GroundTruth, matrix: AccessMatrix, findings: list[Finding]) -> list[str]:
@@ -90,8 +88,6 @@ def judge(gt: GroundTruth, matrix: AccessMatrix, findings: list[Finding]) -> lis
         if f is not None:
             if f.severity is not c.severity:
                 errs.append(f"{c.id}: severity {f.severity.value} != {c.severity and c.severity.value}")
-        elif got is not None and got.outcome in UNSEEDABLE:
-            pass   # could not seed a valid canary row → honest limitation, not a false negative
         else:
             errs.append(f"{c.id}: no confirmed {c.rule} finding and cell is "
                         f"{got.outcome.value if got else 'missing'} ({got.reason if got else ''})")

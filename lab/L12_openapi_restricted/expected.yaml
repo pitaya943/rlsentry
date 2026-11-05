@@ -36,4 +36,4 @@ inconclusive_cases:
   # al_1 存在但沒有任何身分看得到，也無法植入：不可回報為 denied
   - {id: L12-I1, target: audit_log, op: select, role: anon, expect: inconclusive}
   - {id: L12-I2, target: audit_log, op: select, role: user_a, expect: inconclusive}
-splinter_expected: measure
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

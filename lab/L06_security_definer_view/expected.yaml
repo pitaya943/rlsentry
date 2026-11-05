@@ -27,4 +27,4 @@ safe_cases:
   - {id: L06-S1, target: invoices, op: select, role: anon, rows: [inv_a1, inv_b1], expect: denied}
   - {id: L06-S2, target: invoices, op: select, role: user_a, rows: [inv_b1], expect: denied}
   - {id: L06-S3, target: invoices, op: select, role: user_b, rows: [inv_a1], expect: denied}
-splinter_expected: measure
+splinter_expected: reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

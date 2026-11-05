@@ -24,4 +24,4 @@ inconclusive_cases:
   - {id: C03-I1, target: announcements, op: select, role: anon, expect: inconclusive}
   - {id: C03-I2, target: announcements, op: select, role: user_a, expect: inconclusive}
   - {id: C03-I3, target: announcements, op: select, role: user_b, expect: inconclusive}
-splinter_expected: measure
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

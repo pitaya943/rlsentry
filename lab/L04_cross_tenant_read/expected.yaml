@@ -29,4 +29,4 @@ safe_cases:
   - {id: L04-S3, target: notes, op: delete, role: user_a, rows: [note_b1], expect: denied, profiles: [dev, ci]}
   - {id: L04-S4, target: notes, op: insert, role: anon, expect: denied, profiles: [dev, ci]}
   - {id: L04-S5, target: notes, op: insert, role: user_b, new_owner: user_a, expect: denied, profiles: [dev, ci]}
-splinter_expected: measure
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

@@ -41,7 +41,7 @@ def test_spec_section_8_specifics() -> None:
     assert not g["L12"].openapi
     assert ("diary_entries", "inferred") in {(d.target, d.confidence) for d in g["L12"].discovery_cases}
     assert g["C03"].inconclusive_cases and g["C04"].inconclusive_cases   # SPEC §8 C01–C04 row
-    assert all(x.splinter_expected == "measure" for x in g.values())     # filled in at MS4
+    assert all(x.splinter_expected != "measure" for x in g.values())     # measured at MS4 (ADR-035)
 
 
 def test_p0_case_counts() -> None:

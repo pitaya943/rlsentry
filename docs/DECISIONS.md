@@ -525,3 +525,21 @@ D2–D4 由 architect 決定並記錄於此。
   - uuid 欄位若是指向其他表的外鍵，植入會因外鍵失敗（400）→ 仍是 not_tested／inconclusive，不誤判。
   - 沒有 OpenAPI 的目標（L12、bundle 推測）沒有型別資訊，行為與 MS3 相同。
   - L01／L05 的寫入案例在 MS4 bench 若轉為 confirmed，T-170 會收緊 `test_scan_writes` 對它們的「無法植入」容忍。
+
+### ADR-033 補記：空 lint 清單也是量測結果；audit 也執行 M4（2026-11-05，T-173／T-174）
+- 第一次完整 benchmark 發現：L11 完全沒有 lint，`lints or None` 把空清單當成「沒跑」；audit 不跑 M4，使 L07-W1（profiles 含 audit）在 audit 顯示 warning_missing。
+- 決定：`with_whitebox` 時一律記錄 lint（空清單＝splinter 沒有任何回報）；audit 也執行 M4（唯讀，ADR-032 #2）。最終 benchmark：16 個情境 dev 與 audit 的 `splinter_match` 全為 true，audit 的 PostgREST 寫入全為 0。
+
+### ADR-034 補記：寫入探測的文字欄位依型別挑選（2026-11-05，T-171／T-172）
+- 第一次完整 benchmark：L05-V1／V2 仍為 FN。原因：run.py 把「第一個非 pk／owner／public 欄位」當成文字欄位，L05 是 `created_by`（uuid），canary 字串寫入 uuid 欄位 → 400 → work row 植入失敗。
+- 決定：`pick_text_column` 跳過 `column_formats` 記錄為非文字型別的欄位；沒有型別資訊的欄位仍可選（維持 MS3 行為）。修正後 L05 為 TP，`test_scan_writes` 移除 MS3 的「無法植入」容忍（L01／L05 現在必須被確認）。
+
+## ADR-035：第一次完整 benchmark：splinter_expected 實測值、probe-only 類別與展示情境
+- 日期：2026-11-05 · Milestone：MS4 · 相關：SPEC §8「splinter 必須實測」、§9 Probe-only 與展示情境；ADR-032、ADR-033
+- 背景：SPEC 要求 `splinter_expected` 以 MS4 實測填入、probe-only 至少 2 類，並以實測選定展示情境。
+- 決定：
+  1. `splinter_expected`：L01、L03、L05、L06、L07、L09 為 `reported`；其餘 10 個為 `not_reported`（依 ADR-033 #4 的定義，固定版本 splinter 2026.09.1 實測）。`tests/lab/test_splinter_expected.py` 每次重跑實測並與 expected.yaml 比對；splinter 升版或情境改動時，必須重新實測並以 ADR 記錄，不得直接改值。
+  2. Probe-only 類別：L02（SELECT `USING (true)`）、L04（只檢查已登入的跨租戶讀取）、L12（OpenAPI 受限下由 bundle／policy 找到的表），共 3 類 6 個案例。L02 與 L04 是 splinter 的設計範圍之外（0024 排除 SELECT；靜態 lint 不知道預期的擁有者範圍），不是 splinter 的缺陷。
+  3. 展示情境：**L04**（SPEC §9 的首選候選，實測確認 splinter 無任何 SECURITY lint，RLSentry 以 Confirmed 證實 User B 讀到 User A 的列）。
+- 理由：所有數值由程式實測，並有測試把關，ground truth 不會在無人察覺下漂移。
+- 後果與風險：MS4 recall 為 29/32（L03 延後 MS6、L08 延後 MS5），未達 95% 目標；runtime 50 張表 70.7 s 未達 60 s 目標。兩者都在 BENCHMARK_REPORT.md 誠實列出，不調整計分或 rps 來湊數字。

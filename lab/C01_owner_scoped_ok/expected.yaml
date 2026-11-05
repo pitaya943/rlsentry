@@ -32,4 +32,4 @@ safe_cases:
   - {id: C01-S10, target: todos, op: delete, role: anon, rows: [t_a1], expect: denied, profiles: [dev, ci]}
   - {id: C01-S11, target: todos, op: delete, role: user_a, rows: [t_b1], expect: denied, profiles: [dev, ci]}
   - {id: C01-S12, target: todos, op: delete, role: user_b, rows: [t_a1], expect: denied, profiles: [dev, ci]}
-splinter_expected: measure
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）
