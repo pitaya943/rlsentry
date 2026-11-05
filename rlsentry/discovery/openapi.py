@@ -56,6 +56,26 @@ def _columns(definitions: object, name: str) -> tuple[list[str], list[str]]:
     return cols, pk
 
 
+def _types(definitions: object, name: str, columns: list[str]) -> tuple[list[str], dict[str, str]]:
+    """ADR-034: NOT NULL columns (known, in "required" order) and column -> OpenAPI format."""
+    definition = definitions.get(name) if isinstance(definitions, Mapping) else None
+    if not isinstance(definition, Mapping):
+        return [], {}
+    known = set(columns)
+    req = definition.get("required")
+    required = ([c for c in req if isinstance(c, str) and c in known]
+                if isinstance(req, list) else [])
+    props = definition.get("properties")
+    formats: dict[str, str] = {}
+    if isinstance(props, Mapping):
+        for c in columns:
+            prop = props.get(c)
+            fmt = prop.get("format") if isinstance(prop, Mapping) else None
+            if isinstance(fmt, str):
+                formats[c] = fmt
+    return required, formats
+
+
 def parse_openapi(doc: Mapping[str, Any]) -> list[Target]:
     """Turn a (possibly hostile) PostgREST OpenAPI document into confirmed Targets.
 
@@ -76,6 +96,8 @@ def parse_openapi(doc: Mapping[str, Any]) -> list[Target]:
         if not IDENT_RE.match(name):
             continue
         cols, pk = _columns(definitions, name) if kind == "table" else ([], [])
+        required, formats = _types(definitions, name, cols) if kind == "table" else ([], {})
         found[(name, kind)] = Target(name=name, kind=kind, columns=cols, primary_key=pk,
+                                     required=required, column_formats=formats,
                                      discovered_by="openapi", confidence="confirmed")
     return [found[k] for k in sorted(found)]
