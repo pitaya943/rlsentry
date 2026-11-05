@@ -1186,3 +1186,8 @@
 {"ts": "2026-11-05T16:48:37", "kind": "ticket_accepted", "ticket": "T-163", "commit": "3172431d90e0301472d44b54fc6f45243c99a5bf", "files": ["rlsentry/bench/score.py"]}
 {"ts": "2026-11-05T16:56:51", "kind": "ticket_accepted", "ticket": "T-161", "commit": "c31e9a472aed493607e28a995793453f89c5ace0", "files": ["rlsentry/whitebox/policies.py"]}
 {"ts": "2026-11-05T17:05:14", "kind": "ticket_accepted", "ticket": "T-162", "commit": "13433deda2c981956d33d8f26d6d6cbb3e268d42", "files": ["rlsentry/whitebox/correlate.py", "rlsentry/whitebox/run.py"]}
+{"ts": "2026-11-05T17:06:21", "kind": "dispatch", "id": "4443b110", "agent": "lab-dev", "ticket": "T-164", "review": null, "body": "logs/messages/4443b110-dispatch.json"}
+{"ts": "2026-11-05T17:06:25", "kind": "subagent_start", "id": "702020f5", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T17:06:25", "kind": "report", "id": "c171fa82", "agent": "lab-dev", "ticket": "T-164", "review": null, "body": "logs/messages/c171fa82-report.json"}
+{"ts": "2026-11-05T17:07:30", "kind": "subagent_stop", "id": "e9e8e6eb", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T17:16:02", "kind": "ticket_accepted", "ticket": "T-164", "commit": "b2aa5ba8c2f0d5cec0e1c7a55704b6ca6013319e", "files": ["lab/_shared/labctl.py"]}
