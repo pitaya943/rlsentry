@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from rlsentry.contracts.models import Evidence, Role, Severity
+from rlsentry.contracts.models import Evidence, Op, Role, Severity
 
 
 class RuleSpec(BaseModel):
@@ -62,6 +62,8 @@ RULES: dict[str, RuleSpec] = {r.id: r for r in (
     _r("NO_OWNER_COLUMN", _S, Severity.REVIEW, False, "找不到擁有者欄位，無法判斷預期權限"),
     _r("EXPECTED_ACCESS_DENIED", _W, Severity.REVIEW, False,
        "預期允許但實際拒絕（功能性提示，非漏洞）"),
+    _r("CLEANUP_FAILED", _S, Severity.REVIEW, False,
+       "寫入探測植入的 canary 列無法被其擁有者刪除，請人工清理（非漏洞，ADR-029）"),
 )}
 
 SENSITIVE_COLUMN_PATTERNS: tuple[str, ...] = (
@@ -96,5 +98,17 @@ def read_severity(rule: str, columns: list[str]) -> Severity:
     RULES[rule].escalates_to when it is set and any column is_sensitive_column, else
     RULES[rule].severity (SPEC §5 M5: anon read of a table with sensitive columns is Critical).
     Unknown rule → KeyError. Columns unknown (bundle-inferred target, []) never escalate.
+    """
+    raise NotImplementedError
+
+
+def write_rule(role: Role, op: Op) -> str:
+    """Contract only; implemented by rlsentry.rules.severity.write_rule. Pure (MS3; ADR-029 #4).
+
+    Rule id for a confirmed forbidden write: role ANON → ANON_WRITE; user_a / user_b →
+    CROSS_TENANT_WRITE. The write probe only attempts writes the policy forbids (anon writing
+    at all, or a user writing/transferring another user's data), so a confirmed effect maps
+    straight to these rules. `op` is accepted for symmetry and future rules; it does not change
+    the result in MS3.
     """
     raise NotImplementedError

@@ -399,3 +399,28 @@ D2–D4 由 architect 決定並記錄於此。
   3. 本 ADR 的 commit 已依 ADR-025、ADR-026 更新該文件，加入 Codespaces 準備、四種標籤與必做變異的簽章前提。
 - 理由：CLAUDE.md 是凍結檔；流程文件若與實際流程脫節，人類會照著過期的步驟簽章。
 - 後果與風險：文件是手寫的，可能漂移。緩解方式：驗證清單第 3 段第一項引用它的步驟編號；若步驟不符，人類可直接要求修改。
+
+## ADR-029：M3 寫入探測（dev／ci）：只動自己植入的 canary、以讀回驗證最終狀態、完整清理
+- 日期：2026-11-05 · Milestone：MS3 · 相關：SPEC §5 M3 寫入、FR-09、FR-10；ADR-023、ADR-014、NFR-01
+- 背景：SPEC §5 M3 要測 INSERT／UPDATE／DELETE，只在 dev／ci，audit 一律唯讀。關鍵 RLS 行為：`USING` 擋下的 UPDATE／DELETE 會回 2xx 但影響 0 列；只有違反 `WITH CHECK` 的 INSERT 會回錯誤。所以「沒報錯」不等於「寫入成功」，「回 200」不等於「有漏洞」。SPEC 要求以讀回的最終狀態判定，並自動清理 canary。以下設計都在本機 lab 驗證（`tests/lab/test_scan_writes.py`、`test_write_mutations.py`）。
+- 考慮過的選項：
+  1. 直接對 seed.sql 既有列做寫入探測（缺點：改到既有列後無法乾淨還原；跨租戶 DELETE 會破壞後續 case）
+  2. 探測只動「掃描器自己植入的 canary 列」，每一列都由其擁有者負責清理（採用）
+  3. 以 HTTP 狀態碼判定寫入成功（缺點：被 USING 過濾的 0 列 UPDATE 會被誤判為成功）
+- 決定：
+  1. **植入（seed_known_rows）**：探測前，每位測試使用者以自己的 token POST 一筆自己擁有的 canary 私有列（有 public_column 時再一筆公開列）。canary 值一律以 `rlsentry_canary_` 開頭（唯一會寫入的非主鍵值，且不含真實資料，CLAUDE.md）。沒有單欄主鍵或 owner_column 時不植入，該目標的寫入 cell 一律 not_tested。
+  2. **只動自己植入的列**：寫入探測只對 seeded canary 或探測自己新增的 canary 動手，所以掃描器永遠是被改列的擁有者，可完整清理（SPEC 清理）。不碰 seed.sql 既有列。
+  3. **探測哪些寫入（plan_writes）**：只送「預期政策禁止其最終狀態」的寫入（`forbidden_write` = `row_permitted` 為否）：anon 的任何寫入；使用者寫別人的 canary；使用者把自己的 canary 轉移給另一位（L05）。政策允許的寫入不送（不是漏洞）。
+  4. **送出（send_write）**：一律 `Prefer: return=minimal`。理由：`return=representation` 會讓新列再過一次 SELECT policy，把真的有寫入的情況藏在 403 後面（auditor L09-G2、ADR-014 補記）。
+  5. **讀回（read_back／write_outcome）**：由「應該看得到最終狀態的身分」（INSERT／transfer 用新擁有者；UPDATE 值改／DELETE 用原擁有者）以一次 HEAD count 檢查最終狀態，不下載列。初始狀態由建構固定（全新 canary pk／值、自己的列、剛植入的列），所以只讀 after。`write_outcome`：DELETE 最終不存在才算生效；INSERT／UPDATE 最終存在才算生效。
+  6. **判定（write_cell）**：生效 → allowed（漏洞）；可信地未生效 → denied；送不出或讀回不可信 → inconclusive。因此 2xx 但讀回沒變 → denied，絕不 allowed。
+  7. **規則（write_rule）**：anon → ANON_WRITE；user → CROSS_TENANT_WRITE。
+  8. **清理（cleanup_seeded）**：每一筆 canary 由其擁有者 DELETE 並以 HEAD 確認消失；刪不掉的回報 CLEANUP_FAILED（非漏洞的 Review 提示，SPEC「刪不掉也是一種發現」）。
+  9. **L03 提權（escalate_user_metadata／restore_user_metadata）**：使用者以 `PUT /auth/v1/user` 把自己的 user_metadata 設成 role=admin、重新登入取得新 JWT、重跑讀取；原本禁止卻變成可讀 → USER_METADATA_ESCALATION。結束後把 role 清掉還原。只寫測試帳號自己的 Auth 記錄。
+  10. **audit 不變**：audit 的寫入 cell 維持 not_tested（AUDIT_WRITE_REASON），一個寫入請求都不送；寫入閘門（NFR-01）在 SafeClient 層再擋一次。
+- 理由：選項 2 讓「完整清理」成為可達成的性質，而不是盡力而為；選項 3 會違反 SPEC 的核心判定規則。讀回身分用擁有者，對應 SPEC「以擁有者身分或 DB 讀回」。
+- 後果與風險：
+  - canary 列短暫存在於 dev／ci 的 DB；清理失敗會留下 `rlsentry_canary_` 列並回報 CLEANUP_FAILED。
+  - L03 提權會短暫把測試帳號設成 admin；還原是盡力而為，中斷時測試帳號可能殘留 admin metadata（列入已知限制）。
+  - owner_column 為 NULL 或非單欄主鍵的表無法植入，寫入一律 not_tested（偏保守）。
+  - 完全包在字串中的動態寫入不在偵測範圍（沿用 ADR-024 限制）。
