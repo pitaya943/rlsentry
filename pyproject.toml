@@ -11,6 +11,7 @@ dependencies = [
   "pydantic>=2.6,<3",
   "pyyaml>=6",
   "httpx>=0.27,<1",        # MS1 safety/http.py: the only HTTP client (ADR-012)
+  "psycopg[binary]>=3.2,<4",  # MS4 whitebox/: read-only DB connection for splinter (ADR-032)
 ]                          # more are added by the milestone that first needs them (ADR-012)
 
 [project.optional-dependencies]
@@ -21,6 +22,9 @@ dev = ["pytest>=8", "pyyaml>=6", "ruff", "mypy", "mutmut", "types-PyYAML", "setu
 # setuptools' automatic discovery refuses to build ("Multiple top-level packages"). Only the
 # product package is distributed (MS0 approval note #1, T-040).
 include = ["rlsentry*"]
+
+[tool.setuptools.package-data]
+"rlsentry.whitebox" = ["*.sql"]   # vendored, hash-pinned splinter.sql (ADR-032)
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
