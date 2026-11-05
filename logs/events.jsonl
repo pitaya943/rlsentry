@@ -1079,3 +1079,8 @@
 {"ts": "2026-11-05T06:40:57", "kind": "guard_block", "agent": "architect", "tool": "Write", "reason": "docs/tickets/T-139.md is protected. Only the harness (or the architect, for its own files) may change it."}
 {"ts": "2026-11-05T06:41:28", "kind": "ticket_start", "ticket": "T-139", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T06:50:51", "kind": "ticket_accepted", "ticket": "T-139", "commit": "22de6ab6c116dfb955b5b6916f17379c07e226ff", "files": ["docs/DECISIONS.md", "rlsentry/contracts/probe.py", "tests/lab/test_write_mutations.py"]}
+{"ts": "2026-11-05T06:52:04", "kind": "dispatch", "id": "bac21564", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/bac21564-dispatch.json"}
+{"ts": "2026-11-05T06:52:08", "kind": "subagent_start", "id": "7584e64a", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T06:53:22", "kind": "subagent_stop", "id": "ca0da5a6", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T06:53:33", "kind": "report", "id": "6acd82a0", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/6acd82a0-report.json"}
+{"ts": "2026-11-05T07:11:18", "kind": "ticket_accepted", "ticket": "T-130", "commit": "1436632b341aa70000788d34c1fbef0cfabee3f1", "files": ["rlsentry/probe/run.py"]}
