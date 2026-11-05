@@ -301,7 +301,7 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
          with no plan (the policy permits it, or no suitable seeded row / reader) yields one
          NOT_TESTED cell with an explanatory reason, so the matrix still has a cell per
          (role, op). After all writes, cleanup_seeded(...) removes the seeded rows; each row it
-         fails to delete adds a CLEANUP_FAILED finding (write_findings handles cleanup results).
+         fails to delete adds a CLEANUP_FAILED finding (cleanup_findings, from its results).
        - A role without a token still yields NOT_TESTED write cells (reason from
          sessions.missing), no request.
     4. findings += target_findings(target).
