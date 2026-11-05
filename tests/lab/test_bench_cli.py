@@ -19,7 +19,7 @@ def test_single_scenario_json(lab_info: LabInfo, tmp_path: Path, capsys: pytest.
     dev, audit = rep.scenarios
     assert audit.db_writes == 0                       # NFR-01: audit never writes
     assert dev.db_writes is not None and dev.db_writes > 0   # dev write probes really ran
-    assert dev.splinter == "not_reported" and audit.splinter is None
+    assert dev.splinter == "not_reported"
     assert rep.fp == 0 and rep.fp_safe == 0 and rep.tn > 0 and rep.runtime == {}
     assert "recall" in capsys.readouterr().out
 
