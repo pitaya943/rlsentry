@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 111/118 · 進行中 4 · blocked 1
+自動產生，請勿手改 · 完成 112/118 · 進行中 3 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -130,9 +130,9 @@
 - [x] T-160 whitebox/db.py 與 splinter.py：唯讀連線、固定版本 splinter SQL、SET LOCAL pgrst.db_schemas（whitebox-dev，done，1 次）
 - [ ] T-161 whitebox/policies.py：唯讀讀取 pg_policies（whitebox-dev，in_progress，1 次） ← 依賴 T-160✓
 - [ ] T-162 whitebox/correlate.py 與 whitebox/run.py：confirmed／lint_only／probe_only 交叉比對、SECURITY DEFINER 規則（whitebox-dev，in_progress，1 次） ← 依賴 T-160✓
-- [ ] T-163 bench/score.py：score_scenario、aggregate、splinter_status（ADR-011、ADR-033）（whitebox-dev，in_progress，1 次） ← 依賴 T-155✓
+- [x] T-163 bench/score.py：score_scenario、aggregate、splinter_status（ADR-011、ADR-033）（whitebox-dev，done，1 次）
 - [ ] T-164 labctl：apply_synthetic(n)（runtime 量測用的 n 張 owner-scoped 表）（lab-dev，in_progress，1 次） ← 依賴 T-155✓
-- [ ] T-165 bench/run.py 與 bench/__main__.py：`python -m rlsentry.bench`（逐情境 dev＋audit、whitebox、runtime、JSON）（whitebox-dev，todo，0 次） ← 依賴 T-162… T-163… T-164… T-167✓
+- [ ] T-165 bench/run.py 與 bench/__main__.py：`python -m rlsentry.bench`（逐情境 dev＋audit、whitebox、runtime、JSON）（whitebox-dev，todo，0 次） ← 依賴 T-162… T-163✓ T-164… T-167✓
 - [x] T-166 discovery/openapi.py：擷取 required 與 column_formats（probe-dev，done，1 次）
 - [x] T-167 probe/fill.py＋seed.py＋write.py：植入與 INSERT body 填入必填欄位（probe-dev，done，1 次）
 - [ ] T-170 第一次完整 benchmark：依實測填入 splinter_expected、lab 測試、BENCHMARK_REPORT 初版；ADR-035（probe-only 與 demo 情境）（architect，todo，0 次） ← 依賴 T-161… T-165… T-166✓
