@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkcra_app||=[]).push([[203],{203(t,r,a){a.r(r),a.d(r,{default:()=>u});var e=a(43),n=a(480),s=a(579);const i={apiKey:"AIzaSyFxtrFixtureNotARealKey0123456789ab",zoom:3};function u(){const[t,r]=(0,e.useState)([]);return(0,e.useEffect)(()=>{n.N.rpc("monthly_report").then(t=>{var a;return r(null!==(a=t.data)&&void 0!==a?a:[])})},[]),(0,s.jsx)("pre",{"data-maps":JSON.stringify(i),children:JSON.stringify(t)})}}}]);
+//# sourceMappingURL=203.08bac55d.chunk.js.map
