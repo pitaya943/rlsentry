@@ -118,7 +118,7 @@
 - [x] T-140 test_scan_writes 補上 NFR-01 流量證據：DB log 寫入只由 PostgREST 角色發出、seed.sql 既有列未被更動（稽核 P1）（architect，done，1 次）
 - 驗證清單：docs/verification/MS3-v1.md（v1）
 
-## [ ] MS4 M4 Whitebox（等待你審查）
+## [x] MS4 M4 Whitebox（已核准）
 - [x] T-150 ADR：驗證清單指令品質、progress.py 文件同步；MS6 待辦記入 PLAN（MS3 核准意見第 1–3 點）（architect，done，1 次）
 - [x] T-151 合約：M4 Whitebox（splinter 固定版本、唯讀連線、pg_policies、交叉比對）；psycopg 相依；ADR-032（architect，done，1 次）
 - [x] T-152 合約：bench runner 與計分（ScenarioResult／BenchReport 增補、splinter_status、probe-only）、labctl.apply_synthetic；ADR-033（architect，done，1 次）
@@ -144,7 +144,7 @@
 - [x] T-176 probe/write.py：INSERT 探測的其他 uuid 必填欄位填攻擊者自己的 id（稽核 P1-1）（probe-dev，done，1 次）
 - 驗證清單：docs/verification/MS4-v1.md（v1）
 
-## [ ] MS5 M1 Recon（鎖定）
+## [ ] MS5 M1 Recon（進行中）
 
 ## [ ] MS6 M5 Report + 介面 + profiles（鎖定）
 
