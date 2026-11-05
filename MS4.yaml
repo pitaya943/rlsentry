@@ -1,0 +1,19 @@
+milestone: MS4
+checklist: docs/verification/MS4-v1.md
+checklist_sha256: 0ed60f881f42ca1cfa7ac14d460c12c940c85ff447c0fd99ca50e6c119826a17
+decision: approve
+reviewer: Kuei
+date: 2026-11-06 06:44
+notes: |
+  MS4 核准。以下意見請在下一個 session 開始時處理，並套用到之後每一個 milestone。
+    1. 接受 recall 29/32 未達 95%：3 個 FN 皆為已核准延後項（L03 ×2 → MS6、L08 → MS5）。MS5、MS6 完成後於 MS7 重新跑完整 benchmark，並在 BENCHMARK_REPORT 更新原始數量。
+    2. 接受 runtime 未達標（audit、rps 5 下 50 張表 70.7 s > 60 s）。不得調高預設 rps。MS7 前請嘗試把同一身分的多筆主鍵查詢合併為單一請求以減少請求數，並重新量測 5／20／50 張表；仍未達標就如實揭露。
+    3. 同意展示情境選 L04（ADR-035）。MS6 報告需附重現指令與修補 SQL。
+    4. 同意 probe-only 以漏洞類型計，目前為 2 類（L02、L04）；L12 與 L02 同類，不另計（ADR-035 補記）。
+    5. 稽核 P2 全部排進 MS6，並以測試證明已修正：
+       (a) 任一角色在某物件拿到資料時，不得抑制其他角色的 SECURITY DEFINER 警告；
+       (b) SECURITY_DEFINER_RPC_DATA 只用於確實是 SECURITY DEFINER 的函式，其他 RPC 越權讀取改用正確的規則名稱；
+       (c) splinter_status 不得寫死 public；pipeline 要把設定檔的曝露 schema 傳給 M4（db_schemas），並與以 read_policies 填入 ScanReport.policies 一起完成；
+       (d) read_policies 補上以 DB log 驗證唯讀的測試。
+    6. MS1–MS3 已核准的清單不需改格式；「每條指令一個 code block」只從 MS4 起適用。
+    7. ADR-025 至 ADR-031（含 ADR-030 補記：每條指令一個獨立 code block，變異與還原分開）繼續適用。
