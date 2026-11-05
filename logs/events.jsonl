@@ -1004,3 +1004,4 @@
 {"ts": "2026-11-05T03:51:34", "kind": "ticket_accepted", "ticket": "T-124", "commit": "ebfc6dfa923480049843931704dd6f4d568ee227", "files": ["tests/probe/test_metadata.py", "tests/probe/test_plan_writes.py", "tests/probe/test_write_findings.py", "tests/probe/test_write_requests.py", "tests/probe/test_write_verdict.py"]}
 {"ts": "2026-11-05T03:52:38", "kind": "ticket_start", "ticket": "T-125", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T03:55:26", "kind": "ticket_start", "ticket": "T-132", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T04:03:18", "kind": "ticket_accepted", "ticket": "T-132", "commit": "2c101b4c1e69f971f878ed360ce3cfeeca525751", "files": ["docs/DECISIONS.md", "rlsentry/contracts/probe.py", "tests/probe/test_plan_writes.py", "tests/probe/test_write_requests.py", "tests/probe/test_write_verdict.py"]}
