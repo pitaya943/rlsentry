@@ -6,12 +6,14 @@ import httpx
 from rlsentry.contracts.models import Target
 from rlsentry.contracts.probe import (
     CANARY_PREFIX,
+    SEED_UNFILLABLE_REASON,
     USER_ROLES,
     WRITE_NO_OWNER_REASON,
     SeededRow,
     Sessions,
 )
 from rlsentry.contracts.safety import SafeClientContract
+from rlsentry.probe.fill import fill_required
 from rlsentry.probe.paths import rest_url
 
 
@@ -41,6 +43,11 @@ async def seed_known_rows(client: SafeClientContract, supabase_url: str, anon_ke
                 body[public_column] = public
             if text_column is not None:
                 body[text_column] = marker
+            extra = fill_required(target, uid, body.keys())
+            if extra is None:
+                notes.append(f"{role.value}: {SEED_UNFILLABLE_REASON}")
+                continue
+            body.update(extra)
             headers = {"apikey": anon_key, "Authorization": f"Bearer {token}",
                        "Prefer": "return=minimal", "Content-Type": "application/json"}
             try:

@@ -24,6 +24,7 @@ from rlsentry.contracts.probe import (
 )
 from rlsentry.contracts.safety import SafeClientContract
 from rlsentry.probe.evidence import curl_command
+from rlsentry.probe.fill import fill_required
 from rlsentry.probe.paths import rest_url
 from rlsentry.probe.verdict import forbidden_write
 from rlsentry.rules.severity import write_rule
@@ -97,6 +98,10 @@ async def seed_work_row(client: SafeClientContract, supabase_url: str, anon_key:
     body: dict[str, object] = {target.primary_key[0]: pk, owner_column: uid}
     if text_column is not None:
         body[text_column] = marker
+    extra = fill_required(target, uid, body.keys())
+    if extra is None:
+        return None
+    body.update(extra)
     try:
         resp = await client.request("POST", rest_url(supabase_url, target),
                                     headers=_headers(anon_key, token, True), json=body)
@@ -131,6 +136,11 @@ async def send_write(client: SafeClientContract, supabase_url: str, anon_key: st
             body[owner_column] = sessions.user_ids.get(plan.new_owner, "")
         if plan.text_column is not None:
             body[plan.text_column] = CANARY_PREFIX + uuid.uuid4().hex
+        owner_id = sessions.user_ids.get(plan.new_owner, "") if plan.new_owner else ""
+        extra = fill_required(target, owner_id, body.keys())
+        if extra is None:
+            return WriteAttempt(status=None, curl="")
+        body.update(extra)
     else:
         if work is None:
             return WriteAttempt(status=None, curl="")
