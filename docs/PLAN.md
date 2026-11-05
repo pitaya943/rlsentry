@@ -64,6 +64,10 @@ MS0 產出。每個 milestone 開始時 architect 會依此計畫寫出正式 ti
 | CLI（Typer）與 Python API（FR-16） | whitebox-dev | `cli.py` |
 | GitHub Action | whitebox-dev | `action/**` |
 | profile 端到端測試（`e2e_profiles`） | architect | `tests/e2e/**` |
+| ⚠(2) MS3 核准意見第 1 點：L03 `USER_METADATA_ESCALATION`（metadata.py 的 escalate→重新登入→重讀→restore）串進 `run_scan`，以 lab 驗證 L03 能被偵測到 | whitebox-dev | `pipeline.py` |
+| ⚠(2) MS3 核准意見第 1 點：dev／ci 讀取植入（`seed_known_rows`）串進 `run_scan`，以 lab 驗證（C04 在 dev 可判定） | whitebox-dev | `pipeline.py` |
+| ⚠(1) MS3 核准意見第 1 點：遠端 dev／ci 寫入被拒（`WriteRefused`）轉為 inconclusive 寫入 cell 並記入報告，不讓掃描崩潰 | whitebox-dev | `pipeline.py`／`probe/run.py` |
+| MS3 核准意見第 1 點：L01／L05 寫入植入覆蓋（MS4 以 OpenAPI 欄位型別處理，ADR-034；若仍有缺口於此補齊並更新 benchmark） | probe-dev | `probe/**` |
 
 ## MS7 整合與交付
 `make acceptance` 修正、`BENCHMARK_REPORT.md`（五項指標附原始數量）、`USAGE.md`（dev、ci、audit 各一個 doctest）、demo。

@@ -443,3 +443,27 @@ D2–D4 由 architect 決定並記錄於此。
 - 補充（T-138）：CLEANUP_FAILED 以 (target, owner) 去重（Finding.id = finding_id(target, role, op, rule)），每位擁有者一筆，報告不含殘留列數；實際殘留列在 dev／ci 可丟棄 DB 中。
 
 - 補充（T-139）：寫入探測只對 kind=="table"；RPC／view 的寫入 cell 一律 NOT_TESTED（對 RPC 路徑送寫入會被閘門擋，ADR-014 #3）。變異測試以 `disable row level security` 植入（permissive `to anon` policy 在本 lab 讓 anon DELETE 仍影響 0 列，非可利用）。
+
+## ADR-030：驗證清單的指令品質（MS3 核准意見第 2 點）
+- 日期：2026-11-05 · Milestone：MS4 · 相關：ADR-025、ADR-026、ADR-028
+- 背景：MS3-v1 第 7 項留下一條佔位指令（select leftover），人類照貼無法執行；多行 heredoc 在 markdown 清單中被縮排，結尾終止符失效，shell 卡在續行。
+- 考慮過的選項：
+  1. 照舊，由人類自行修正指令（缺點：審查時間花在除錯指令，且可能照錯誤的指令簽章）
+  2. 每條指令都是 architect 在 lab 實跑過的成品（採用，人類決定）
+- 決定（自 MS4 起，每份驗證清單）：
+  1. 每一條要人類執行的指令，architect 必須先在 lab（與清單標頭相同的 sha）實際執行，清單附**真實**的預期輸出（可截取關鍵行，但不得改寫）。
+  2. 不得有佔位指令或需要人類自行補完的片段（`<...>`、`...`、「自行替換」）。唯一例外是本機簽章用的金鑰路徑，須註明。
+  3. 指令要能直接複製貼上，優先單行；多步驟以 `&&` 串接或分成多個 code block。
+  4. 禁用 heredoc（`<<EOF`）與依賴縮排的多行輸入；需要多行 SQL 時改用 `psql -c "..."` 單行，或 `python3 -c` 單行。
+  5. 變異的還原、測試資料的刪除、Codespace 的清理等步驟，寫出完整指令（例如 `git restore rlsentry/whitebox/correlate.py`），不得只寫「還原」。
+- 理由：人類在審查時的注意力應該花在判斷結果，而不是修指令；實跑過的輸出也讓「結果不符」成為有意義的訊號。
+- 後果與風險：撰寫清單的成本變高（每條指令都要實跑）；lab 狀態會影響輸出（例如上一個套用的情境），所以需要前置狀態的項目要把 `labctl.apply` 寫進指令本身。
+
+## ADR-031：收尾與暫停前同步 progress.html／branch-log.md（補強 ADR-015；MS3 核准意見第 3 點）
+- 日期：2026-11-05 · Milestone：MS4 · 相關：ADR-015、ADR-021、ADR-028
+- 背景：ADR-015 已規定何時執行 `docs/tools/progress.py`，但 MS3 收尾時人類發現 progress.html／branch-log.md 落後於 system_overview.html。
+- 決定：
+  1. 每次 milestone 收尾（§4 第 5 步 push 之前）與每次暫停等待人類之前，architect 依序：更新 `docs/system_overview.html`（ADR-021）→ 執行 `python3 docs/tools/progress.py` → 在**同一個 commit** 提交三個檔案。
+  2. 每份驗證清單保留自檢項：`python3 docs/tools/progress.py && git diff --stat docs/progress.html docs/branch-log.md`，預期沒有輸出（若 accept 之後 harness 又寫入 logs/，以清單標頭的 sha 為準）。
+- 理由：衍生文件只要重跑就一致，漏跑才是問題；把它和 push 綁在一起，就不需要記得。
+- 後果與風險：branch-log.md 來自 logs/events.jsonl，harness 在 Stop hook 時仍會追加事件，所以清單標頭之後的事件不會出現在該版 branch-log.md，這是預期的。
