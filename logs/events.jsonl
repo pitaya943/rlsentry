@@ -1034,3 +1034,4 @@
 {"ts": "2026-11-05T04:26:30", "kind": "ticket_accepted", "ticket": "T-128", "commit": "ab9d3189c448223d7cdc8def8b405bb86ba5f579", "files": ["rlsentry/probe/cleanup.py", "rlsentry/probe/diff.py", "rlsentry/probe/verdict.py", "rlsentry/rules/severity.py"]}
 {"ts": "2026-11-05T04:32:06", "kind": "ticket_accepted", "ticket": "T-126", "commit": "fe87da6eecf0e1539031fe5171a815ba58ad4d4b", "files": ["rlsentry/probe/seed.py"]}
 {"ts": "2026-11-05T04:38:04", "kind": "ticket_accepted", "ticket": "T-129", "commit": "e00e9e80255b86df8e5a8e0f56f750336a9ea4f4", "files": ["rlsentry/probe/metadata.py"]}
+{"ts": "2026-11-05T04:39:21", "kind": "ticket_start", "ticket": "T-133", "agent": "architect", "attempt": 1}
