@@ -7,23 +7,23 @@ Design decisions: ADR-023 (reads), ADR-029 (writes).
 
 How a write cell (target × role × INSERT/UPDATE/DELETE) is decided — dev/ci only; audit never
 writes (SPEC §5 M3; FR-09; ADR-029):
-1. seed_known_rows: before probing, each test user INSERTs a canary row it owns (a public one
-   too when a public column exists), with its own token. These seeded rows are the ONLY rows
-   the write probe ever touches, so the scanner is always the owner of what it mutates and can
-   clean it up (SPEC §5 M3 "canary 由同一身分刪除").
-2. plan_writes: for each role, enumerate the forbidden writes worth attempting from the
-   expected policy and the seeded rows (anon writing at all; a user writing another user's
-   seeded row; a user transferring ownership of its own seeded row to the other user). A write
-   is attempted only when the expected policy forbids its END state (forbidden_write).
+1. plan_writes: for each role, enumerate the forbidden writes worth attempting from the
+   expected policy and the identities (anon writing at all; a user writing another user's row;
+   a user transferring ownership of its own row to the other user). A write is attempted only
+   when the expected policy forbids its END state (forbidden_write).
+2. seed_work_row: each UPDATE/DELETE plan gets its OWN fresh canary, created by the required
+   owner just before the probe, so a successful destructive write never corrupts another
+   probe's row (ADR-029 補記). INSERT makes its own canary. The scanner only ever writes to
+   canaries it created, so it is always the owner and can clean up (SPEC §5 M3 清理).
 3. send_write: one POST/PATCH/DELETE with `Prefer: return=minimal` (ADR-029 #2: a returned
    representation would re-run the SELECT policy and hide a real write behind a 403).
-4. read_back: the identity that SHOULD see the end state (the row's owner, or the new owner of
-   a transfer/insert) reads the single primary key back. write_outcome turns before/after into
-   "the forbidden change took effect" — the only thing that counts (SPEC §5 M3: a 2xx is not a
-   write, a filtered 0-row UPDATE is not a write).
+4. read_back: the identity that SHOULD see the end state (the work row's owner, or the new
+   owner of a transfer/insert) reads the single primary key back immediately. write_outcome
+   turns the after-state into "the forbidden change took effect" — the only thing that counts
+   (SPEC §5 M3: a 2xx is not a write, a filtered 0-row UPDATE is not a write).
 5. write_cell: took effect → allowed (a vulnerability); verifiably did not → denied; could not
    send or could not trust the read-back → inconclusive. cleanup_seeded then removes every
-   seeded row by its owner and reports any it could not (SPEC §5 M3 清理).
+   canary (read-seed, work and INSERT) by its owner and reports any it could not (SPEC §5 M3).
 
 How a read cell (target × role × SELECT) is decided — the core of the "count = 0 is not
 denied" rule (SPEC §5 M3 三態結果):
@@ -290,24 +290,32 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
          list (forbidden first); note "no known row outside the expected scope of <role>"
          plus the KnownRows notes when forbidden is empty.
        cell = read_cell(obs); findings += read_findings(target, obs, cell).
-    3. Write cells (SPEC §5 M3 writes; FR-09; ADR-029):
+    3. Write cells (SPEC §5 M3 writes; FR-09; ADR-029, revised in the ADR-029 補記):
        - audit → for each op in WRITE_OPS and role in PROBE_ROLES a NOT_TESTED cell, known 0,
          evidence "", reason AUDIT_WRITE_REASON. No request ever leaves in audit (NFR-01).
-       - dev/ci → seeded = seed_known_rows(...) once per target (needs a single-column pk and
-         an owner column; otherwise no seeding and every write cell is NOT_TESTED with the
-         reason from KnownRows-style notes). For every plan in plan_writes(expected_by_op,
-         seeded, user_ids): send_write + read_back build a WriteObservation; cell =
-         write_cell(obs); findings += write_findings(target, obs, cell). A (role, op) pair
-         with no plan (the policy permits it, or no suitable seeded row / reader) yields one
-         NOT_TESTED cell with an explanatory reason, so the matrix still has a cell per
-         (role, op). After all writes, cleanup_seeded(...) removes the seeded rows; each row it
-         fails to delete adds a CLEANUP_FAILED finding (cleanup_findings, from its results).
+       - dev/ci → pick text_column = the first target column that is not the primary key, the
+         owner column or the public column (a best-effort mutable column; None when none).
+         For every plan in plan_writes(expected_by_op, user_ids, tokens, text_column is not None):
+         if plan.op is INSERT, work = None; else work = seed_work_row(target, plan.work_owner,
+         text_column, ...) — a FRESH canary created just for this probe, so a destructive write
+         never corrupts another probe's row (ADR-029 補記). work is None (seeding refused) →
+         NOT_TESTED cell, reason from the seed note, nothing else sent. Otherwise send_write +
+         read_back (immediately, before the next probe) build a WriteObservation; cell =
+         write_cell(obs); findings += write_findings(...). A (role, op) pair with no plan
+         yields one NOT_TESTED cell (WRITE_NOT_FORBIDDEN_REASON / WRITE_NO_OWNER_REASON), so
+         the matrix keeps a cell per (role, op). Every work row, every INSERT canary and the
+         read-seed rows are collected and cleanup_seeded(...) deletes them at the end; leftovers
+         become CLEANUP_FAILED findings (cleanup_findings, from its results).
        - A role without a token still yields NOT_TESTED write cells (reason from
          sessions.missing), no request.
+       Read seeding: in dev/ci seed_known_rows(...) once per target adds canary rows to the
+       READ known set (SPEC §5 M3 "dev／ci 植入已知資料"), so empty real targets (C04) become
+       decidable; it never feeds the write probes.
     4. findings += target_findings(target).
     Cells in target order, then per role the SELECT cell, then the write cells in WRITE_OPS
     order; findings deduplicated by id, first occurrence kept. In audit only GET/HEAD and the
-    login POST are sent; in dev/ci the only writes are to seeded canary rows and their cleanup.
+    login POST are sent; in dev/ci the only writes are to canary rows (read-seed, work and
+    INSERT canaries) and their cleanup.
     """
     raise NotImplementedError
 
@@ -344,18 +352,19 @@ class SeededRow(_Strict):
 
 
 class WritePlan(_Strict):
-    """One forbidden write worth attempting, chosen by plan_writes from the expected policy and
-    the seeded rows. `reader` is the identity that can observe the forbidden end state."""
+    """One forbidden write worth attempting, chosen by plan_writes from the expected policy.
+    `reader` is the identity that can observe the forbidden end state. UPDATE/DELETE plans name
+    `work_owner`: run() seeds a FRESH canary owned by that role just for this probe (ADR-029
+    補記), so a destructive write never corrupts another probe's row."""
 
     op: Op                      # INSERT / UPDATE / DELETE
     actor: Role                 # the role attempting the write
     rule: str                   # write_rule(actor, op): ANON_WRITE or CROSS_TENANT_WRITE
     reader: Role                # verifies the end state (INSERT/transfer: new_owner; else owner)
-    pk: str | None = None       # existing seeded row (UPDATE/DELETE); None for INSERT
-    row_owner: Role | None = None   # owner of pk
+    work_owner: Role | None = None  # owner of the fresh work row (UPDATE/DELETE); None for INSERT
     new_owner: Role | None = None   # owner the INSERT sets, or the transfer target (UPDATE)
     text_column: str | None = None  # column an UPDATE value-change sets; None = transfer/ins/del
-    transfer: bool = False      # UPDATE that moves ownership of an own row to new_owner
+    transfer: bool = False      # UPDATE that moves ownership of the work row to new_owner
 
 
 class WriteAttempt(_Strict):
@@ -485,43 +494,62 @@ async def seed_known_rows(client: SafeClientContract, supabase_url: str, anon_ke
 # --- probe/write.py (FR-09; dev/ci) ---------------------------------------------------------
 
 def plan_writes(expected_by_op: Mapping[tuple[Op, Role], ExpectedAccess],
-                seeded: list[SeededRow], user_ids: Mapping[Role, str],
-                tokens: Mapping[Role, str]) -> list[WritePlan]:
+                user_ids: Mapping[Role, str], tokens: Mapping[Role, str],
+                has_text_column: bool) -> list[WritePlan]:
     """Contract only; implemented by rlsentry.probe.write.plan_writes. Pure.
 
     The forbidden writes worth attempting, in (op INSERT→UPDATE→DELETE, actor PROBE_ROLES)
-    order. actor_id = None for anon else user_ids.get(actor). A plan is produced only when its
-    reader has a token (else the end state could not be verified). For each op and actor:
-    - INSERT: new_owner = the first USER_ROLE != actor whose id and token exist (so anon→user_a,
-      user_a→user_b, user_b→user_a). reader = new_owner. Add iff forbidden_write(
-      expected_by_op[(INSERT, actor)].scope, actor_id, user_ids[new_owner], False).
-    - UPDATE / DELETE on a seeded private row owned by owner != actor (cross-tenant): the first
-      such SeededRow. reader = owner. Add iff forbidden_write(scope, actor_id, owner_id, public).
-      row_owner = owner; new_owner None; for UPDATE text_column = row.text_column (value change;
-      skip the UPDATE when it is None).
-    - UPDATE transfer: actor is a user with a seeded OWN private row; new_owner = the other
-      user (id + token present). reader = new_owner, transfer=True. Add iff forbidden_write(
-      expected_by_op[(UPDATE, actor)].scope, actor_id, user_ids[new_owner], False) — the moved
-      row would be owned by someone the policy does not allow.
+    order. actor_id = None for anon else user_ids.get(actor). The row each UPDATE/DELETE needs
+    is created at probe time (work_owner), not here, so planning depends only on the policy and
+    the identities. A plan is produced only when its reader AND its work_owner (if any) have a
+    token (else the write could not be set up or verified). For each op and actor:
+    - INSERT: new_owner = the first USER_ROLE != actor whose id and token exist (anon→user_a,
+      user_a→user_b, user_b→user_a). reader = new_owner, work_owner None. Add iff
+      forbidden_write(expected_by_op[(INSERT, actor)].scope, actor_id, user_ids[new_owner], False).
+    - UPDATE / DELETE cross-tenant: work_owner = the first USER_ROLE != actor with id + token
+      (the owner of a fresh row the actor then tries to touch). reader = work_owner. Add iff
+      forbidden_write(scope, actor_id, user_ids[work_owner], False). For UPDATE this is the
+      value-change plan: text_column is set (the caller passes has_text_column=False to skip it
+      when the table has no mutable text column).
+    - UPDATE transfer: actor is a user (actor_id present); work_owner = actor (its own fresh
+      row); new_owner = the other user with id + token; reader = new_owner, transfer=True. Add
+      iff forbidden_write(expected_by_op[(UPDATE, actor)].scope, actor_id, user_ids[new_owner],
+      False) — the moved row would be owned by someone the policy does not allow.
     At most one plan per (op, actor, kind); every plan carries rule = write_rule(actor, op).
     An expected scope that is_review (unknown owner) yields no plan for that op/actor.
     """
     raise NotImplementedError
 
 
+async def seed_work_row(client: SafeClientContract, supabase_url: str, anon_key: str,
+                        target: Target, owner: Role, text_column: str | None,
+                        owner_column: str, sessions: Sessions) -> SeededRow | None:
+    """Contract only; implemented by rlsentry.probe.write.seed_work_row. ⚠ sends one POST.
+
+    Create one FRESH private canary owned by `owner` (its own token), exactly as
+    seed_known_rows builds a private row (new uuid pk, owner_column = owner id, text_column =
+    CANARY_PREFIX + uuid4 hex when given), `Prefer: return=minimal`. A 2xx returns the SeededRow
+    (so the write probe has an isolated row and cleanup can delete it); any other response or a
+    missing token/id returns None (the write cell then becomes NOT_TESTED, never a false
+    verdict). This is what makes every destructive probe independent (ADR-029 補記).
+    """
+    raise NotImplementedError
+
+
 async def send_write(client: SafeClientContract, supabase_url: str, anon_key: str,
-                     target: Target, plan: WritePlan, seeded: list[SeededRow],
-                     sessions: Sessions) -> WriteAttempt:
+                     target: Target, plan: WritePlan, work: SeededRow | None,
+                     owner_column: str, sessions: Sessions) -> WriteAttempt:
     """Contract only; implemented by rlsentry.probe.write.send_write. ⚠ sends one write.
 
-    Uses apikey + the actor's token and `Prefer: return=minimal` (ADR-029 #2). pk column =
-    target.primary_key[0]; owner column taken from the seeded rows' usage by the caller.
-    - INSERT: POST <base> a body like seed_known_rows builds but owner_column = new_owner's id;
-      new_pk = the generated uuid; new_value = None.
-    - UPDATE value-change: PATCH <base>?<pk>=eq.<plan.pk> with {text_column: CANARY_PREFIX+uuid};
-      new_value = that marker; new_pk = None.
-    - UPDATE transfer: PATCH <base>?<pk>=eq.<plan.pk> with {owner_column: new_owner's id}.
-    - DELETE: DELETE <base>?<pk>=eq.<plan.pk>.
+    Uses apikey + the ACTOR's token and `Prefer: return=minimal` (ADR-029 #2). pk column =
+    target.primary_key[0]. `work` is the fresh row seed_work_row made for this probe (None for
+    INSERT).
+    - INSERT: POST <base> a private canary body (new uuid pk, owner_column = new_owner's id,
+      text_column CANARY_PREFIX+uuid when the target has one); new_pk = that uuid; new_value None.
+    - UPDATE value-change: PATCH <base>?<pk>=eq.<work.pk> with {plan.text_column:
+      CANARY_PREFIX+uuid}; new_value = that marker; new_pk None.
+    - UPDATE transfer: PATCH <base>?<pk>=eq.<work.pk> with {owner_column: new_owner's id}.
+    - DELETE: DELETE <base>?<pk>=eq.<work.pk>.
     Returns WriteAttempt(status, curl, new_pk, new_value). Transport error → status None.
     curl = curl_command(method, final URL, headers). RPC targets are never written (plan_writes
     does not produce them). The request still passes through the SafeClient write gate, so audit
@@ -544,15 +572,16 @@ async def read_back(client: SafeClientContract, supabase_url: str, anon_key: str
     raise NotImplementedError
 
 
-def after_filter(plan: WritePlan, attempt: WriteAttempt, pk_col: str,
+def after_filter(plan: WritePlan, attempt: WriteAttempt, work: SeededRow | None, pk_col: str,
                  owner_col: str | None, user_ids: Mapping[Role, str]) -> dict[str, str]:
     """Contract only; implemented by rlsentry.probe.write.after_filter. Pure.
 
-    PostgREST filter params that detect the forbidden end state after the write:
+    PostgREST filter params that detect the forbidden end state after the write (`work` is the
+    probe's work row; None for INSERT):
     - INSERT: {pk_col: "eq.<attempt.new_pk>"}.
-    - DELETE: {pk_col: "eq.<plan.pk>"} (present afterwards = NOT deleted).
-    - UPDATE value: {pk_col: "eq.<plan.pk>", plan.text_column: "eq.<attempt.new_value>"}.
-    - UPDATE transfer: {pk_col: "eq.<plan.pk>", owner_col: "eq.<user_ids[plan.new_owner]>"}.
+    - DELETE: {pk_col: "eq.<work.pk>"} (present afterwards = NOT deleted).
+    - UPDATE value: {pk_col: "eq.<work.pk>", plan.text_column: "eq.<attempt.new_value>"}.
+    - UPDATE transfer: {pk_col: "eq.<work.pk>", owner_col: "eq.<user_ids[plan.new_owner]>"}.
     Values use plain eq.; the pk/owner are uuids and the marker has no PostgREST metacharacters.
     """
     raise NotImplementedError
