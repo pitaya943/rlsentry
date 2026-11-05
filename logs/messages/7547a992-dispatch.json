@@ -1,0 +1,6 @@
+{
+  "description": "T-127 probe write",
+  "prompt": "Ticket: T-127\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-127.md and follow it.",
+  "subagent_type": "probe-dev",
+  "isolation": "worktree"
+}

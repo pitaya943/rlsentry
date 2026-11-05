@@ -1011,3 +1011,23 @@
 {"ts": "2026-11-05T04:13:18", "kind": "ticket_start", "ticket": "T-127", "agent": "probe-dev", "attempt": 1}
 {"ts": "2026-11-05T04:13:33", "kind": "ticket_start", "ticket": "T-128", "agent": "probe-dev", "attempt": 1}
 {"ts": "2026-11-05T04:13:48", "kind": "ticket_start", "ticket": "T-129", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-05T04:14:23", "kind": "dispatch", "id": "439cef49", "agent": "probe-dev", "ticket": "T-126", "review": null, "body": "logs/messages/439cef49-dispatch.json"}
+{"ts": "2026-11-05T04:14:24", "kind": "dispatch", "id": "7547a992", "agent": "probe-dev", "ticket": "T-127", "review": null, "body": "logs/messages/7547a992-dispatch.json"}
+{"ts": "2026-11-05T04:14:26", "kind": "dispatch", "id": "4bd084ae", "agent": "probe-dev", "ticket": "T-128", "review": null, "body": "logs/messages/4bd084ae-dispatch.json"}
+{"ts": "2026-11-05T04:14:27", "kind": "dispatch", "id": "454630c9", "agent": "probe-dev", "ticket": "T-129", "review": null, "body": "logs/messages/454630c9-dispatch.json"}
+{"ts": "2026-11-05T04:14:30", "kind": "report", "id": "35122833", "agent": "probe-dev", "ticket": "T-128", "review": null, "body": "logs/messages/35122833-report.json"}
+{"ts": "2026-11-05T04:14:30", "kind": "subagent_start", "id": "66feb22e", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:14:30", "kind": "report", "id": "33148d24", "agent": "probe-dev", "ticket": "T-126", "review": null, "body": "logs/messages/33148d24-report.json"}
+{"ts": "2026-11-05T04:14:30", "kind": "subagent_start", "id": "6227e9f4", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:14:30", "kind": "report", "id": "c8f88eea", "agent": "probe-dev", "ticket": "T-127", "review": null, "body": "logs/messages/c8f88eea-report.json"}
+{"ts": "2026-11-05T04:14:30", "kind": "subagent_start", "id": "18663fb5", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:14:30", "kind": "subagent_start", "id": "c5cce994", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:14:30", "kind": "report", "id": "f78b2ef5", "agent": "probe-dev", "ticket": "T-129", "review": null, "body": "logs/messages/f78b2ef5-report.json"}
+{"ts": "2026-11-05T04:15:15", "kind": "guard_block", "agent": "probe-dev", "tool": "Bash", "reason": "shell command appears to modify protected path tests/probe/test_tmp_seed.py"}
+{"ts": "2026-11-05T04:15:36", "kind": "subagent_stop", "id": "419cc2d3", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:15:37", "kind": "subagent_stop", "id": "d7d973a8", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:15:43", "kind": "guard_block", "agent": "probe-dev", "tool": "Bash", "reason": "shell command appears to modify protected path tests/probe/_tmp_cleanup_check.py"}
+{"ts": "2026-11-05T04:16:06", "kind": "subagent_stop", "id": "f6d779dc", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:16:08", "kind": "guard_block", "agent": "probe-dev", "tool": "Bash", "reason": "shell command appears to modify protected path tests/probe/_tmp_wr.py"}
+{"ts": "2026-11-05T04:17:08", "kind": "subagent_stop", "id": "7c470f45", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T04:21:23", "kind": "ticket_start", "ticket": "T-128", "agent": "probe-dev", "attempt": 1}
