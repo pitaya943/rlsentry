@@ -52,11 +52,11 @@ def run_scenario(sid: str, profile: Profile, info: LabInfo, *,
         matrix, findings = asyncio.run(_pipeline(profile, info, gt.policy, sources, rps))
         runtime_s = time.monotonic() - start
         db_writes = sum(1 for w in labctl.db_writes_since(marker) if w.role in POSTGREST_ROLES)
-        lints = run_splinter(info.db_url) if with_whitebox else []
-        if with_whitebox:
+        lints = run_splinter(info.db_url) if with_whitebox else None
+        if lints is not None:
             findings = correlate(findings, lints)
         return score_scenario(gt, profile, matrix, findings, runtime_s,
-                              lints=lints or None, db_writes=db_writes)
+                              lints=lints, db_writes=db_writes)
 
 
 def run_runtime(info: LabInfo, tables: Sequence[int] = RUNTIME_TABLES) -> dict[str, float]:
@@ -78,7 +78,7 @@ def run_bench(scenarios: Sequence[str], *, runtime: bool = True) -> BenchReport:
         results: list[ScenarioResult] = []
         for sid in scenarios:
             results.append(run_scenario(sid, Profile.DEV, info))
-            results.append(run_scenario(sid, Profile.AUDIT, info, with_whitebox=False))
+            results.append(run_scenario(sid, Profile.AUDIT, info))
         runtime_dict = run_runtime(info) if runtime else {}
         return aggregate(results, runtime_dict)
     finally:
