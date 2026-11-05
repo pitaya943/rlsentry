@@ -246,4 +246,4 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 ### Holdout（派工前紀錄，§2）
 | 檔案 | sha256 |
 | --- | --- |
-| rlsentry-holdout:MS4/test_holdout_whitebox.py | c33e3d6b4fdb6ccbdbca1c85dea96a1e0ff65869c2361c19994e4c733abefeac |
+| rlsentry-holdout:MS4/test_holdout_whitebox.py | cc747c1be74d8f2e0a7253bd0ba2af1f2cbc54d3172927c28fb26df985da6db5（acceptance 發現 fixture 缺少必填 evidence_curl，與 T-157 同一缺陷；只改 fixture、斷言不變，重加；舊 c33e3d6b…） |
