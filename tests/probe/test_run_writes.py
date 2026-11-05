@@ -28,6 +28,7 @@ SESS = Sessions(tokens={Role.ANON: ANON, Role.USER_A: TA, Role.USER_B: TB}, user
 Pred = Callable[[str | None, str | None], bool]
 OWN: Pred = lambda uid, owner: uid is not None and uid == owner
 ANY: Pred = lambda uid, owner: True
+NONE: Pred = lambda uid, owner: False
 
 
 @dataclass
@@ -39,6 +40,7 @@ class Table:
     update_using: Pred = OWN        # UPDATE USING (current owner)
     update_check: Pred = OWN        # UPDATE WITH CHECK (new owner)
     delete_using: Pred = OWN        # DELETE USING
+    insert_bad: bool = False        # POST returns 400 (a NOT NULL / typed column we cannot fill)
 
 
 @dataclass
@@ -54,6 +56,8 @@ class FakeRest:
         p = r.url.params
         if r.method == "POST":
             body = json.loads(r.content)
+            if t.insert_bad:
+                return httpx.Response(400, json={"code": "23502"})   # NOT NULL: our row, not a denial
             if not t.insert_check(uid, body.get("owner_id")):
                 return httpx.Response(403, json={"code": "42501"})
             t.rows[body["id"]] = dict(body)
@@ -143,6 +147,26 @@ def test_safe_table_writes_denied_no_false_positive_and_cleaned_up() -> None:
             assert cells[("t", role, op)].outcome is not Outcome.ALLOWED
     assert not any(rule in ("ANON_WRITE", "CROSS_TENANT_WRITE") for (_t, _r, _o, rule) in rules)
     assert canary_rows(fake) == []
+
+
+def test_insert_that_fails_to_build_a_valid_row_is_inconclusive_not_denied() -> None:
+    # INSERT WITH CHECK would allow it (ANY), but the server rejects the body (400 NOT NULL):
+    # the scanner could not build a valid canary → inconclusive, never a false "denied"/safe.
+    bad = Table(select_vis=ANY, insert_check=ANY, update_using=ANY, update_check=ANY,
+                delete_using=ANY, insert_bad=True)
+    cells, rules, _f, _rec, _fake = scan(FakeRest({"t": bad}), [tgt("t")])
+    assert cells[("t", Role.ANON, Op.INSERT)].outcome is Outcome.INCONCLUSIVE
+    assert not any(op is Op.INSERT for (_t, _r, op, _rule) in rules)
+
+
+def test_uncleanable_canaries_each_get_a_cleanup_failed_finding() -> None:
+    # INSERT allowed (ANY) but nobody may DELETE (NONE): every canary the probe leaves behind
+    # must be reported, never left silently (SPEC §5 M3).
+    stuck = Table(select_vis=ANY, insert_check=ANY, update_using=ANY, update_check=ANY, delete_using=NONE)
+    _cells, _rules, findings, _rec, fake = scan(FakeRest({"t": stuck}), [tgt("t")])
+    leftover = canary_rows(fake)
+    cleanup_failed = [f for f in findings if f.rule == "CLEANUP_FAILED"]
+    assert leftover and len(cleanup_failed) == len(leftover)
 
 
 def test_audit_sends_no_write_and_marks_not_tested() -> None:
