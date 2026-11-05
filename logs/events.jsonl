@@ -1120,3 +1120,5 @@
 {"ts": "2026-11-05T14:54:08", "kind": "subagent_stop", "id": "94c10437", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-05T14:58:25", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS3"}
 {"ts": "2026-11-05T14:59:00", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS3"}
+{"ts": "2026-11-05T14:59:03", "kind": "subagent_stop", "id": "072acf76", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-05T15:01:27", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS3"}
