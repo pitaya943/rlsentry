@@ -426,3 +426,32 @@ def _lock_cm() -> Iterator[None]:
 def lock() -> AbstractContextManager[None]:
     """Exclusive, process-reentrant lab lock."""
     return _lock_cm()
+
+
+@contextmanager
+def _serve_cm(scenario: str) -> Iterator[str]:
+    from functools import partial
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+    root = scenario_dir(scenario) / "frontend"
+    if not (root / "index.html").is_file():
+        raise ValueError(f"scenario {scenario!r}: no frontend/index.html")
+
+    class _Handler(SimpleHTTPRequestHandler):
+        def log_message(self, format: str, *args: object) -> None:
+            return None
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(_Handler, directory=str(root)))
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_address[1]}/"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def serve_frontend(scenario: str) -> AbstractContextManager[str]:
+    """Serve lab/<scenario>_*/frontend/ on 127.0.0.1 so M1 recon runs over real HTTP."""
+    return _serve_cm(scenario)
