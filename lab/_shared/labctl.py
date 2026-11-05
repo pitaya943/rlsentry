@@ -6,7 +6,6 @@ set by supabase_admin inside the db container.
 """
 from __future__ import annotations
 
-import fcntl
 import json
 import os
 import re
@@ -369,6 +368,8 @@ def _lock_cm() -> Iterator[None]:
         finally:
             _LOCK_STATE.depth -= 1
         return
+    import fcntl  # only lock() needs it; absent on Windows
+
     with open(LAB_LOCK_FILE, "a") as fh:
         fcntl.flock(fh, fcntl.LOCK_EX)
         _LOCK_STATE.depth = 1
