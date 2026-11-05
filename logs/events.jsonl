@@ -1078,3 +1078,4 @@
 {"ts": "2026-11-05T06:40:44", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "shell command appears to modify protected path docs/tickets/T-139.md"}
 {"ts": "2026-11-05T06:40:57", "kind": "guard_block", "agent": "architect", "tool": "Write", "reason": "docs/tickets/T-139.md is protected. Only the harness (or the architect, for its own files) may change it."}
 {"ts": "2026-11-05T06:41:28", "kind": "ticket_start", "ticket": "T-139", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T06:50:51", "kind": "ticket_accepted", "ticket": "T-139", "commit": "22de6ab6c116dfb955b5b6916f17379c07e226ff", "files": ["docs/DECISIONS.md", "rlsentry/contracts/probe.py", "tests/lab/test_write_mutations.py"]}
