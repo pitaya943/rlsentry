@@ -8,6 +8,7 @@ from rlsentry.contracts.models import Op, Outcome, ProbeResult, Role
 from rlsentry.contracts.policy import ExpectedAccess, RowScope
 from rlsentry.contracts.probe import (
     WRITE_NOT_FORBIDDEN_REASON,
+    WRITE_OK_STATUS,
     KnownRow,
     ReadObservation,
     WriteObservation,
@@ -80,8 +81,8 @@ def write_outcome(op: Op, after_present: bool | None) -> bool | None:
 def write_cell(obs: WriteObservation) -> ProbeResult:
     """Decide allowed / denied / inconclusive / not_tested for one write cell.
 
-    Why: only a trustworthy read-back of the end state can say allowed or denied; a 2xx
-    with no verified effect is denied (USING filters to 0 rows yet PostgREST answers 2xx).
+    Why: only a trustworthy read-back of the end state can say allowed or denied; only 401/403 is a policy denial and other
+    non-2xx are inconclusive; a 2xx with no verified effect is denied (USING filters to 0 rows yet PostgREST answers 2xx).
     """
     curl = obs.attempt.curl if obs.attempt is not None else ""
     status = obs.attempt.status if obs.attempt is not None else None
@@ -95,6 +96,12 @@ def write_cell(obs: WriteObservation) -> ProbeResult:
         return make(Outcome.NOT_TESTED, 0, obs.note or WRITE_NOT_FORBIDDEN_REASON)
     if obs.attempt is None or obs.after is None:
         return make(Outcome.INCONCLUSIVE, 0, obs.note or "write not sent")
+    if status in (401, 403):
+        return make(Outcome.DENIED, 1, f"the policy refused the write (HTTP {status})")
+    if status not in WRITE_OK_STATUS:
+        got = f"HTTP {status}" if status is not None else "no response"
+        return make(Outcome.INCONCLUSIVE, 0,
+                    f"the write was not accepted for a non-authorization reason ({got})")
     took = write_outcome(obs.op, obs.after.present)
     if took is None:
         return make(Outcome.INCONCLUSIVE, 0,
