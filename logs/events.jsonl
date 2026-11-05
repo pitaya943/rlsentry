@@ -1101,3 +1101,4 @@
 {"ts": "2026-11-05T07:59:44", "kind": "ticket_accepted", "ticket": "T-140", "commit": "24b3473270a346078275ff49eba0c652e7a348a9", "files": ["tests/lab/test_scan_writes.py"]}
 {"ts": "2026-11-05T08:54:30", "kind": "acceptance_run", "scope": "MS3", "failed": ["tests", "safety invariants"]}
 {"ts": "2026-11-05T09:23:39", "kind": "acceptance_run", "scope": "MS3", "failed": []}
+{"ts": "2026-11-05T09:25:17", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS3"}
