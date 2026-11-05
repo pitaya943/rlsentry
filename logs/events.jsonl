@@ -1197,3 +1197,6 @@
 {"ts": "2026-11-05T17:17:07", "kind": "report", "id": "d94c3c3c", "agent": "whitebox-dev", "ticket": "T-165", "review": null, "body": "logs/messages/d94c3c3c-report.json"}
 {"ts": "2026-11-05T17:19:25", "kind": "subagent_stop", "id": "96acb8bb", "agent": "whitebox-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T17:31:56", "kind": "ticket_accepted", "ticket": "T-165", "commit": "1284d41cb47de049be26a9c37d4722a844a0a264", "files": ["rlsentry/bench/__main__.py", "rlsentry/bench/run.py"]}
+{"ts": "2026-11-05T17:32:37", "kind": "ticket_start", "ticket": "T-170", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T17:40:55", "kind": "ticket_start", "ticket": "T-171", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T17:51:16", "kind": "ticket_accepted", "ticket": "T-171", "commit": "76e82c79605e3ca0c6c43b4daa8cf267f9f74240", "files": ["rlsentry/contracts/probe.py", "tests/probe/test_text_column.py"]}
