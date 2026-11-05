@@ -1042,3 +1042,4 @@
 {"ts": "2026-11-05T04:48:35", "kind": "subagent_stop", "id": "f0304a29", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T04:48:43", "kind": "report", "id": "483aa737", "agent": "probe-dev", "ticket": "T-127", "review": null, "body": "logs/messages/483aa737-report.json"}
 {"ts": "2026-11-05T04:54:56", "kind": "ticket_accepted", "ticket": "T-127", "commit": "334414c0a80d95020204ce00f355f920d291a008", "files": ["rlsentry/probe/write.py"]}
+{"ts": "2026-11-05T04:56:04", "kind": "ticket_start", "ticket": "T-130", "agent": "probe-dev", "attempt": 1}
