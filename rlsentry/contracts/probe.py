@@ -293,7 +293,10 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
     3. Write cells (SPEC §5 M3 writes; FR-09; ADR-029, revised in the ADR-029 補記):
        - audit → for each op in WRITE_OPS and role in PROBE_ROLES a NOT_TESTED cell, known 0,
          evidence "", reason AUDIT_WRITE_REASON. No request ever leaves in audit (NFR-01).
-       - dev/ci → pick text_column = the first target column that is not the primary key, the
+       - dev/ci → the write path runs ONLY for targets with kind == "table"; an RPC or a view
+         gets NOT_TESTED write cells (reason WRITE_NO_OWNER_REASON) and no request (a write to
+         an RPC path is refused by the gate, ADR-014 #3). For a table: pick
+         text_column = the first target column that is not the primary key, the
          owner column or the public column (a best-effort mutable column; None when none).
          For every plan in plan_writes(expected_by_op, user_ids, tokens, text_column):
          if plan.op is INSERT, work = None; else work = seed_work_row(target, plan.work_owner,
