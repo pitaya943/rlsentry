@@ -995,3 +995,4 @@
 {"ts": "2026-11-05T02:48:57", "kind": "ticket_accepted", "ticket": "T-120", "commit": "b7ce3d397a6e61b1f12fea70798e4f78844acdd2", "files": ["docs/DECISIONS.md", "docs/verification_steps.html"]}
 {"ts": "2026-11-05T02:49:11", "kind": "subagent_stop", "id": "a9ddc5d7", "agent": "lab-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T02:53:07", "kind": "ticket_accepted", "ticket": "T-122", "commit": "bf20e7007579aa752f2ae8da61e49123ea567764", "files": ["lab/_shared/labctl.py"]}
+{"ts": "2026-11-05T02:57:04", "kind": "ticket_start", "ticket": "T-123", "agent": "architect", "attempt": 1}
