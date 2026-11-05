@@ -543,3 +543,9 @@ D2–D4 由 architect 決定並記錄於此。
   3. 展示情境：**L04**（SPEC §9 的首選候選，實測確認 splinter 無任何 SECURITY lint，RLSentry 以 Confirmed 證實 User B 讀到 User A 的列）。
 - 理由：所有數值由程式實測，並有測試把關，ground truth 不會在無人察覺下漂移。
 - 後果與風險：MS4 recall 為 29/32（L03 延後 MS6、L08 延後 MS5），未達 95% 目標；runtime 50 張表 70.7 s 未達 60 s 目標。兩者都在 BENCHMARK_REPORT.md 誠實列出，不調整計分或 rps 來湊數字。
+
+### ADR-034 補記 2：INSERT 探測的其他 uuid 必填欄位填攻擊者自己的 id（2026-11-05，MS4 稽核 P1-1，T-175／T-176）
+- 問題：原本 INSERT 以 new_owner（受害者）的 id 填其他 uuid 欄位。若政策是 `WITH CHECK (created_by = auth.uid())`，真正的攻擊者會把 created_by 填成自己；掃描器卻送受害者 id → 403 → denied，把可能存在的跨租戶寫入說成安全。
+- 決定：actor 是有 id 的使用者時，其他 uuid 必填欄位填 actor 自己的 id；anon 沒有 id，維持 new_owner 的 id。owner 欄位不變（new_owner）。
+- 理由：填值只影響請求能否通過 WITH CHECK；最終狀態以 pk 讀回判定，所以這個改變只會減少錯誤的 denied，不會產生錯誤的 allowed。
+- 仍存在的限制：每個 plan 只嘗試一種填法；需要特定欄位組合（例如外鍵指向其他表）才能通過的政策，仍可能是 inconclusive 或 denied。稽核 P1-2（anon INSERT 送空字串 uuid）不成立：所有 INSERT plan 都有 new_owner。

@@ -14,7 +14,7 @@
 | FPR | fp_safe 0／(0＋TN 72) | 0.000 | ≤ 0.05 | 達成 |
 | Coverage | 應測格子全部測到 | 1.000 | — | inconclusive 比例 0.073 |
 | safe_decided_ratio | 應為 denied 的 safe 案例全部判定為 denied | 1.000 | — | 沒有以「全部 inconclusive」換取低 FPR |
-| Runtime（audit、rps 5） | 5 張 7.4 s；20 張 28.5 s；50 張 70.7 s | — | 50 張 < 60 s | **未達**（見 §4） |
+| Runtime（audit、rps 5） | 5 張 7.4 s；20 張 28.5 s；50 張 70.7 s | — | 50 張 < 60 s | **未達**（見 §5） |
 | Probe-only 類別 | L02、L04、L12（6 個案例） | 3 類 | ≥ 2 類 | 達成 |
 
 audit 的 16 個情境：PostgREST 角色在 DB log 的寫入次數全部為 **0**（NFR-01）。

@@ -86,3 +86,29 @@
 | dev／ci 讀取植入 seed_known_rows | seed_known_rows | probe/seed.py | test_write_requests | 單元 OK；MS3 未串接（延後 MS6） |
 
 稽核結果：無 P0；P1 ×1（NFR-01 DB log 流量證據缺失）已由 T-140 補上；P2 數項列入 MS3-v1 §5 已知限制。
+
+## MS4 M4 Whitebox（auditor，base 24b3473；第 1 次派工用罄回合未回報，第 2 次只讀程式碼）
+
+| SPEC 項目 | 程式 | 測試 | 狀態 |
+| --- | --- | --- | --- |
+| FR-11／§5 M4 #1 兩層唯讀連線 | rlsentry/whitebox/db.py:16-18 | tests/lab/test_whitebox_lab.py（Docker） | OK（無單元測試，P2） |
+| §5 M4「固定版本」雜湊鎖定 | whitebox/splinter.py:21-31；contracts/whitebox.py:30-41 | tests/whitebox/test_vendored.py | OK |
+| §5 M4 #1 `pgrst.db_schemas`（參數化）＋識別字驗證 | splinter.py:78-85 | test_vendored.py（驗證）；test_whitebox_lab.py（實效） | OK |
+| M4 交易一律 rollback、不 commit | splinter.py:96-98；policies.py:31-33 | test_whitebox_lab.py（DB log 無寫入） | OK |
+| §5 M4 #2 pg_policies | whitebox/policies.py | tests/lab/test_policies_lab.py | OK |
+| §5 M4 #3 confirmed／probe_only／lint_only | whitebox/correlate.py | tests/whitebox/test_correlate.py | OK |
+| 焦點：SECURITY DEFINER 有資料才是漏洞，否則 config warning | correlate.py:43-62；rules.py（SECURITY_DEFINER_EXECUTABLE vuln=False） | test_correlate.py；tests/lab/test_whitebox_run_lab.py（L07） | OK |
+| 焦點：M4 不產生 confirmed | correlate.py:24-28（evidence 取自 RULES） | test_correlate.py | OK |
+| 焦點：probe-only 案例真實 | correlate.py:50；bench/score.py:83-84 | test_whitebox_run_lab.py（L02、L04；L12 由 T-175 補上） | OK |
+| §9／ADR-011 計分 | bench/score.py:66-135 | tests/bench/test_score.py | OK |
+| ADR-033 aggregate、0/0 | score.py:142-160 | tests/bench/test_aggregate.py | OK |
+| ADR-033 splinter_status | score.py:30-40 | test_score.py | OK |
+| §8 splinter_expected 必須實測 | lab/*/expected.yaml | tests/lab/test_splinter_expected.py（Docker 逐情境實測） | OK |
+| NFR-01 audit 寫入 0；破壞時 exit 1 | bench/run.py:54；bench/__main__.py:58 | test_bench_audit_m4.py；exit 1 由 T-175 的 test_main_exit.py 補上 | OK |
+| ADR-034 fill_required／OpenAPI 型別／pick_text_column | probe/fill.py；discovery/openapi.py:59-76；probe/run.py:42-54 | test_fill.py、test_seed_fill.py、test_openapi_types.py、test_text_column.py | OK（P1-1 由 T-175／T-176 修正） |
+
+**發現**：P0 無。
+- P1-1（採納）：INSERT 探測以受害者 id 填其他 uuid 必填欄位，`WITH CHECK (created_by = auth.uid())` 類政策會得到 403→denied（把可能的漏洞說成安全）。→ T-175／T-176：改填攻擊者自己的 id（anon 仍用 new_owner）。
+- P1-2（不成立）：「anon INSERT 送出空字串 uuid」。plan_writes 對所有 INSERT plan 都設定 new_owner（合約），不會發生。
+- P2：correlate 以裸物件名比對（多 schema 同名會合併；不同類型 lint 也標 confirmed，已揭露於 BENCHMARK_REPORT §6）；finally 中的 rollback 在連線已斷時可能蓋掉原始錯誤；BENCHMARK_REPORT 章節引用錯誤（已修）；lab 以 superuser 執行 splinter（唯讀由 GUC＋BEGIN READ ONLY 保證，真實專案應建議低權限角色，記入 MS6 USAGE）；test_splinter_expected 的非 Docker 部分是固定值釘選，真正的實測證據是 Docker 參數化部分。
+- 抽查情境：L07（W1 在 audit 為 warning_seen、get_all_accounts confirmed、ping_definer 無 confirmed）、L02／L04（probe_only）、L12（diary_entries probe_only、audit_log lint_only）。
