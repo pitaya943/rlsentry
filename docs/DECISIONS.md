@@ -507,3 +507,21 @@ D2–D4 由 architect 決定並記錄於此。
   8. **bench 的範圍**：MS4 的 bench 只串 M2＋M3＋M4；M1（L08 key，MS5）與 L03 提權（MS6，MS3 核准意見第 1 點）尚未串接，對應案例在 MS4 會誠實記為 FN，並在 BENCHMARK_REPORT 註明原因，不從分母剔除。
 - 理由：每個比率都能由 JSON 裡的原始數量重算；量測條件寫死在合約常數，避免挑對自己有利的設定。
 - 後果與風險：MS4 的 recall 會因 L03／L08 延後而低於 95% 目標，這是誠實的中間狀態；runtime 在 rps 5 下，50 張表可能超過 60 秒（每張表數十個請求），若如此會在報告中列為未達標並說明，不調高 rps 來湊數字。
+
+## ADR-034：依 OpenAPI 欄位型別填入必填欄位，改善寫入植入覆蓋（MS3 核准意見第 1 點）
+- 日期：2026-11-05 · Milestone：MS4 · 相關：ADR-029 補記 2（可植入性限制）、FR-04、FR-09；ADR-005 第 2 類
+- 背景：MS3 的 canary 只帶 pk、owner、public、一個文字欄位，L01（`email text NOT NULL`）與 L05（`created_by uuid NOT NULL`）因此無法植入，寫入 cell 為 not_tested。architect 在 lab 實測 PostgREST 的 OpenAPI：`definitions.<table>.required` 列出 NOT NULL 且無預設值的欄位，每個 property 有 `format`（`uuid`、`text`…）。
+- 考慮過的選項：
+  1. 由 DB 連線（M4）讀 information_schema（缺點：M3 必須在沒有 DB 連線時也能運作，audit 使用者通常不提供 DB）
+  2. 由 OpenAPI 的 required＋format 決定填值（採用）
+  3. 隨機猜值並重試（缺點：請求數暴增，且 400 的原因無法分辨）
+- 決定：
+  1. `parse_openapi` 把 `required` 與 `column_formats` 放進 Target（新增欄位，預設空）。
+  2. `fill_required` 只填「必填且呼叫端尚未設定」的欄位：uuid → 該列擁有者的 user id；文字 → `rlsentry_canary_…`；整數／數值 → 0；布林 → false；timestamp → 現在時間；date → 今天；json／jsonb → `{}`。
+  3. 任一必填欄位型別不在上述範圍（enum、array…）→ 整列不送，cell 維持 not_tested（植入）或 inconclusive（INSERT），絕不誤報為 denied。
+  4. 填入的值只有 canary 字串、擁有者自己的 id 與常數，不含任何真實資料（CLAUDE.md）。
+- 理由：uuid 欄位在 Supabase 幾乎都是使用者參照（外鍵到 auth.users），policy 也常要求它等於 `auth.uid()`（L05 的 `created_by`）；填擁有者自己的 id 最可能通過合法的 WITH CHECK，因此「被拒」才代表政策真的擋住。
+- 後果與風險：
+  - uuid 欄位若是指向其他表的外鍵，植入會因外鍵失敗（400）→ 仍是 not_tested／inconclusive，不誤判。
+  - 沒有 OpenAPI 的目標（L12、bundle 推測）沒有型別資訊，行為與 MS3 相同。
+  - L01／L05 的寫入案例在 MS4 bench 若轉為 confirmed，T-170 會收緊 `test_scan_writes` 對它們的「無法植入」容忍。

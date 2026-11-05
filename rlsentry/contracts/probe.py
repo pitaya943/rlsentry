@@ -41,7 +41,8 @@ denied" rule (SPEC §5 M3 三態結果):
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -347,6 +348,33 @@ WRITE_NO_SEED_REASON = "no seeded row and reader available to probe this write s
 WRITE_NO_OWNER_REASON = "needs a single-column primary key and an owner column to seed canaries"
 
 
+FILL_TEXT_FORMATS: frozenset[str] = frozenset({"text", "character varying", "character", "citext"})
+FILL_INT_FORMATS: frozenset[str] = frozenset({"smallint", "integer", "bigint"})
+FILL_NUM_FORMATS: frozenset[str] = frozenset({"numeric", "real", "double precision"})
+FILL_TIME_FORMATS: frozenset[str] = frozenset({"timestamp with time zone",
+                                               "timestamp without time zone"})
+SEED_UNFILLABLE_REASON = "required column without a fillable type (ADR-034)"
+
+
+def fill_required(target: Target, owner_id: str, preset: Collection[str]) -> dict[str, Any] | None:
+    """Contract only; implemented by rlsentry.probe.fill.fill_required. Pure apart from fresh
+    uuid4 / clock values (ADR-034; MS3 approval note 1: L01, L05).
+
+    Values for every column of target.required that is not in `preset` (the columns the caller
+    already sets: pk, owner, public, text), in target.required order, chosen by
+    target.column_formats[column]:
+      "uuid" → owner_id (the row's owner: Supabase uuid columns are almost always user
+               references, and policies often require them to equal auth.uid(), e.g. L05
+               created_by);
+      FILL_TEXT_FORMATS → CANARY_PREFIX + uuid4 hex;  FILL_INT_FORMATS → 0;
+      FILL_NUM_FORMATS → 0;  "boolean" → False;  FILL_TIME_FORMATS → datetime.now(UTC)
+      .isoformat();  "date" → date.today().isoformat();  "json"/"jsonb" → {}.
+    Returns None when any such column has no format or another format (enum, array, …): the
+    row cannot be built honestly, so the caller sends nothing (the cell stays not_tested or
+    inconclusive, never a false verdict). No required column outside preset → {}."""
+    raise NotImplementedError
+
+
 class SeededRow(_Strict):
     """A canary row the write probe created with its owner's token, to probe and then delete.
 
@@ -503,7 +531,10 @@ async def seed_known_rows(client: SafeClientContract, supabase_url: str, anon_ke
     and — when public_column is set — one public canary row, with headers apikey/Authorization
     (that user's token) and `Prefer: return=minimal`. The JSON body sets: the primary key to a
     new uuid4 str; owner_column to the user's id; public_column (if any) to False then True;
-    text_column (if any) to CANARY_PREFIX + uuid4 hex. A 2xx (or a readable-back pk) adds a
+    text_column (if any) to CANARY_PREFIX + uuid4 hex; plus fill_required(target, <that user's
+    id>, <the keys already set>) (ADR-034). When fill_required returns None, that user's rows
+    are not sent and the note "<role>: " + SEED_UNFILLABLE_REASON is added (role value).
+    A 2xx (or a readable-back pk) adds a
     SeededRow; any other response adds the note "<role>: seed HTTP <status>" and no row (the
     scanner never fabricates a seed it could not create). The marker and pk let read_back and
     cleanup find exactly this row.
@@ -548,7 +579,9 @@ async def seed_work_row(client: SafeClientContract, supabase_url: str, anon_key:
 
     Create one FRESH private canary owned by `owner` (its own token), exactly as
     seed_known_rows builds a private row (new uuid pk, owner_column = owner id, text_column =
-    CANARY_PREFIX + uuid4 hex when given), `Prefer: return=minimal`. A 2xx returns the SeededRow
+    CANARY_PREFIX + uuid4 hex when given, plus fill_required(target, owner id, the keys already
+    set); fill_required None → return None without a request, ADR-034),
+    `Prefer: return=minimal`. A 2xx returns the SeededRow
     (so the write probe has an isolated row and cleanup can delete it); any other response or a
     missing token/id returns None (the write cell then becomes NOT_TESTED, never a false
     verdict). This is what makes every destructive probe independent (ADR-029 補記).
@@ -565,7 +598,10 @@ async def send_write(client: SafeClientContract, supabase_url: str, anon_key: st
     target.primary_key[0]. `work` is the fresh row seed_work_row made for this probe (None for
     INSERT).
     - INSERT: POST <base> a private canary body (new uuid pk, owner_column = new_owner's id,
-      text_column CANARY_PREFIX+uuid when the target has one); new_pk = that uuid; new_value None.
+      text_column CANARY_PREFIX+uuid when the target has one, plus fill_required(target,
+      new_owner's id, the keys already set), ADR-034); new_pk = that uuid; new_value None.
+      fill_required None → no request: WriteAttempt(status=None, curl="") (the cell becomes
+      inconclusive, never denied).
     - UPDATE value-change: PATCH <base>?<pk>=eq.<work.pk> with {plan.text_column:
       CANARY_PREFIX+uuid}; new_value = that marker; new_pk None.
     - UPDATE transfer: PATCH <base>?<pk>=eq.<work.pk> with {owner_column: new_owner's id}.
