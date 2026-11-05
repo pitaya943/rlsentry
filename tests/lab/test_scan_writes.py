@@ -1,0 +1,135 @@
+"""MS3 write + escalation scan against the real lab (SPEC §5 M3 writes; FR-09; ADR-029): the
+scanner's probe() in the DEV profile, scored against every dev-profile case of lab/*/expected.yaml.
+
+What this proves beyond the unit tests:
+- forbidden writes that really take effect are confirmed with the ground-truth rule/severity,
+  and no confirmed vulnerability finding appears on a safe cell (no false positive);
+- a 2xx that RLS filtered to 0 rows is NOT reported as a write (three-state write verdict);
+- the L03 user_metadata escalation read is found only in dev/ci;
+- cleanup is complete: after the scan every base table holds exactly its seeded rows (no canary
+  left behind) and there is no CLEANUP_FAILED finding — the focus of MS3 (清理完整).
+Needs Docker (tests/lab/conftest.py). Storage (L11, P2) is out of scope.
+"""
+from __future__ import annotations
+
+import asyncio
+
+import pytest
+
+from lab._shared import labctl
+from rlsentry.contracts.ground_truth import LAB_USERS, SCENARIO_IDS, Case, CaseKind, GroundTruth
+from rlsentry.contracts.lab import LabInfo
+from rlsentry.contracts.models import AccessMatrix, Evidence, Finding, Op, Outcome, ProbeResult, Profile, Role
+from rlsentry.contracts.policy import TestUser
+from rlsentry.contracts.probe import CANARY_PREFIX
+from rlsentry.contracts.rules import RULES
+from rlsentry.discovery.discover import discover
+from rlsentry.probe.run import probe
+from rlsentry.probe.session import build_sessions
+from rlsentry.safety.http import SafeClient
+from rlsentry.safety.ratelimit import RateLimiter
+from tests.lab.oracle import load_gt, scenario_path
+
+Cell = tuple[str | None, Role | None, Op | None]
+
+
+def frontend_sources(sid: str) -> list[str]:
+    d = scenario_path(sid) / "frontend"
+    return [p.read_text("utf-8") for p in sorted(d.rglob("*.js"))] if d.is_dir() else []
+
+
+def scan(info: LabInfo, sid: str, gt: GroundTruth) -> tuple[AccessMatrix, list[Finding]]:
+    users = [TestUser(name=r, email=u["email"], password_env=u["password_env"]) for r, u in LAB_USERS.items()]
+    env = {u["password_env"]: labctl.lab_password(r) for r, u in LAB_USERS.items()}
+
+    async def go() -> tuple[AccessMatrix, list[Finding]]:
+        async with SafeClient(profile=Profile.DEV, limiter=RateLimiter(rps=200, concurrency=4)) as client:
+            disc = await discover(client, info.api_url, info.anon_key, gt.policy, frontend_sources(sid))
+            sessions = await build_sessions(client, info.api_url, info.anon_key, users, env)
+            assert sessions.missing == {}, f"{sid}: lab login failed: {sessions.missing}"
+            return await probe(client, info.api_url, info.anon_key, disc.targets, sessions, gt.policy, Profile.DEV)
+    return asyncio.run(go())
+
+
+def dev_cases(cases: list[Case]) -> list[Case]:
+    return [c for c in cases if c.kind is CaseKind.ACCESS and Profile.DEV in c.profiles]
+
+
+def base_tables(gt: GroundTruth) -> dict[str, list[str]]:
+    """Base table name → its single pk column, for the leftover/unchanged check."""
+    out: dict[str, list[str]] = {}
+    for name, e in gt.schema_.items():
+        if e.kind == "table":
+            out[name] = e.primary_key
+    return out
+
+
+def seed_pks(gt: GroundTruth, table: str) -> set[str]:
+    return {r.pk for r in gt.rows.values() if r.target == table}
+
+
+def judge(gt: GroundTruth, matrix: AccessMatrix, findings: list[Finding]) -> list[str]:
+    errs: list[str] = []
+    cells: dict[Cell, ProbeResult] = {(c.target, c.role, c.op): c for c in matrix.cells}
+    vuln = [f for f in findings if f.evidence is Evidence.CONFIRMED and RULES[f.rule].vulnerability]
+    hit = {(f.target, f.role, f.op, f.rule): f for f in vuln}
+    expected: set[tuple] = set()
+    for c in dev_cases(gt.vulnerable_cases):
+        key = (c.target, c.role, c.op, c.rule)
+        expected.add(key)
+        f = hit.get(key)
+        if f is None:
+            errs.append(f"{c.id}: no confirmed {c.rule} finding ({c.op and c.op.value} {c.role and c.role.value})")
+        elif f.severity is not c.severity:
+            errs.append(f"{c.id}: severity {f.severity.value} != {c.severity and c.severity.value}")
+    for c in dev_cases(gt.safe_cases) + dev_cases(gt.inconclusive_cases):
+        got = cells.get((c.target, c.role, c.op))
+        if got is None:
+            errs.append(f"{c.id}: cell missing")
+            continue
+        if any((f.target, f.role, f.op) == (c.target, c.role, c.op) for f in vuln):
+            errs.append(f"{c.id}: confirmed vulnerability on a {c.expect and c.expect.value} cell")
+        # A denied write may be reported denied or (if it could not be seeded) not_tested/inconclusive,
+        # but never allowed. A denied read must be denied (reads are always probeable in dev).
+        if c.expect is Outcome.DENIED and got.outcome is Outcome.ALLOWED:
+            errs.append(f"{c.id}: outcome allowed on a denied cell ({got.reason})")
+        if c.op is Op.SELECT and c.expect in (Outcome.DENIED, Outcome.INCONCLUSIVE) and got.outcome is not c.expect:
+            errs.append(f"{c.id}: read outcome {got.outcome.value} != {c.expect.value} ({got.reason})")
+    extra = [f"{k[0]}/{k[1] and k[1].value}/{k[2] and k[2].value}/{k[3]}" for k in hit if k not in expected]
+    if extra:
+        errs.append(f"unexpected confirmed findings (FP): {extra}")
+    if any(f.rule == "CLEANUP_FAILED" for f in findings):
+        errs.append("CLEANUP_FAILED: the scanner left a canary behind")
+    return errs
+
+
+def cleanup_problems(gt: GroundTruth) -> list[str]:
+    errs: list[str] = []
+    for table, pk in base_tables(gt).items():
+        if len(pk) != 1:
+            continue
+        got = {r[0] for r in labctl.query(f"select {pk[0]}::text from public.{table}")}
+        want = seed_pks(gt, table)
+        if got != want:
+            errs.append(f"{table}: rows after scan {sorted(got)} != seeded {sorted(want)} (leftover or deleted)")
+        marker_cols = [c for (c,) in labctl.query(
+            "select column_name from information_schema.columns where table_schema='public' "
+            f"and table_name='{table}' and data_type in ('text','character varying')")]
+        for col in marker_cols:
+            n = labctl.query(f"select count(*) from public.{table} where {col} like '{CANARY_PREFIX}%'")
+            if n != [("0",)]:
+                errs.append(f"{table}.{col}: {n[0][0]} canary values remain")
+    return errs
+
+
+@pytest.mark.safety
+@pytest.mark.parametrize("sid", [s for s in SCENARIO_IDS if s != "L11"])
+def test_dev_writes_match_ground_truth(lab_info: LabInfo, sid: str) -> None:
+    gt = load_gt(sid)
+    labctl.apply(sid)
+    try:
+        matrix, findings = scan(lab_info, sid, gt)
+        problems = judge(gt, matrix, findings) + cleanup_problems(gt)
+        assert not problems, f"{sid}: " + "; ".join(problems)
+    finally:
+        labctl.apply(sid)   # discard any canary / escalation residue for the next scenario
