@@ -1,7 +1,7 @@
 """Rule selection and severity for confirmed reads (SPEC §5 M5; ADR-023). Pure functions."""
 from __future__ import annotations
 
-from rlsentry.contracts.models import Role, Severity
+from rlsentry.contracts.models import Op, Role, Severity
 from rlsentry.contracts.rules import RULES, SENSITIVE_COLUMN_PATTERNS
 
 
@@ -26,3 +26,9 @@ def read_severity(rule: str, columns: list[str]) -> Severity:
     if spec.escalates_to is not None and any(is_sensitive_column(c) for c in columns):
         return spec.escalates_to
     return spec.severity
+
+
+def write_rule(role: Role, op: Op) -> str:
+    """Rule id for a confirmed forbidden write; `op` is accepted for symmetry (ADR-029 #4)."""
+    del op
+    return "ANON_WRITE" if role is Role.ANON else "CROSS_TENANT_WRITE"
