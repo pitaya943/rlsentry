@@ -997,3 +997,4 @@
 {"ts": "2026-11-05T02:53:07", "kind": "ticket_accepted", "ticket": "T-122", "commit": "bf20e7007579aa752f2ae8da61e49123ea567764", "files": ["lab/_shared/labctl.py"]}
 {"ts": "2026-11-05T02:57:04", "kind": "ticket_start", "ticket": "T-123", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T03:29:53", "kind": "ticket_start", "ticket": "T-131", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T03:35:15", "kind": "ticket_accepted", "ticket": "T-131", "commit": "c25ff20e05cebece893f11eec95571471e3ee492", "files": ["tests/labctl/test_import.py"]}
