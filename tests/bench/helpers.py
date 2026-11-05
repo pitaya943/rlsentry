@@ -30,7 +30,8 @@ def gt(sid: str, **update: object) -> GroundTruth:
 
 
 def cell(target: str, role: Role, op: Op, outcome: Outcome) -> ProbeResult:
-    return ProbeResult(target=target, role=role, op=op, outcome=outcome, known_rows_checked=1, reason="r")
+    return ProbeResult(target=target, role=role, op=op, outcome=outcome, known_rows_checked=1, reason="r",
+                       evidence_curl="curl -I http://127.0.0.1:54321/rest/v1/t")
 
 
 def matrix(*cells: ProbeResult) -> AccessMatrix:
