@@ -1,0 +1,7 @@
+{
+  "description": "T-167 seed fill",
+  "prompt": "Ticket: T-167\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-167.md and follow it.",
+  "subagent_type": "probe-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

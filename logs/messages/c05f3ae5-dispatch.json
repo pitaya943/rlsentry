@@ -1,0 +1,7 @@
+{
+  "description": "T-160 splinter runner",
+  "prompt": "Ticket: T-160\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-160.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

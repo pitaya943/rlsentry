@@ -1,0 +1,7 @@
+{
+  "description": "T-164 apply_synthetic",
+  "prompt": "Ticket: T-164\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-164.md and follow it.",
+  "subagent_type": "lab-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}
