@@ -65,3 +65,24 @@
 | ADR-022 #3 query 唯讀、execute 原子 | `lab/_shared/labctl.py` | test_shared_execute.py | OK；F4 → T-112 收緊 |
 | ADR-022 #3 變異測試以預期原因失敗 | tests/lab/test_oracle_mutations.py | 同左＋holdout 變異版本 | F3 → T-112 改為 case id＋失敗片語 |
 | ADR-024 寫入分類排除引號內關鍵字 | labctl.py `write_command` | test_shared_classify.py（純函式）、test_shared_execute.py（端到端） | F1（P1）、F2、F6 → T-112、T-113 |
+
+## MS3 M3 寫入（auditor base bd79ce0；最後 accept 24b347327）
+
+| 需求／ADR-029 決定 | 合約 | 實作 | 真正驗證的測試 | 狀態 |
+| --- | --- | --- | --- | --- |
+| FR-09 寫入列舉（只列禁止的寫入） | plan_writes | probe/write.py | test_plan_writes.py（all-deny／permit／review／no-token 的精確 plan 集合） | OK |
+| FR-09 送 INSERT／UPDATE（值改＋轉移）／DELETE | send_write | probe/write.py | test_write_requests.py（逐 op 的 method／path／params／token／body） | OK |
+| FR-09 每個破壞性探測各自新 work row | seed_work_row、WritePlan.work_owner | probe/write.py、run.py | test_write_requests、test_run_writes（stateful fake） | OK |
+| FR-09 讀回驗證最終狀態（HEAD count，不下載列） | read_back、write_outcome | probe/write.py、verdict.py | test_write_requests、test_write_verdict | OK |
+| 2xx 不等於寫入 → denied 非 allowed | write_cell 步驟 4 | verdict.py | test_write_verdict、test_write_status、test_run_writes（USING→0 列） | OK |
+| 狀態分類：401／403→denied、2xx→讀回、其餘→inconclusive（非誤判安全） | write_cell、WRITE_OK_STATUS | verdict.py | test_write_status.py | OK |
+| 每筆寫入帶 return=minimal | send_write、seed_* | write.py、seed.py | test_write_requests | OK |
+| 清理全涵蓋或回報 CLEANUP_FAILED（不悄悄遺留） | cleanup_seeded、cleanup_findings | cleanup.py、diff.py | test_write_requests、test_write_findings、test_run_writes、test_scan_writes | OK |
+| 規則對應（anon→ANON_WRITE/Critical、user→CROSS_TENANT_WRITE/High） | write_rule、RULES | rules/severity.py | test_write_findings.py | OK |
+| 寫入只對 kind=="table"（RPC／view 不寫） | probe() docstring | run.py（guard）＋gate RPC ban | test_run_writes（只用 table）＋gate 測試（MS1） | OK |
+| audit 不送寫入、寫入 cell NOT_TESTED（NFR-01） | probe() audit 分支 | run.py、safety/mode.py | test_run_writes、test_write_requests、test_metadata、test_scan_reads（DB log 0 寫入） | OK |
+| NFR-01 dev 流量證據：真實列未變、PostgREST 寫入只有 I/U/D | — | — | test_scan_writes.traffic_problems（直接讀 DB＋db_writes_since；稽核 P1 → T-140） | OK |
+| L03 escalate／restore user_metadata | escalate/restore_user_metadata | probe/metadata.py | test_metadata.py | 單元 OK；MS3 未串接（延後 MS6） |
+| dev／ci 讀取植入 seed_known_rows | seed_known_rows | probe/seed.py | test_write_requests | 單元 OK；MS3 未串接（延後 MS6） |
+
+稽核結果：無 P0；P1 ×1（NFR-01 DB log 流量證據缺失）已由 T-140 補上；P2 數項列入 MS3-v1 §5 已知限制。

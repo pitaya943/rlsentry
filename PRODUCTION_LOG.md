@@ -201,7 +201,7 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 - lab 整合：15 個情境以 audit 掃描，所有 audit SELECT case 都符合 ground truth。confirmed 誤報為 0；PostgREST 角色寫入為 0；GET 只下載主鍵。
 - subagent tokens（約）：probe-dev 每張 16k–26k；lab-dev T-092 23k、T-113 30k；auditor 43k、48k。
 
-## MS3 M3 寫入（進行中）
+## MS3 M3 寫入（等待審查，main @ 24b347327）
 
 ### Holdout（派工前紀錄，§2）
 | 檔案 | sha256 |
@@ -214,3 +214,29 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 | T-121 的 test_import.py 以 importlib.reload 模擬無 fcntl，在完整回歸時與 tests/lab/conftest 的 session flock 死鎖（T-123 驗收卡住） | T-131：改以子行程檢查無 fcntl；reopen T-121 缺陷 |
 | 被中止的 T-123 驗收留下已暫存的 merge，誤併入 T-131 start commit（a091975 成為 arch/T-123 的 merge）。contracts/ 屬 architect 路徑，provenance 不觸發；T-123 改以一個真實的 docstring 修正（arch/T-123b）重新走驗收閘門 | 已記錄，內容正確且已整合 |
 | 原寫入設計共用單一 canary，跨租戶 DELETE／轉移會造成後續探測偽陽性與清理不全 | T-132：每個破壞性探測各自新植入 work row（ADR-029 補記） |
+| T-135 第一次驗收把新斷言加進 regression 中的 test_write_verdict → 回歸失敗（同類死結） | 狀態測試移到新檔 test_write_status（T-136）；T-135 只留合約＋ADR，走乾淨分支 arch/T-135b |
+| INSERT 因 NOT NULL（L01 email）失敗被判 denied（＝安全） | T-135／T-137：write_cell 依 HTTP 狀態分類（401／403→denied、2xx→讀回、其餘→inconclusive） |
+| run.py 悄悄遺留無法刪除的 canary（L09：10 列殘留僅 2 筆回報） | T-135 合約要求收集全部 canary 交 cleanup_seeded；T-138 測試改為 (target,owner) 去重 |
+| run.py 對 RPC 目標嘗試寫入（L07 被 gate 擋）；變異測試用 permissive policy 在本 lab 不生效 | T-139：寫入只對 kind=="table"；變異改用 disable RLS |
+| 稽核 P1：test_scan_writes 缺 NFR-01 DB log 流量證據 | T-140：加入 seed 列快照（真實列未變）＋PostgREST 寫入只有 I/U/D |
+
+### Ticket（21 張，全 done）
+| 批次 | ticket | 攻擊次數 |
+| --- | --- | --- |
+| 核准意見 | T-120（ADR-025–028）、T-121（2）、T-122 | 1／2／1 |
+| 合約與測試 | T-123、T-124、T-125 | 1 |
+| 寫入實作 | T-126、T-127、T-128、T-129、T-130 | 1 |
+| 過程修訂 | T-131、T-132、T-133、T-134、T-135（2）、T-136、T-137、T-138、T-139、T-140 | 多為 1，T-135 為 2 |
+
+### ADR
+025（清單標籤＋Codespaces 準備）、026（必做／選做變異分級）、027（worktree：origin/main 須為 HEAD 祖先）、028（verification_steps.html 維護）、029（寫入探測設計）＋補記（work row、text_column、狀態分類、清理全涵蓋、讀取植入／L03 延後、只對 table、去重）。
+
+### 指標
+- acceptance `--milestone MS3 --no-vc`：ALL PASSED（holdout 5；tests／safety／provenance／ruff／mypy 通過；mutation 需 MUTATION=1）。
+- lab：test_scan_writes 15、test_write_mutations 2、test_scan_reads 15 全綠（約 4 分鐘／輪）。
+- auditor（base bd79ce0）：無 P0；P1 ×1（NFR-01 流量證據）已由 T-140 修正；P2 列入 MS3-v1 §5。
+- subagent tokens（約）：probe-dev 每張 19k–54k；auditor 110k。lab 套件在本環境偏慢，T-130 曾兩次用罄 30-turn 未提交，改以「先過快速 fake 測試即提交、lab 由 architect 驗」策略成功。
+
+### 事件引用
+holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accepted／holdout_added）。
+
