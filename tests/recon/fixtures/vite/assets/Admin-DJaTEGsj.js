@@ -1,0 +1,2 @@
+import{n as e,r as t,t as n}from"./index-B8pWgJCH.js";var r=t(),i=n(),a=e(`https://fxtrvitefixture000001.supabase.co`,`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4dHJ2aXRlZml4dHVyZTAwMDAwMSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MjAwMDAwMDAwMH0.Slx16tRMegd9ImKUoF5Fa8Xgx5PFq4AC4qUTWN0yGMA`);function o(){let[e,t]=(0,r.useState)([]);return(0,r.useEffect)(()=>{a.from(`profiles`).select(`*`).then(e=>t(e.data??[]))},[]),(0,i.jsx)(`pre`,{children:JSON.stringify(e)})}export{o as default};
+//# sourceMappingURL=Admin-DJaTEGsj.js.map
