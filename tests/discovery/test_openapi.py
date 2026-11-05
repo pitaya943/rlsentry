@@ -26,15 +26,19 @@ def doc(**extra: Any) -> dict[str, Any]:
     return d
 
 
+OLD_FIELDS = {"name", "kind", "columns", "primary_key", "discovered_by", "confidence"}
+
+
 def test_tables_and_rpcs_with_columns_and_primary_keys() -> None:
-    got = parse_openapi(doc())
-    assert got == [
+    # Compares the MS2 fields; required/column_formats (ADR-034) are tested in test_openapi_types.
+    got = [t.model_dump(include=OLD_FIELDS) for t in parse_openapi(doc())]
+    assert got == [t.model_dump(include=OLD_FIELDS) for t in [
         Target(name="accounts", kind="table", columns=["id", "owner_id", "balance"], primary_key=["id"],
                discovered_by="openapi", confidence="confirmed"),
         Target(name="get_all_accounts", kind="rpc", discovered_by="openapi", confidence="confirmed"),
         Target(name="invoice_summary", kind="table", columns=["amount", "id"], primary_key=["id"],
                discovered_by="openapi", confidence="confirmed"),
-    ]
+    ]]
 
 
 def test_view_is_reported_as_table_never_view() -> None:
