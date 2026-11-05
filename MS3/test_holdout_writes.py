@@ -66,7 +66,7 @@ def _scopes(ins: RowScope, upd: RowScope, dele: RowScope) -> dict[tuple[Op, Role
 def test_plan_writes_only_forbidden_ops() -> None:
     # users may UPDATE/DELETE anything (all) but only own INSERTs; anon denied everywhere.
     exp: Mapping[tuple[Op, Role], ExpectedAccess] = _scopes(RowScope.OWN_ROWS_ONLY, RowScope.ALL, RowScope.ALL)
-    plans = plan_writes(exp, IDS, TOK, has_text_column=True)
+    plans = plan_writes(exp, IDS, TOK, "body")
     kinds = {(p.op, p.actor) for p in plans}
     # anon forbidden for every op → 3 anon plans; users only forbidden on cross-tenant INSERT.
     assert (Op.INSERT, Role.ANON) in kinds
