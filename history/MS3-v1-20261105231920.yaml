@@ -1,0 +1,17 @@
+milestone: MS3
+checklist: docs/verification/MS3-v1.md
+checklist_sha256: 1d379c49698e18561b6a4cfdc65454b595d7ccbbf451f0f8b9940bff057f1106
+decision: approve
+reviewer: Kuei
+date: 2026-11-05 23:19
+notes: |
+  MS3 核准。以下意見請在下一個 session 開始時處理，並套用到之後每一個 milestone。
+  1. 接受驗證清單第 5 段的延後項與 P2，列為 MS6 待辦，不需 reopen MS3：
+     - L03 的 user_metadata 提權與 dev／ci 讀取植入（seed_known_rows）延到 MS6 pipeline；MS6 必須把這兩項串進 run_scan 並以 lab 驗證，L03 的 USER_METADATA_ESCALATION 要能實際被偵測到。
+     - L01 與 L05 因 NOT NULL 或 uuid 欄位不可植入，接受記為 not_tested；若 MS4（有 DB 連線）或之後能由 OpenAPI 或 DB 取得欄位型別，請改善寫入覆蓋並更新 benchmark。
+     - 遠端 dev／ci 寫入目前會以 WriteRefused 讓 probe() 以失敗中止，接受；MS6 pipeline 請改成轉為 inconclusive 的寫入 cell 並記進報告，不要讓整個掃描崩潰。
+  2. 驗證清單的指令品質，請寫成 ADR 並於之後每個 milestone 遵守：
+     - 每一條要我執行的指令都必須先在 lab 實跑過並附真實預期輸出，不得留佔位指令（本次第 7 項的 select leftover 是錯誤示範，已修正）。
+     - 指令要能直接複製貼上，優先單行；不要用會被 markdown 縮排的多行 heredoc（縮排會讓結尾終止符失效、shell 卡在續行）；還原或刪除等步驟要把完整指令寫出來。
+  3. 文件同步，請寫成 ADR 或補進 ADR-015 的提醒：每次 milestone 收尾或暫停前，除了 system_overview.html，也必須重跑 docs/tools/progress.py 並提交，使 progress.html 與 branch-log.md 不落後；每份清單保留該自檢項。
+  4. 沿用 MS2：ADR-025 至 028（清單四種標籤、必做變異為簽章前提、worktree 規則、verification_steps.html 維護）繼續適用。
