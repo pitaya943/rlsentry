@@ -998,3 +998,5 @@
 {"ts": "2026-11-05T02:57:04", "kind": "ticket_start", "ticket": "T-123", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T03:29:53", "kind": "ticket_start", "ticket": "T-131", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T03:35:15", "kind": "ticket_accepted", "ticket": "T-131", "commit": "c25ff20e05cebece893f11eec95571471e3ee492", "files": ["tests/labctl/test_import.py"]}
+{"ts": "2026-11-05T03:38:05", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
+{"ts": "2026-11-05T03:42:27", "kind": "ticket_accepted", "ticket": "T-123", "commit": "ead52cc8b778e530babc1fdccdfc7fbb9233acb5", "files": ["rlsentry/contracts/probe.py"]}
