@@ -72,6 +72,12 @@ def parse_openapi(doc: Mapping[str, Any]) -> list[Target]:
     - "/<name>" → Target(kind="table", columns=list(doc["definitions"][name]["properties"]) in
       document order, primary_key = those properties whose "description" (a string) contains
       PK_MARKER, in document order). Missing definition → columns=[] and primary_key=[].
+      ADR-034 (MS4): required = the definition's "required" list (PostgREST lists NOT NULL
+      columns without a default) filtered to strings that are among `columns`, in "required"
+      order; column_formats = {column: property["format"]} for every property whose "format"
+      is a string (e.g. "uuid", "text", "integer", "boolean", "timestamp with time zone").
+      A non-list "required" or a non-dict property is ignored for these two fields. RPC
+      targets keep required=[] and column_formats={};
       ADR-023 #1: PostgREST's OpenAPI cannot tell a view from a table (same methods, same PK
       marker; verified on L06), so M2 never reports kind="view";
     - every other key, or a <name> not matching IDENT_RE, is ignored.
