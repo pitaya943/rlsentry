@@ -987,3 +987,4 @@
 {"ts": "2026-11-05T02:39:15", "kind": "ticket_start", "ticket": "T-121", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T02:40:01", "kind": "ticket_fail", "ticket": "T-121", "reason": "checks failed:\nE   ModuleNotFoundError: import of fcntl halted; None in sys.modules\nERROR tests/labctl/test_import.py::test_module_imports_without_fcntl - Module...\nERROR tests/labctl/test_import.py::test_lock_is_the_only_part_that_needs_fcntl", "attempts": 1}
 {"ts": "2026-11-05T02:40:30", "kind": "ticket_start", "ticket": "T-121", "agent": "architect", "attempt": 2}
+{"ts": "2026-11-05T02:44:51", "kind": "ticket_accepted", "ticket": "T-121", "commit": "1be13844e30d662baf5afeca788cd5b9abbd17c6", "files": ["rlsentry/contracts/lab.py", "tests/labctl/__init__.py", "tests/labctl/test_classify.py", "tests/labctl/test_import.py"]}

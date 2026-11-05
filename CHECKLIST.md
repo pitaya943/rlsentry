@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 79/83 · 進行中 2 · blocked 1
+自動產生，請勿手改 · 完成 80/83 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -96,8 +96,8 @@
 
 ## [ ] MS3 M3 寫入（進行中）
 - [ ] T-120 ADR：驗證清單標籤與 Codespaces 準備、必做變異分級、worktree 規則、verification_steps.html 維護（MS2 核准意見第 1、2、4、6、7 點）（architect，in_progress，1 次）
-- [ ] T-121 可見測試：write_command 分類測試移出 tests/lab/；labctl 在沒有 fcntl 時仍可 import（MS2 核准意見第 5 點）（architect，in_progress，2 次）
-- [ ] T-122 labctl：只在 lock() 內 import fcntl（MS2 核准意見第 5 點）（lab-dev，todo，0 次） ← 依賴 T-121…
+- [x] T-121 可見測試：write_command 分類測試移出 tests/lab/；labctl 在沒有 fcntl 時仍可 import（MS2 核准意見第 5 點）（architect，done，2 次）
+- [ ] T-122 labctl：只在 lock() 內 import fcntl（MS2 核准意見第 5 點）（lab-dev，todo，0 次） ← 依賴 T-121✓
 
 ## [ ] MS4 M4 Whitebox（鎖定）
 
