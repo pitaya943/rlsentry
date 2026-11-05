@@ -441,3 +441,5 @@ D2–D4 由 architect 決定並記錄於此。
 - **可植入性限制**：寫入探測以 canary 列植入（pk uuid、owner id、public bool、一個文字欄位）。有其他 NOT NULL 無預設欄位或非文字型別欄位（L01 `email` text NOT NULL、L05 `created_by` uuid NOT NULL）的表無法植入 → 該寫入 cell 為 not_tested／inconclusive（保守、不誤報）。完整覆蓋需由 OpenAPI 取得欄位型別，列為未來工作。
 
 - 補充（T-138）：CLEANUP_FAILED 以 (target, owner) 去重（Finding.id = finding_id(target, role, op, rule)），每位擁有者一筆，報告不含殘留列數；實際殘留列在 dev／ci 可丟棄 DB 中。
+
+- 補充（T-139）：寫入探測只對 kind=="table"；RPC／view 的寫入 cell 一律 NOT_TESTED（對 RPC 路徑送寫入會被閘門擋，ADR-014 #3）。變異測試以 `disable row level security` 植入（permissive `to anon` policy 在本 lab 讓 anon DELETE 仍影響 0 列，非可利用）。

@@ -61,15 +61,18 @@ def caught(info: LabInfo, sid: str, target: str, op: Op, rule: str, sql: str) ->
         labctl.apply(sid)
 
 
+# Disabling RLS is the canonical "safe table becomes fully writable" defect (as in L01). A
+# permissive `to anon` policy is NOT used here: in this Supabase lab anon DELETE still affects
+# 0 rows under such a policy (a role-mapping nuance), so it would not be an exploitable mutation.
+_RLS_OFF = "alter table public.todos disable row level security"
+
+
 def test_scanner_catches_planted_cross_tenant_update(lab_info: LabInfo) -> None:
-    # C01 todos is owner-scoped and safe. A permissive UPDATE policy opens cross-tenant writes;
+    # C01 todos is owner-scoped and safe. With RLS off, a user can rewrite another user's row;
     # the scanner must flip from denied to a confirmed CROSS_TENANT_WRITE (read-back verified).
-    caught(lab_info, "C01", "todos", Op.UPDATE, "CROSS_TENANT_WRITE",
-           "create policy pwn_upd on public.todos for update to authenticated "
-           "using (true) with check (true)")
+    caught(lab_info, "C01", "todos", Op.UPDATE, "CROSS_TENANT_WRITE", _RLS_OFF)
 
 
 def test_scanner_catches_planted_anon_delete(lab_info: LabInfo) -> None:
-    # A permissive DELETE policy for anon opens anonymous deletes → ANON_WRITE.
-    caught(lab_info, "C01", "todos", Op.DELETE, "ANON_WRITE",
-           "create policy pwn_del on public.todos for delete to anon using (true)")
+    # With RLS off, anon can delete any row → ANON_WRITE.
+    caught(lab_info, "C01", "todos", Op.DELETE, "ANON_WRITE", _RLS_OFF)
