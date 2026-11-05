@@ -295,22 +295,26 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
          evidence "", reason AUDIT_WRITE_REASON. No request ever leaves in audit (NFR-01).
        - dev/ci → pick text_column = the first target column that is not the primary key, the
          owner column or the public column (a best-effort mutable column; None when none).
-         For every plan in plan_writes(expected_by_op, user_ids, tokens, text_column is not None):
+         For every plan in plan_writes(expected_by_op, user_ids, tokens, text_column):
          if plan.op is INSERT, work = None; else work = seed_work_row(target, plan.work_owner,
          text_column, ...) — a FRESH canary created just for this probe, so a destructive write
          never corrupts another probe's row (ADR-029 補記). work is None (seeding refused) →
-         NOT_TESTED cell, reason from the seed note, nothing else sent. Otherwise send_write +
-         read_back (immediately, before the next probe) build a WriteObservation; cell =
-         write_cell(obs); findings += write_findings(...). A (role, op) pair with no plan
-         yields one NOT_TESTED cell (WRITE_NOT_FORBIDDEN_REASON / WRITE_NO_OWNER_REASON), so
-         the matrix keeps a cell per (role, op). Every work row, every INSERT canary and the
-         read-seed rows are collected and cleanup_seeded(...) deletes them at the end; leftovers
-         become CLEANUP_FAILED findings (cleanup_findings, from its results).
+         NOT_TESTED cell, reason from the seed note ("work row could not be seeded"), nothing
+         else sent. Otherwise send_write + read_back (immediately, before the next probe) build
+         a WriteObservation; cell = write_cell(obs); findings += write_findings(...). A
+         (role, op) pair with no plan yields one NOT_TESTED cell (WRITE_NOT_FORBIDDEN_REASON /
+         WRITE_NO_OWNER_REASON), so the matrix keeps a cell per (role, op). EVERY canary the
+         probe created — each work row AND each INSERT canary whose POST returned 2xx (its
+         new_pk) — is collected into one list; cleanup_seeded(...) deletes them at the end and
+         its return (rows still present) becomes CLEANUP_FAILED findings (cleanup_findings). No
+         canary is ever left without a CLEANUP_FAILED finding (SPEC §5 M3 清理; never leave data
+         silently).
        - A role without a token still yields NOT_TESTED write cells (reason from
          sessions.missing), no request.
-       Read seeding: in dev/ci seed_known_rows(...) once per target adds canary rows to the
-       READ known set (SPEC §5 M3 "dev／ci 植入已知資料"), so empty real targets (C04) become
-       decidable; it never feeds the write probes.
+       MS3 does NOT call seed_known_rows: reads use collect_known_rows on existing rows (as in
+       MS2). dev/ci read-seeding of empty targets (SPEC "dev／ci 植入已知資料") and the L03
+       user_metadata escalation read pass both need inputs probe() does not receive (a re-login
+       needs the password) and are deferred to the MS6 pipeline (ADR-029 補記).
     4. findings += target_findings(target).
     Cells in target order, then per role the SELECT cell, then the write cells in WRITE_OPS
     order; findings deduplicated by id, first occurrence kept. In audit only GET/HEAD and the
@@ -323,6 +327,11 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
 # ============================================================================================
 # --- M3 writes (FR-09; dev/ci only; ADR-029) ------------------------------------------------
 # ============================================================================================
+
+WRITE_OK_STATUS: frozenset[int] = frozenset({200, 201, 204, 206})
+"""Write statuses from which the read-back decides the verdict. 401/403 is a policy denial;
+anything else (400 NOT NULL, 409, 5xx, transport error) is inconclusive, not denied (ADR-029
+補記): the scanner may simply have failed to build a valid canary row."""
 
 CANARY_PREFIX = "rlsentry_canary_"
 """Every value the write probe writes starts with this, so a human (or cleanup) can spot a
@@ -432,16 +441,24 @@ def write_cell(obs: WriteObservation) -> ProbeResult:
     """Contract only; implemented by rlsentry.probe.verdict.write_cell. Pure.
 
     target/role/op from obs. evidence_curl = obs.attempt.curl if an attempt was made, else "".
-    First match:
+    http_status = obs.attempt.status throughout. Classify by the write's HTTP status, because a
+    non-2xx can be a policy denial OR our own invalid request, and only the former is "denied":
     1. obs.plan is None → NOT_TESTED, known 0, reason obs.note or WRITE_NOT_FORBIDDEN_REASON.
     2. obs.attempt is None or obs.after is None → INCONCLUSIVE, 0, reason obs.note or
        "write not sent".
-    3. took = write_outcome(obs.op, obs.after.present). took is None → INCONCLUSIVE, 0,
-       http_status obs.attempt.status, reason names that the end state could not be read back
-       (obs.after.status). took True → ALLOWED; took False → DENIED; known_rows_checked = 1
-       (the one seeded/canary row read back), http_status = obs.attempt.status.
-    A 2xx write with no verified effect is therefore DENIED, never ALLOWED (SPEC §5 M3: USING
-    filters an UPDATE/DELETE to 0 rows and PostgREST still answers 2xx).
+    3. obs.attempt.status in (401, 403) → DENIED, known 1: the policy refused the write
+       (PostgREST 403 / Postgres 42501 WITH CHECK). reason names the status.
+    4. obs.attempt.status in WRITE_OK_STATUS (200, 201, 204, 206) → took =
+       write_outcome(obs.op, obs.after.present); took None → INCONCLUSIVE, 0 (end state could
+       not be read back, reason names obs.after.status); took True → ALLOWED, known 1; took
+       False → DENIED, known 1. A 2xx with no verified effect is DENIED, never ALLOWED (SPEC §5
+       M3: USING filters an UPDATE/DELETE to 0 rows yet PostgREST answers 2xx).
+    5. any other status, or None → INCONCLUSIVE, 0: the write was not accepted for a
+       non-authorization reason (e.g. 400 NOT NULL / bad input, 409 conflict, 5xx, or a
+       transport error — our canary could not be built or the server erred), so denial cannot
+       be concluded. reason names the status (or "no response").
+    So an INSERT that fails because the scanner could not satisfy a NOT NULL / typed column it
+    does not know about is inconclusive, never a false "denied" (ADR-029 補記).
     """
     raise NotImplementedError
 

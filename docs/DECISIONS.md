@@ -430,3 +430,12 @@ D2–D4 由 architect 決定並記錄於此。
 - 決定：`plan_writes` 只依政策與身分列出要探測的寫入（不再依賴預先植入列）。每個 UPDATE／DELETE 探測在送出前，由 `seed_work_row` 以所需擁有者的 token 新植入一筆專屬 work row；INSERT 自建 canary；讀回緊接在每次寫入之後。`WritePlan` 以 `work_owner` 取代 `pk`／`row_owner`；`send_write`、`after_filter` 改以傳入的 work row。`seed_known_rows` 僅供 dev／ci 讀取已知列（SPEC「dev／ci 植入已知資料」，讓 C04 這類空資料情境在 dev／ci 可判定），不再餵給寫入探測。所有 canary（讀取植入、work、INSERT）都在最後由各自擁有者清理，殘留回報 CLEANUP_FAILED。
 - 後果：每個情境的寫入探測會植入較多短命 canary（每個破壞性探測一筆），但彼此獨立、判定正確、清理完整。work row 植入失敗（擁有者無法 INSERT）時該寫入 cell 為 not_tested，不會誤判。
 - 補充（T-133）：`plan_writes` 第 4 參數改為 `text_column: str | None`（真實可變文字欄位名稱，由 run 依 target 欄位挑選），value-change UPDATE plan 直接帶入 `WritePlan.text_column`；None 時略過該 plan。避免實作以佔位字串猜欄位名。
+
+### ADR-029 補記 2：寫入判定依 HTTP 狀態分類、清理全涵蓋、讀取植入與可植入性限制（2026-11-05）
+- 實測（dev 掃描全情境）發現並修正：
+  1. **狀態分類**：INSERT 因非授權原因失敗（如 L01 `customers.email` NOT NULL，回 400）原本被判 denied（＝安全）。改為 `write_cell` 依狀態分類：401／403（政策、42501）→ denied；2xx → 以讀回判 allowed／denied；其餘（400／409／5xx／無回應）→ inconclusive。因此掃描器自己送不出有效寫入時只會「無法判定」，絕不誤報為安全。
+  2. **清理全涵蓋**：`run()` 收集每一筆建立過的 canary（work row 與 2xx 的 INSERT canary）全部交給 `cleanup_seeded`；刪不掉的一律產生 CLEANUP_FAILED，不得悄悄遺留（L09 feedback 無 owner DELETE policy → 預期會有 CLEANUP_FAILED 與殘留 canary，屬正確行為）。
+- **延後至 MS6 pipeline**（probe() 沒有可用的輸入）：
+  - dev／ci 讀取植入（seed_known_rows，SPEC「dev／ci 植入已知資料」）：MS3 讀取沿用 collect_known_rows（既有列）；C04 在 dev 仍為 inconclusive。
+  - L03 `USER_METADATA_ESCALATION`：提權後需以密碼重新登入取得新 JWT，但 `probe()` 只收到 token（不含密碼，NFR-03）。metadata.py（escalate／restore）已實作並單元測試（T-129），於 MS6 串接。
+- **可植入性限制**：寫入探測以 canary 列植入（pk uuid、owner id、public bool、一個文字欄位）。有其他 NOT NULL 無預設欄位或非文字型別欄位（L01 `email` text NOT NULL、L05 `created_by` uuid NOT NULL）的表無法植入 → 該寫入 cell 為 not_tested／inconclusive（保守、不誤報）。完整覆蓋需由 OpenAPI 取得欄位型別，列為未來工作。
