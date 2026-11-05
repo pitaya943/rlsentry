@@ -97,9 +97,9 @@
     <rect x="540" y="30" width="150" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
     <text x="615" y="60" text-anchor="middle" font-size="14" font-weight="bold">M3 Probe（核心）</text>
     <text x="615" y="80" text-anchor="middle" font-size="12">讀取 ✓、寫入 ✓（dev／ci）</text>
-    <rect x="720" y="30" width="140" height="70" rx="8" fill="#f1f3f5" stroke="#adb5bd" stroke-dasharray="5,4"/>
+    <rect x="720" y="30" width="140" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44" stroke-dasharray="5,4"/>
     <text x="790" y="60" text-anchor="middle" font-size="14" font-weight="bold">M4 Whitebox</text>
-    <text x="790" y="80" text-anchor="middle" font-size="12">splinter 交叉（MS4，選配）</text>
+    <text x="790" y="80" text-anchor="middle" font-size="12">splinter 交叉 ✓（選配）</text>
     <rect x="890" y="30" width="190" height="70" rx="8" fill="#f1f3f5" stroke="#adb5bd"/>
     <text x="985" y="60" text-anchor="middle" font-size="14" font-weight="bold">M5 Report</text>
     <text x="985" y="80" text-anchor="middle" font-size="12">JSON／HTML／SARIF（MS6）</text>
@@ -245,7 +245,7 @@
   <div class="cards">
     <div class="card"><b>12 個漏洞情境＋4 個對照組</b>漏洞（L01–L12）證明掃描器抓得到；對照組（C01–C04）證明它不會亂報，以及「空表、沒資料的使用者」必須回報 inconclusive。</div>
     <div class="card"><b>oracle 怎麼證明自己有效</b>故意弄壞 lab：C04 改成 USING (false) → 正向對照失敗；L05 關掉 RLS → 10 個 denied 案例全部失敗。驗證器本身也要被驗證。</div>
-    <div class="card"><b>MS4 才會接上掃描器</b>bench 讓掃描器只拿到 policy、對 lab 掃描，再以 cases 計分（recall、precision、FPR，附原始數量）。</div>
+    <div class="card"><b>MS4 已接上掃描器</b><code>python -m rlsentry.bench</code> 讓掃描器只拿到 policy、對 lab 以 dev（計分）與 audit（唯讀檢查）各掃一次，再以 cases 計分；結果見 BENCHMARK_REPORT.md。</div>
   </div>
 </section>
 
@@ -285,8 +285,8 @@
     <tr><td>MS0</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>contracts、policy/*、16 份 ground truth</td><td>「正確答案」與模組之間的語言定案</td></tr>
     <tr><td>MS1</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>safety/*、lab/_shared、16 個情境、oracle</td><td>安全地送出請求；有一個答案已被證明的靶場</td></tr>
     <tr><td>MS2</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>discovery/*、probe 讀取、diff、severity、init</td><td>第一次能說出「這裡有讀取漏洞」</td></tr>
-    <tr><td>MS3</td><td><i class="dot" style="background:var(--wip)"></i>等待你審查</td><td>probe 寫入（seed work row／write／read-back／verdict／cleanup）</td><td>寫入類漏洞（L01／L09 的 INSERT；安全表誤報為 0）</td></tr>
-    <tr><td>MS4</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>whitebox、bench</td><td>第一次完整計分（recall／precision／FPR）</td></tr>
+    <tr><td>MS3</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>probe 寫入（seed work row／write／read-back／verdict／cleanup）</td><td>寫入類漏洞（L01／L09 的 INSERT；安全表誤報為 0）</td></tr>
+    <tr><td>MS4</td><td><i class="dot" style="background:var(--wip)"></i>等待你審查</td><td>whitebox（splinter、pg_policies、correlate）、bench、OpenAPI 型別植入</td><td>第一次完整計分：recall 29/32、precision 29/29、FPR 0/72；probe-only 3 類</td></tr>
     <tr><td>MS5</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>recon/*</td><td>從網址出發，自己找到 Supabase 與 key</td></tr>
     <tr><td>MS6</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>report、pipeline、CLI、Action</td><td>一個指令跑完全部；授權綁定（ADR-020 #6）</td></tr>
     <tr><td>MS7</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>整合與交付</td><td>USAGE、BENCHMARK_REPORT、demo</td></tr>
@@ -296,7 +296,11 @@
 <!-- 8 ------------------------------------------------------------------>
 <section id="s8">
   <h2>8. 本 milestone 的過程（overview）</h2>
-  <h3>MS3：寫入探測（ADR-029＋補記）</h3>
+  <h3>MS4：Whitebox 交叉比對與第一次完整 benchmark（ADR-032–035）</h3>
+  <p><b>M4 怎麼運作</b>：以唯讀連線（伺服器預設＋BEGIN READ ONLY，兩層）執行 sha256 鎖定的 splinter 2026.09.1，交易內先以參數化 <code>set_config('pgrst.db_schemas', …, true)</code> 設定曝露的 schema，結束一律 rollback。只取 SECURITY 類 lint，以「物件名」與 M3 finding 對照：兩邊都有＝<b>confirmed</b>；只有實測＝<b>probe_only</b>；只有 lint＝<b>lint_only</b>（LINT_ONLY 警告）。<b>SECURITY DEFINER</b>：實測拿到他人資料才保留 M3 的 confirmed（L07 <code>get_all_accounts</code>）；可執行但沒拿到資料只給 SECURITY_DEFINER_EXECUTABLE（config_warning，L07 <code>ping_definer</code>）。M4 永遠不產生 confirmed，所以它無法改變 recall／precision／FPR。</p>
+  <p><b>benchmark（第一次完整執行）</b>：recall 29/32、precision 29/29、FPR 0/72、coverage 1.0、safe_decided 1.0；probe-only 3 類（L02 SELECT <code>USING (true)</code>、L04 跨租戶讀取、L12 OpenAPI 受限）；audit 16 個情境的 DB 寫入全為 0。3 個 FN 是已核准的延後項（L03 提權→MS6、L08 key→MS5）。runtime 50 張表 70.7 s（rps 5）未達 60 s 目標，誠實列出。</p>
+  <p><b>實測抓到的問題</b>：第一次 benchmark L05 仍是 FN，原因是寫入探測把 uuid 欄位 <code>created_by</code> 當成文字欄位（T-171／T-172 依 OpenAPI 型別挑選）；L11 沒有任何 lint 被記成「沒跑」、audit 沒跑 M4（T-173／T-174）。auditor P1：INSERT 的其他 uuid 欄位應填攻擊者自己的 id，否則可能把漏洞說成 denied（T-175／T-176）。MS3 核准意見的 L01／L05 寫入覆蓋已由 OpenAPI 必填欄位與型別完成（ADR-034）。</p>
+  <h3 style="margin-top:28px">MS3：寫入探測（ADR-029＋補記）</h3>
   <p>一個禁止的寫入怎麼判定：<b>為該探測新植入一筆專屬 canary（work row）→ 以被測身分送出 INSERT／UPDATE／DELETE（<code>Prefer: return=minimal</code>）→ 以應看得到最終狀態的身分讀回（HEAD count）→ write_cell 依 HTTP 狀態分類</b>：401／403＝政策拒絕（denied）；2xx＝依讀回（無效果→denied，有效果→allowed＝漏洞）；其餘（400 NOT NULL／5xx／無回應）＝inconclusive，<b>絕不把送不出的寫入當成安全</b>。最後所有 canary 由各自擁有者清理，刪不掉回報 CLEANUP_FAILED。寫入只對 <code>kind=="table"</code>、只在 dev／ci；audit 整段跳過（NFR-01）。最容易出錯處：把 2xx 當成寫入、把自己送不出的 INSERT 當成 denied、留下未回報的 canary——三者都有測試與必做變異把關。已知限制：L01／L05 因 NOT NULL／uuid 欄位不可植入（記為 not_tested）；L03 提權與 dev／ci 讀取植入延到 MS6（probe() 無密碼）。過程中有 11 張自我修訂／稽核修正 ticket（T-131–T-140），詳見 PRODUCTION_LOG。</p>
   <h3 style="margin-top:28px">MS2：讀取判定</h3>
   <h3>一個讀取 cell 怎麼被判定（ADR-023 #3）</h3>

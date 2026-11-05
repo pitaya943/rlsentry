@@ -241,9 +241,39 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accepted／holdout_added）。
 
 
-## MS4 M4 Whitebox（進行中）
+## MS4 M4 Whitebox（等待審查，main @ 93e03445d）
 
 ### Holdout（派工前紀錄，§2）
 | 檔案 | sha256 |
 | --- | --- |
 | rlsentry-holdout:MS4/test_holdout_whitebox.py | cc747c1be74d8f2e0a7253bd0ba2af1f2cbc54d3172927c28fb26df985da6db5（acceptance 發現 fixture 缺少必填 evidence_curl，與 T-157 同一缺陷；只改 fixture、斷言不變，重加；舊 c33e3d6b…） |
+
+### 失敗與修正
+| 問題 | 修正 |
+| --- | --- |
+| T-163 回報：architect 的 tests/bench/helpers.py 建 ProbeResult 少了必填 evidence_curl，8 個計分測試在進入實作前就失敗 | T-157 修 fixture（斷言不變）；同一缺陷也在 holdout，acceptance 抓到後只改 fixture 重加（events.jsonl 第 1234 行） |
+| T-164 第 1 次派工用罄 30 回合未提交（lab 測試太慢） | ticket 加註「只跑 test_synthetic、通過即提交」重派，1 次完成 |
+| 第一次 benchmark：L05-V1／V2 仍 FN（work row 植入失敗） | 根因：run.py 把 uuid 欄位 created_by 當文字欄位。T-171／T-172 `pick_text_column` 依 OpenAPI 型別挑選 → L05 TP |
+| L11 沒有任何 lint 被記為「splinter 沒跑」；audit 不跑 M4 使 L07-W1 在 audit 顯示缺少 | T-173／T-174（ADR-033 補記） |
+| T-170 第 1 次驗收：兩個舊測試寫死 `splinter_expected == measure`（events.jsonl 第 1217 行） | 改為「不得是 measure」（更嚴格）後第 2 次通過 |
+| 稽核 P1-1：INSERT 以受害者 id 填其他 uuid 欄位，可能把漏洞說成 denied | T-175／T-176 改填攻擊者 id（ADR-034 補記 2）；P1-2 經查不成立 |
+| auditor 第 1 次派工用罄回合未回報（嘗試跑 lab） | 第 2 次限定只讀程式碼，完成；轉錄於 traceability.md |
+| acceptance 第 1 次背景執行被 30 分鐘上限中止 | 以 2 小時上限重跑 |
+
+### Ticket（27 張，全部 done）
+| 批次 | ticket | 嘗試次數 |
+| --- | --- | --- |
+| MS3 核准意見 | T-150（ADR-030、031、PLAN 的 MS6 待辦） | 1 |
+| 合約與測試 | T-151–T-156、T-157（fixture 修正） | 1 |
+| 實作 | T-160 splinter、T-161 policies、T-162 correlate、T-163 score、T-164 synthetic（2 次派工）、T-165 bench、T-166 openapi、T-167 fill | 1 |
+| benchmark 與實測修正 | T-170（2）、T-171／T-172、T-173／T-174 | T-170 為 2，其餘 1 |
+| 稽核修正 | T-175／T-176 | 1 |
+
+### ADR
+030（清單指令品質）、031（progress 同步）、032（M4 設計）、033＋補記（計分補充定義；空 lint、audit 跑 M4）、034＋補記 1、2（OpenAPI 型別植入；文字欄位依型別；INSERT 填攻擊者 id）、035（splinter_expected 實測、probe-only 3 類、展示情境 L04）。
+
+### 指標（BENCHMARK_REPORT.md）
+- recall 29/32、precision 29/29、FPR 0/72、coverage 1.0、safe_decided 1.0；probe-only L02／L04／L12；audit 寫入 16/16 情境為 0。
+- runtime（audit、rps 5）：5 張 7.4 s、20 張 28.5 s、50 張 70.7 s（未達 60 s）。
+- FN：L03 ×2（MS6）、L08（MS5）。L11 為 P2 不計。
+- subagent tokens（約）：whitebox-dev 每張 19k–41k；probe-dev 15k–30k；lab-dev 22k–30k；auditor 80k（第 2 次）＋102k（第 1 次未完成）。

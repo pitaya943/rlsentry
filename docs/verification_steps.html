@@ -32,7 +32,7 @@
 <main>
 
 <h1>每個 milestone 的固定審查流程</h1>
-<p class="sub">適用於 MS2 之後的每個 milestone（以下以 <code>MSx</code> 表示）。依據 ADR-022（三段信任鏈）、ADR-025（清單標籤與 Codespaces）、ADR-026（必做變異）、ADR-028（本文件的維護）、ADR-005 補記（審查分級）、ADR-021。本文件由 architect 撰寫，只說明「怎麼做」；判斷仍以你自己的執行結果為準。</p>
+<p class="sub">適用於 MS2 之後的每個 milestone（以下以 <code>MSx</code> 表示）。依據 ADR-022（三段信任鏈）、ADR-025（清單標籤與 Codespaces）、ADR-026（必做變異）、ADR-028（本文件的維護）、ADR-030（指令品質）、ADR-031（文件同步）、ADR-005 補記（審查分級）、ADR-021。本文件由 architect 撰寫，只說明「怎麼做」；判斷仍以你自己的執行結果為準。</p>
 
 <h2>0. 為什麼是這個流程（一張圖）</h2>
 <svg viewBox="0 0 960 250" width="100%" role="img" aria-label="三段信任鏈">
@@ -132,9 +132,7 @@ git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'
 <pre>cd /workspaces/rlsentry          # Codespace 內的 repo 路徑
 pip install -e ".[dev]"</pre></li>
   <li><b>安裝 Supabase CLI</b>（與 workflow 同一行；lab 以它啟動本機 Supabase）：
-<pre>curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
-  | sudo tar -xz -C /usr/local/bin supabase
-supabase --version</pre>
+<pre>curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | sudo tar -xz -C /usr/local/bin supabase && supabase --version</pre>
     需要與 CI 完全相同的版本時，把 <code>latest/download</code> 換成 <code>download/v&lt;版本&gt;</code>（版本以 Actions log 的 <code>supabase --version</code> 為準）。</li>
   <li><b>確認 Docker 可用</b>（Codespaces 通常已內建；若 <code>docker info</code> 失敗，依 CLAUDE.md 啟動）：
 <pre>docker info &gt;/dev/null 2>&amp;1 || (sudo dockerd &gt;/tmp/dockerd.log 2>&amp;1 &amp;); sleep 5; docker info &gt;/dev/null 2>&amp;1 &amp;&amp; echo DOCKER_OK</pre></li>
@@ -176,6 +174,8 @@ make verify-milestone MS=MSx</pre></li>
     </table>
   </li>
   <li>選做變異只影響呈現或便利性，可以不做。每份清單至少一項必做變異；沒有時清單會說明原因。</li>
+  <li><b>指令品質保證（ADR-030，MS4 起）</b>：清單中每一條指令都由 architect 先在 lab 以清單標頭的 sha 實跑過，附的是真實輸出；沒有佔位指令、可直接複製貼上、以單行為主、不使用 heredoc；變異的還原與資料刪除都寫出完整指令。若你照貼卻得到不同結果，這本身就是要回報的發現。</li>
+  <li><b>文件同步自檢（ADR-031）</b>：每份清單都保留 <code>python3 docs/tools/progress.py &amp;&amp; git diff --stat docs/progress.html docs/branch-log.md</code>，預期沒有輸出。</li>
   <li>開啟 <code>docs/system_overview.html</code>：確認「本 milestone」一節與架構圖的狀態色和實際一致（ADR-021）。</li>
 </ul>
 </div>
