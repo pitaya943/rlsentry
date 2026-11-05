@@ -1240,3 +1240,8 @@
 {"ts": "2026-11-05T20:09:17", "kind": "subagent_start", "id": "276fa16b", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T20:09:47", "kind": "subagent_stop", "id": "f46b3686", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T20:26:51", "kind": "ticket_accepted", "ticket": "T-176", "commit": "93e03445d67f7812daf4fb12031fadb04faca7f4", "files": ["rlsentry/probe/write.py"]}
+{"ts": "2026-11-05T21:01:34", "kind": "acceptance_run", "scope": "MS4", "failed": []}
+{"ts": "2026-11-05T21:08:20", "kind": "subagent_start", "id": "9e3cd3e6", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-05T21:08:20", "kind": "subagent_start", "id": "1a93754e", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T21:08:37", "kind": "subagent_stop", "id": "97a92161", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T21:08:40", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS4"}
