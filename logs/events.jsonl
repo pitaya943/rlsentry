@@ -939,3 +939,5 @@
 {"ts": "2026-11-03T13:26:41", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "shell command appears to modify protected path logs/events.jsonl"}
 {"ts": "2026-11-03T13:38:33", "kind": "acceptance_run", "scope": "MS2", "failed": []}
 {"ts": "2026-11-03T13:39:26", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS2"}
+{"ts": "2026-11-03T13:39:29", "kind": "subagent_stop", "id": "0da8a86f", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-05T01:24:02", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS2"}
