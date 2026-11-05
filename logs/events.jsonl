@@ -1136,3 +1136,5 @@
 {"ts": "2026-11-05T15:51:22", "kind": "ticket_accepted", "ticket": "T-153", "commit": "7902773065b22315368429788652ef66ebbec6b2", "files": ["docs/DECISIONS.md", "rlsentry/contracts/discovery.py", "rlsentry/contracts/probe.py"]}
 {"ts": "2026-11-05T15:52:30", "kind": "ticket_start", "ticket": "T-154", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T15:57:45", "kind": "ticket_accepted", "ticket": "T-154", "commit": "e9411b90538be99c8eefaa0f7fb01693c58be7db", "files": ["tests/lab/test_policies_lab.py", "tests/lab/test_whitebox_lab.py", "tests/lab/test_whitebox_run_lab.py", "tests/whitebox/__init__.py", "tests/whitebox/test_correlate.py", "tests/whitebox/test_vendored.py"]}
+{"ts": "2026-11-05T15:58:29", "kind": "ticket_start", "ticket": "T-155", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T16:03:34", "kind": "ticket_accepted", "ticket": "T-155", "commit": "ba9a06686b9d619fa5529f8f0bbba78260535016", "files": ["tests/bench/__init__.py", "tests/bench/helpers.py", "tests/bench/test_aggregate.py", "tests/bench/test_score.py", "tests/lab/test_bench_cli.py", "tests/lab/test_synthetic.py"]}
