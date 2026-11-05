@@ -128,7 +128,9 @@ def run_scenario(sid: str, profile: Profile, info: LabInfo, *,
     db_writes = number of labctl.db_writes_since(marker) entries whose role is in
     POSTGREST_ROLES. If with_whitebox: lints = run_splinter(info.db_url) and findings =
     correlate(findings, lints) (M4 after M3, read-only, not timed). Return score_scenario(gt,
-    profile, matrix, findings, runtime_s, lints=lints or None, db_writes=db_writes)."""
+    profile, matrix, findings, runtime_s, lints=lints if with_whitebox else None,
+    db_writes=db_writes). An empty lint list is a measurement ("splinter reported nothing",
+    e.g. L11), not "not run" (ADR-033 補記)."""
     raise NotImplementedError
 
 
@@ -145,7 +147,8 @@ def run_bench(scenarios: Sequence[str], *, runtime: bool = True) -> BenchReport:
     """Contract only; implemented by rlsentry.bench.run.run_bench.
 
     info = labctl.ensure_up(). For each sid in the given order: run_scenario(sid, DEV, info)
-    then run_scenario(sid, AUDIT, info, with_whitebox=False). runtime dict = run_runtime(info)
+    then run_scenario(sid, AUDIT, info) (M4 is read-only and runs in every profile,
+    ADR-032; ADR-033 補記). runtime dict = run_runtime(info)
     if runtime else {}. Return aggregate(results, runtime_dict). Finally (try/finally) leave
     the lab with the last scenario re-applied: labctl.apply(scenarios[-1])."""
     raise NotImplementedError
