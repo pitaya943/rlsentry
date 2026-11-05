@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from rlsentry.contracts.models import Finding, Op, Outcome, ProbeResult, Role, Severity, Target, finding_id
-from rlsentry.contracts.probe import ReadObservation
+from rlsentry.contracts.probe import ReadObservation, SeededRow, WriteObservation
 from rlsentry.contracts.rules import RULES
 from rlsentry.rules.severity import is_sensitive_column, read_rule, read_severity
 
@@ -41,3 +41,15 @@ def target_findings(target: Target) -> list[Finding]:
     if target.confidence == "inferred":
         return [_finding(target.name, None, None, "INFERRED_TARGET", [])]
     return []
+
+
+def write_findings(target: Target, obs: WriteObservation, cell: ProbeResult) -> list[Finding]:
+    """Why: only a verified forbidden write is a vulnerability; other outcomes never claim a finding."""
+    if cell.outcome is not Outcome.ALLOWED or obs.plan is None:
+        return []
+    return [_finding(target.name, cell.role, cell.op, obs.plan.rule, [cell])]
+
+
+def cleanup_findings(target: Target, failures: list[SeededRow]) -> list[Finding]:
+    """Why: leftover canary rows must be reported so the user can remove them (SPEC §5 M3)."""
+    return [_finding(target.name, row.owner, Op.DELETE, "CLEANUP_FAILED", []) for row in failures]

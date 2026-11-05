@@ -5,8 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from rlsentry.contracts.models import Op, Outcome, ProbeResult, Role
-from rlsentry.contracts.policy import ExpectedAccess
-from rlsentry.contracts.probe import KnownRow, ReadObservation
+from rlsentry.contracts.policy import ExpectedAccess, RowScope
+from rlsentry.contracts.probe import (
+    WRITE_NOT_FORBIDDEN_REASON,
+    KnownRow,
+    ReadObservation,
+    WriteObservation,
+)
 from rlsentry.policy.visibility import row_permitted
 
 
@@ -51,3 +56,49 @@ def read_cell(obs: ReadObservation) -> ProbeResult:
                     fb.status)
     seen = f"HTTP {fb.status}" if fb.status is not None else "no response"
     return make(Outcome.INCONCLUSIVE, 0, f"{seen}: no trustworthy row count was obtained", fb.status)
+
+
+def forbidden_write(scope: RowScope, actor_id: str | None, owner_id: str | None,
+                    is_public: bool) -> bool:
+    """True iff the expected scope does not permit the end state of the write.
+
+    Why: only forbidden writes are attempted, so a confirmed effect is a vulnerability.
+    """
+    return not row_permitted(scope, actor_id, owner_id, is_public)
+
+
+def write_outcome(op: Op, after_present: bool | None) -> bool | None:
+    """Did the forbidden write take effect, judged only by the read-back of the end state?
+
+    Why: a 2xx is not a write; None (untrustworthy read-back) stays None, never False.
+    """
+    if after_present is None:
+        return None
+    return (not after_present) if op is Op.DELETE else after_present
+
+
+def write_cell(obs: WriteObservation) -> ProbeResult:
+    """Decide allowed / denied / inconclusive / not_tested for one write cell.
+
+    Why: only a trustworthy read-back of the end state can say allowed or denied; a 2xx
+    with no verified effect is denied (USING filters to 0 rows yet PostgREST answers 2xx).
+    """
+    curl = obs.attempt.curl if obs.attempt is not None else ""
+    status = obs.attempt.status if obs.attempt is not None else None
+
+    def make(outcome: Outcome, checked: int, reason: str) -> ProbeResult:
+        return ProbeResult(target=obs.target, role=obs.role, op=obs.op, outcome=outcome,
+                           known_rows_checked=checked, reason=reason, http_status=status,
+                           evidence_curl=curl)
+
+    if obs.plan is None:
+        return make(Outcome.NOT_TESTED, 0, obs.note or WRITE_NOT_FORBIDDEN_REASON)
+    if obs.attempt is None or obs.after is None:
+        return make(Outcome.INCONCLUSIVE, 0, obs.note or "write not sent")
+    took = write_outcome(obs.op, obs.after.present)
+    if took is None:
+        return make(Outcome.INCONCLUSIVE, 0,
+                    f"the end state could not be read back (HTTP {obs.after.status})")
+    if took:
+        return make(Outcome.ALLOWED, 1, "the forbidden write took effect (verified by read-back)")
+    return make(Outcome.DENIED, 1, "the forbidden write did not take effect (verified by read-back)")
