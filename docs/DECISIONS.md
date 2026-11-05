@@ -557,3 +557,41 @@ D2–D4 由 architect 決定並記錄於此。
 ### ADR-030 補記：每條指令都是獨立的 code block（2026-11-05，人類於 MS4 審查前要求）
 - 決定（自 MS4-v1 起，之後每份驗證清單）：第 3 段中所有要人類執行的指令，一律放在獨立的 fenced code block（```bash），一個 block 一條單行指令，讓人類直接按 Copy 執行，不需用滑鼠選取。變異指令與其還原指令（`git restore …`）分成兩個 block。行內反引號只用於檔名、預期輸出與測試名稱，不用於要執行的指令。
 - 佔位例外：只有本機 sha 與 Actions sha（只有人類知道）以 `LOCAL=請貼上本機sha` 這類變數放在 block 開頭，其餘不得有佔位。
+
+## ADR-036：M1 Recon 設計：只抓同源、依真實 bundle 量測的擷取規則、key 分類與遮罩
+- 日期：2026-11-06 · Milestone：MS5 · 相關：SPEC §5 M1、FR-01–03、NFR-03、§9 測試層級；ADR-011 #9、ADR-023、ADR-032
+- 背景：M1 要從目標網站的 HTML 與 JS chunk 找出 Supabase URL 與 key，並把 service_role／secret 判為 Critical、anon／publishable 判為正常。architect 在派工前以 Next.js 15.5（pages router、static export）、Vite 8、Create React App 5 各建一個真實專案（皆用 supabase-js 2.119），產出放在 `tests/recon/fixtures/`，並以草稿程式實測規則（未提交）。實測發現：(1) 壓縮後的 createClient 是 `(0,t(8033).UU)("https://…","eyJ…")`，看不到 `createClient(` 字樣；(2) Vite 8 的字串是反引號；(3) source map 內嵌 supabase-js 的文件範例（`https://xyzcompany.supabase.co`、`your-publishable-key`）；(4) Next.js 的延遲 chunk 只出現在 `_buildManifest.js` 與 `l.e(43)`，CRA 的延遲 chunk 只出現在 webpack 的 chunk map；(5) phoenix 的常數 `base64url.bearer.phx.` entropy 3.52。
+- 考慮過的選項：
+  1. 只掃 HTML 引用的 script（缺點：漏掉延遲載入的 chunk；Next.js 的 admin 頁、Vite 的 lazy route 正好是最容易藏 service_role 的地方）
+  2. 依框架的已知結構補抓（`_buildManifest`、`import()` 路徑、webpack chunk map、source map 註解），只抓同源（採用）
+  3. 無頭瀏覽器執行前端（見 ADR-037，不採用）
+- 決定：
+  1. **只抓同源**：只對與 target 相同 scheme、host、port 的 URL 發 GET，不帶任何 header（不送 apikey／Authorization／cookie）；跨源的 script（CDN）列入 `chunks_skipped`，不請求。理由：CLAUDE.md 只允許連線到使用者授權的目標；CDN 不屬於授權範圍。
+  2. **範圍上限與誠實揭露**：最多 200 次請求、單檔 10 MB；超過、非 200、轉址（不跟隨）、SPA fallback 回傳 HTML 都列入 `ReconResult.chunks_skipped`（新增欄位）並附原因。只依檔案中的 `sourceMappingURL` 或 `SourceMap` header 抓 map，不盲猜 `<url>.map`（每個 chunk 多一個請求，且常是 404）。
+  3. **chunk 路徑**：字串常值（'、"、`）中的 `./x.js`、`/x.js`、含 `/` 的相對路徑（`static/chunks/…`、`assets/…`）；後者相對於 public path（路徑含 `/_next/` 時為 `…/_next/`，否則網站根目錄）。webpack chunk map 支援兩種形式（CRA 的 `{id:"hash"}` map、Next.js 的單一 hash＋`.e(id)`）。非根目錄的 public path、其他 webpack 形式列為限制。
+  4. **URL 擷取**：以「URL 常值緊接著 key 形狀常值（JWT 或 sb_ key）」找 createClient 的兩個參數（也涵蓋自訂網域與本機 lab），其次 `https://<ref>.supabase.co|in`；建置檔（html／js）優先於 map 內的原始碼，避免把 supabase-js 文件範例當成目標。
+  5. **key 擷取與分類**（FR-03）：JWT 以不驗簽方式解碼 payload，只保留 `role`、`ref`、`exp`（`sub`、`email` 是使用者資料，丟棄）。`anon` → publishable（不產生 finding）；`service_role` → secret（SECRET_KEY_IN_BUNDLE，Critical）；其他 role（如 `authenticated`、`supabase_admin`）與無法解碼的 JWT → unverified（UNVERIFIED_KEY，Configuration warning，交人工判斷）。`sb_publishable_` → publishable；`sb_secret_` → secret。其他字串只有在 key 語境（屬性或變數名含 apiKey、secret、token、anon_key、service_role_key 等）且長度 24–512、含數字與字母、entropy ≥ 4.0 時才列為 unverified；sb_ key 的後段 entropy 須 ≥ 3.0（排除 `sb_publishable_xxxx` 範例）。
+  6. **標籤**：`KeyFinding` 新增 `label`（`jwt:<role>`、`sb_secret`、`sb_publishable`、`unverified`），即 key finding 的 `target`，與 ground truth 的 `KEY_TARGET_RE` 相同（ADR-011 #9），讓「anon 被誤判為 secret」不可能被算成 TP。同一標籤只產生一個 Finding；每個出現位置各有一筆 KeyFinding（只有遮罩值）。
+  7. **M1 finding 不經過 M4 correlate**：key 的 target 是標籤不是資料庫物件，交給 correlate 會被標成 `probe_only`，使 probe-only 類別被灌水。bench（與 MS6 pipeline）先對 M3 finding 做 correlate，再附上 M1 finding。這改動 MS4 的 `bench/run.py`（整合 M1 的必要步驟，不是 MS4 的缺陷；MS4 的計分與 correlate 對 MS4 輸入的行為不變）。
+  8. **遮罩**（NFR-03）：原始 key 只存在記憶體（`Candidate`、`ReconOutput.anon_key`，repr 皆遮罩；`FetchedFile.text` 不進 repr）。報告只有 `KeyFinding.masked`（前 6 後 4）。`ReconOutput.anon_key` 供 MS6 pipeline 在設定檔沒有 key 時給 M2／M3 使用。
+  9. **介面**：`Recon` 改為 `recon(client, target_url) -> ReconOutput`（ADR-023：送請求的階段第一個參數是 SafeClient）。
+- 理由：所有規則都由真實框架產出驗證過（fixture 測試），而不是只在自寫範例上有效（SPEC §9）；同源限制把 M1 的網路範圍綁在授權目標上。
+- 後果與風險：
+  - 動態組字串、執行期由 API 下發的 key、非根目錄 public path、其他 webpack 形式會漏掉；報告以 `chunks_scanned`／`chunks_skipped` 揭露範圍，不宣稱完整（SPEC §5 M1 限制）。
+  - `supabase_admin` 等高權限 role 的 JWT 只被列為 unverified（Low），不是 Critical；人工確認時應視為嚴重。
+  - generic 規則依 key 語境；名稱被壓縮成無意義的屬性時（`{a:"…"}`）不會被擷取。
+  - bench 的 L12 等情境改用 recon 實際抓到的 bundle 做 M2 推測；recon 漏抓會直接顯示為 FN（這是刻意的端到端檢查）。
+
+## ADR-037：D2：不支援無頭瀏覽器抓動態 chunk（列為未來工作）
+- 日期：2026-11-06 · Milestone：MS5 · 相關：SPEC §12 D2、§5 M1 限制、§5 Safety、NFR-01、NFR-04
+- 背景：SPEC §12 D2 要 architect 決定 M1 是否以 Playwright 等無頭瀏覽器執行前端，以抓到只在執行期才載入的 chunk。
+- 考慮過的選項：
+  1. 預設使用無頭瀏覽器（優點：抓到執行期載入的 chunk 與執行期下發的設定；缺點見下）
+  2. 選配旗標 `--browser`（缺點同上，只是預設關閉）
+  3. 不支援；以靜態抓取＋框架結構補抓（ADR-036），並在報告揭露範圍（採用）
+- 決定：MVP 不支援無頭瀏覽器；列為未來工作。若日後加入，必須以 request interception 讓瀏覽器的每個請求都經過 SafeClient（同源、限速、User-Agent、寫入閘門），並另寫 ADR。
+- 理由：
+  1. **安全邊界**：瀏覽器會執行目標的 JavaScript，JS 會自行對任意主機（API、第三方分析、CDN）發請求，甚至 POST；這些流量繞過 SafeClient 的寫入閘門、限速與 User-Agent（SPEC §5 Safety、NFR-01、NFR-04），也可能連到授權範圍外的主機（CLAUDE.md、SPEC §7）。audit profile 承諾「0 次寫入」，執行目標程式碼就無法保證。
+  2. **量測**：三個真實框架 fixture 中，所有延遲 chunk（Next.js 的頁面與 dynamic import、Vite 的 lazy route、CRA 的 webpack chunk）都能由靜態結構找到（`tests/recon/test_recon_fixtures.py`）。
+  3. **成本**：瀏覽器二進位檔數百 MB，CI（GitHub Action）冷啟動時間大增。
+- 後果與風險：只在執行期組出的 chunk URL、由 API 下發的 key、登入後才載入的頁面不會被掃到。報告列出 `chunks_scanned`／`chunks_skipped`，使用者可據此判斷覆蓋範圍；SPEC §5 M1 已聲明結果不保證完整。

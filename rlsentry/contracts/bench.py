@@ -120,17 +120,22 @@ def run_scenario(sid: str, profile: Profile, info: LabInfo, *,
 
     Holding labctl.lock(): labctl.apply(sid); gt = the scenario's expected.yaml
     (labctl.scenario_dir(sid) / "expected.yaml", GroundTruth.model_validate); marker =
-    labctl.db_log_marker(); start a monotonic clock; then exactly what the pipeline will do
-    for M2+M3: SafeClient(profile=profile, limiter=RateLimiter(rps=rps, concurrency=4));
-    discover(client, info.api_url, info.anon_key, gt.policy, <frontend/**/*.js texts, sorted
-    by path>); build_sessions with LAB_USERS as TestUser and env {password_env:
-    labctl.lab_password(role)}; probe(..., gt.policy, profile). Stop the clock → runtime_s.
-    db_writes = number of labctl.db_writes_since(marker) entries whose role is in
-    POSTGREST_ROLES. If with_whitebox: lints = run_splinter(info.db_url) and findings =
-    correlate(findings, lints) (M4 after M3, read-only, not timed). Return score_scenario(gt,
-    profile, matrix, findings, runtime_s, lints=lints if with_whitebox else None,
-    db_writes=db_writes). An empty lint list is a measurement ("splinter reported nothing",
-    e.g. L11), not "not run" (ADR-033 補記)."""
+    labctl.db_log_marker(); then exactly what the pipeline will do, through ONE
+    SafeClient(profile=profile, limiter=RateLimiter(rps=rps, concurrency=4)):
+    M1 (MS5, ADR-036): inside `labctl.serve_frontend(sid) as url`, rec = recon(client, url)
+    (not timed); then start a monotonic clock; M2+M3: discover(client, info.api_url,
+    info.anon_key, gt.policy, rec.sources); build_sessions with LAB_USERS as TestUser and env
+    {password_env: labctl.lab_password(role)}; probe(..., gt.policy, profile) → (matrix,
+    probe_findings). Stop the clock → runtime_s (M2+M3 only, ADR-033 #6). The lab's own
+    anon key (info.anon_key) is still what M2/M3 use, so a recon defect shows up as a key
+    FN, never as a broken probe. db_writes = number of labctl.db_writes_since(marker) entries
+    whose role is in POSTGREST_ROLES. If with_whitebox: lints = run_splinter(info.db_url) and
+    probe_findings = correlate(probe_findings, lints) (M4 after M3, read-only, not timed).
+    findings = probe_findings + rec.findings: M1 key findings never go through correlate
+    (contracts.recon.KEY_RULES; a key is outside splinter's scope and must not count as
+    probe_only). Return score_scenario(gt, profile, matrix, findings, runtime_s,
+    lints=lints if with_whitebox else None, db_writes=db_writes). An empty lint list is a
+    measurement ("splinter reported nothing", e.g. L11), not "not run" (ADR-033 補記)."""
     raise NotImplementedError
 
 

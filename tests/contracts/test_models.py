@@ -57,9 +57,17 @@ def test_unknown_fields_are_rejected() -> None:
 
 
 def test_key_finding_kind_is_restricted() -> None:
-    KeyFinding(kind="publishable", masked="eyJhbG…abcd", source_file="a.js")
+    KeyFinding(kind="publishable", label="jwt:anon", masked="eyJhbG…abcd", source_file="a.js")
     with pytest.raises(ValidationError):
-        KeyFinding(kind="anon", masked="x", source_file="a.js")
+        KeyFinding(kind="anon", label="jwt:anon", masked="x", source_file="a.js")
+
+
+def test_key_finding_label_is_restricted() -> None:
+    # ADR-036: the label doubles as the key finding's target; free text could never match a
+    # ground-truth key case (ADR-011 #9) and could carry an unmasked value.
+    for bad in ("jwt:Service-Role", "eyJhbGciOi.raw", "anon", ""):
+        with pytest.raises(ValidationError):
+            KeyFinding(kind="secret", label=bad, masked="x", source_file="a.js")
 
 
 def test_severity_rank_orders_review_lowest() -> None:

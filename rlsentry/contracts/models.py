@@ -82,6 +82,9 @@ class KeyFinding(_Strict):
     """M1: one key-like string found in the bundle. The raw value is never stored (NFR-03)."""
 
     kind: str = Field(pattern=r"^(publishable|secret|unverified)$")
+    # ADR-036: jwt:<role> | sb_secret | sb_publishable | unverified (= contracts.recon.KEY_LABEL_RE);
+    # also the Finding.target of a key finding, so the benchmark matches by label (ADR-011 #9).
+    label: str = Field(pattern=r"^(jwt:[a-z_]+|sb_secret|sb_publishable|unverified)$")
     masked: str                       # first 6 + last 4 characters kept, see safety/mask
     source_file: str
     jwt_claims: dict[str, str | int | None] | None = None   # role, ref, exp only
@@ -180,6 +183,7 @@ class ReconResult(_Strict):
     supabase_url: str | None
     keys: list[KeyFinding] = []
     chunks_scanned: list[str] = []
+    chunks_skipped: list[str] = []   # ADR-036: "<url> (<reason>)"; the scope is never claimed complete
 
 
 class DiscoveryResult(_Strict):

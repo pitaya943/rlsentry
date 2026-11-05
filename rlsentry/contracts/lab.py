@@ -217,6 +217,17 @@ class LabCtl(Protocol):
         """lab/<scenario>_<slug>/ (exactly one match), else ValueError."""
         ...
 
+    def serve_frontend(self, scenario: str) -> AbstractContextManager[str]:
+        """Serve lab/<scenario>_*/frontend/ read-only over HTTP for M1 recon (MS5; ADR-036).
+        Yields the base URL "http://127.0.0.1:<port>/" of a stdlib ThreadingHTTPServer bound to
+        127.0.0.1 on a free port (port 0) and running in a daemon thread; GET/HEAD only, files
+        under the frontend directory only (SimpleHTTPRequestHandler with directory=…), request
+        logging silenced. "/" serves index.html. The server is shut down and closed when the
+        block exits, also on error. Unknown scenario or a scenario without frontend/index.html
+        → ValueError before anything listens. Needs neither Docker nor lock(): it serves static
+        files and never touches the database."""
+        ...
+
     def lock(self) -> AbstractContextManager[None]:
         """Exclusive fcntl lock on LAB_LOCK_FILE; blocks until free. Re-entrant within one
         process (nested use does not deadlock). `fcntl` is imported inside the call, never at

@@ -161,6 +161,10 @@ def correlate(findings: list[Finding], lints: list[Lint],
               db_schemas: Sequence[str] = DEFAULT_DB_SCHEMAS) -> list[Finding]:
     """Contract only; implemented by rlsentry.whitebox.correlate.correlate. Pure (ADR-032).
 
+    Callers pass M3 (probe) findings only. M1 key findings (contracts.recon.KEY_RULES) are
+    appended AFTER correlate by the caller (bench/run.py; MS6 pipeline): their targets are key
+    labels, not database objects, so correlate would wrongly mark them probe_only (ADR-036 #7).
+
     Relevant lints: SECURITY_CATEGORY in categories, object_name is not None, and
     object_schema in db_schemas. A lint's *object* is its object_name (PostgREST exposes
     db_schemas objects by bare name, the same string as Finding.target).
