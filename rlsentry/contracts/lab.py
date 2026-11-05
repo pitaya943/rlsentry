@@ -198,6 +198,9 @@ class LabCtl(Protocol):
 
     def lock(self) -> AbstractContextManager[None]:
         """Exclusive fcntl lock on LAB_LOCK_FILE; blocks until free. Re-entrant within one
-        process (nested use does not deadlock)."""
+        process (nested use does not deadlock). `fcntl` is imported inside the call, never at
+        module level, so labctl imports on platforms without it (Windows) and the Docker-free
+        helpers such as write_command work there; only lock() raises ImportError (MS2 approval
+        note 5)."""
         ...
 
