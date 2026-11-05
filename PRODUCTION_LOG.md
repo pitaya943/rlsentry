@@ -206,7 +206,7 @@ ADR-005（PR 政策與高風險判定）、006（模型增補）、007（RPC = s
 ### Holdout（派工前紀錄，§2）
 | 檔案 | sha256 |
 | --- | --- |
-| rlsentry-holdout:MS3/test_holdout_writes.py | 6fba499e4f9531e739bafd7e5cddd0ab9eaaec05b75ab4808cfa58920da301ca |
+| rlsentry-holdout:MS3/test_holdout_writes.py | 94680aedc763b81d32b3c3c9683a2207aa1fdcbd9178fccc7d627c68d9a9c824（T-133 後更新 plan_writes 簽名；舊 6fba499e…） |
 
 ### 失敗與修正（進行中）
 | 問題 | 修正 |
