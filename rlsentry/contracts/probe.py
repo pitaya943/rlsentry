@@ -297,8 +297,7 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
        - dev/ci → the write path runs ONLY for targets with kind == "table"; an RPC or a view
          gets NOT_TESTED write cells (reason WRITE_NO_OWNER_REASON) and no request (a write to
          an RPC path is refused by the gate, ADR-014 #3). For a table: pick
-         text_column = the first target column that is not the primary key, the
-         owner column or the public column (a best-effort mutable column; None when none).
+         text_column = pick_text_column(target, owner column, public column) (ADR-034 補記).
          For every plan in plan_writes(expected_by_op, user_ids, tokens, text_column):
          if plan.op is INSERT, work = None; else work = seed_work_row(target, plan.work_owner,
          text_column, ...) — a FRESH canary created just for this probe, so a destructive write
@@ -372,6 +371,20 @@ def fill_required(target: Target, owner_id: str, preset: Collection[str]) -> dic
     Returns None when any such column has no format or another format (enum, array, …): the
     row cannot be built honestly, so the caller sends nothing (the cell stays not_tested or
     inconclusive, never a false verdict). No required column outside preset → {}."""
+    raise NotImplementedError
+
+
+def pick_text_column(target: Target, owner_column: str | None,
+                     public_column: str | None) -> str | None:
+    """Contract only; implemented by rlsentry.probe.run.pick_text_column. Pure (ADR-034 補記).
+
+    The column the write probe puts its CANARY_PREFIX marker into: the first column of
+    target.columns (in order) that is not in target.primary_key, not owner_column, not
+    public_column, and — when target.column_formats has an entry for it — whose format is in
+    FILL_TEXT_FORMATS. A column without a format entry is still eligible (no type information:
+    MS3 behaviour, e.g. bundle- or policy-discovered targets). None when no column qualifies.
+    Why: a canary string written into a uuid column (L05 created_by) fails with 400, so the
+    work row was never seeded and the write cells stayed not_tested."""
     raise NotImplementedError
 
 
