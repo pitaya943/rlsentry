@@ -1005,3 +1005,5 @@
 {"ts": "2026-11-05T03:52:38", "kind": "ticket_start", "ticket": "T-125", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T03:55:26", "kind": "ticket_start", "ticket": "T-132", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T04:03:18", "kind": "ticket_accepted", "ticket": "T-132", "commit": "2c101b4c1e69f971f878ed360ce3cfeeca525751", "files": ["docs/DECISIONS.md", "rlsentry/contracts/probe.py", "tests/probe/test_plan_writes.py", "tests/probe/test_write_requests.py", "tests/probe/test_write_verdict.py"]}
+{"ts": "2026-11-05T04:06:47", "kind": "holdout_added", "milestone": "MS3", "commit": "41ab96765d21621142bf180a71f70636e30dc933", "files": {"MS3/test_holdout_writes.py": "6fba499e4f9531e739bafd7e5cddd0ab9eaaec05b75ab4808cfa58920da301ca"}}
+{"ts": "2026-11-05T04:11:49", "kind": "ticket_accepted", "ticket": "T-125", "commit": "e418c78b61d4a9c8824d49f938ec5fd18578ebfe", "files": ["tests/lab/test_scan_writes.py", "tests/lab/test_write_mutations.py"]}

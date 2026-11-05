@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 86/93 · 進行中 1 · blocked 1
+自動產生，請勿手改 · 完成 87/93 · 進行中 0 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -100,11 +100,11 @@
 - [x] T-122 labctl：只在 lock() 內 import fcntl（MS2 核准意見第 5 點）（lab-dev，done，1 次）
 - [x] T-123 合約：M3 寫入探測（seed／write／cleanup／metadata）、CLEANUP_FAILED 規則、write_rule；ADR-029（architect，done，1 次）
 - [x] T-124 可見測試：寫入三態判定、plan_writes、after_filter、seed／write／cleanup／metadata（純函式與 fake client）（architect，done，1 次）
-- [ ] T-125 Lab 整合與變異測試：dev profile 寫入掃描對照 ground truth、寫入 oracle 變異、holdout（architect，in_progress，1 次） ← 依賴 T-123✓
-- [ ] T-126 probe/seed.py：dev／ci 植入 canary 已知列（FR-09）（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125…
-- [ ] T-127 probe/write.py：plan_writes、send_write、read_back、after_filter（INSERT／UPDATE／DELETE，FR-09）（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125…
-- [ ] T-128 probe/cleanup.py 與 verdict／diff 寫入判定：write_cell、write_outcome、forbidden_write、write_findings、cleanup_findings、cleanup_seeded（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125…
-- [ ] T-129 probe/metadata.py：L03 user_metadata 提權（修改後還原），USER_METADATA_ESCALATION（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125…
+- [x] T-125 Lab 整合與變異測試：dev profile 寫入掃描對照 ground truth、寫入 oracle 變異、holdout（architect，done，1 次）
+- [ ] T-126 probe/seed.py：dev／ci 植入 canary 已知列（FR-09）（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125✓
+- [ ] T-127 probe/write.py：plan_writes、send_write、read_back、after_filter（INSERT／UPDATE／DELETE，FR-09）（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125✓
+- [ ] T-128 probe/cleanup.py 與 verdict／diff 寫入判定：write_cell、write_outcome、forbidden_write、write_findings、cleanup_findings、cleanup_seeded（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125✓
+- [ ] T-129 probe/metadata.py：L03 user_metadata 提權（修改後還原），USER_METADATA_ESCALATION（probe-dev，todo，0 次） ← 依賴 T-123✓ T-124✓ T-125✓
 - [ ] T-130 probe/run.py：dev／ci 寫入探測串接（seed→plan→write→read_back→verdict→cleanup，含 L03 提權 pass）（probe-dev，todo，0 次） ← 依賴 T-126… T-127… T-128… T-129…
 - [x] T-131 修正 test_import.py：以子行程檢查無 fcntl，避免 reload 破壞 lab 的 session flock（T-121 缺陷）（architect，done，1 次）
 - [x] T-132 修訂寫入合約與可見測試：每個破壞性寫入探測使用各自新植入的 work row（修正共享列順序危害）（architect，done，1 次）
