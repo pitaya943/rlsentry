@@ -1,0 +1,23 @@
+milestone: MS2
+checklist: docs/verification/MS2-v1.md
+checklist_sha256: f10545e9e46b0fe06f33ad5a8f36f0bd9f7c2aab6c27372de33ce11b888d8ec1
+decision: approve
+reviewer: Kuei
+date: 2026-11-05 10:29
+notes: |
+  MS2 核准。以下意見請在 MS3 開始時處理，並套用到之後每一個 milestone。
+  1. 驗證清單的每一項都必須標註下列其中一個標籤：
+     - 【Actions 涵蓋】：寫明涵蓋它的測試檔或檢查名稱，並註明「Actions 只證明通過，不顯示細節」。
+     - 【Codespaces 必做】：Actions 會略過或無法顯示的項目（親手變異、docker logs、需要看輸出原文的測試）。附完整指令、預期輸出與還原方式。
+     - 【Codespaces 必做變異】：見第 2 點。
+     - 【本機】：只有防竄改檢查（review.sh 第 1、2 步，必須與我本機的 harness-frozen tag 比對）、sha 比對、閱讀程式碼、做出決定與簽章留在本機，金鑰不得放進 Codespaces。
+     清單開頭固定放「Codespaces 準備」：安裝指令，以及確認 git rev-parse HEAD 與我本機驗證的 sha 一致（不一致時以排除 logs/ 的 diff 為空為準）。結尾提醒：不要從 Codespaces 提交或推送，測完先 git restore 再刪除該 Codespace。
+  2. 親手變異測試必須分級：
+     - 「必做變異」：錯誤會讓系統把不安全說成安全、讓判定錯誤，或讓唯讀、遮罩、授權、NFR-01 偵測等防線失效（例如三態判定、safety、oracle、ground truth、計分）。清單中要寫明：改哪一行、預期的失敗訊息、它能抓到什麼錯誤、為什麼重要。我必須在 Codespaces 實際做過且結果符合預期後才簽章，請把它列為簽章前提。
+     - 「選做變異」：只影響呈現或便利性，可以不做。
+     - 每份清單至少要有一項必做變異；若某個 milestone 沒有，請說明原因。
+  3. ADR-024：接受在 MS2 內修改 MS1 的 lab/_shared/labctl.py，不需要 reopen MS1。
+  4. worktree 變通做法：我會把 main 上的 workflow commit 合併進 session 分支，之後不需要再設定 origin/HEAD。MS3 開始時請確認 origin/main 是 HEAD 的祖先；若不是，停下來回報，不要自行變通。
+  5. 讓不需要 Docker 的測試也能在 Windows 執行：labctl 只在 lock() 內 import fcntl，並把 test_shared_classify.py 移出 tests/lab/。
+  6. docs/verification_steps.html 是固定的審查流程文件（與 ADR-021 的 system_overview.html 相同）。審查流程有任何改變時，必須在同一個 commit 中更新它（包括 Codespaces 的步驟），並在驗證清單中提醒我。
+  7. 請把第 1、2、4、6 點寫成 ADR，因為 CLAUDE.md 是凍結檔，這份核准意見是下一個 session 一定會讀到的地方。
