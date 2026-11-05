@@ -31,8 +31,8 @@ def tup(p: WritePlan) -> tuple:
 
 
 def run(exp: Mapping[tuple[Op, Role], ExpectedAccess], tokens: dict[Role, str] = TOKENS,
-        has_text: bool = True) -> set[tuple]:
-    return {tup(p) for p in plan_writes(exp, IDS, tokens, has_text)}
+        text: str | None = "body") -> set[tuple]:
+    return {tup(p) for p in plan_writes(exp, IDS, tokens, text)}
 
 
 def test_all_denied_policy_plans_every_forbidden_write() -> None:
@@ -64,13 +64,13 @@ def test_review_scope_plans_nothing() -> None:
 
 
 def test_ordered_by_op_then_actor() -> None:
-    plans = plan_writes(scopes(RowScope.OWN_ROWS_ONLY), IDS, TOKENS, True)
+    plans = plan_writes(scopes(RowScope.OWN_ROWS_ONLY), IDS, TOKENS, "body")
     ops = [p.op for p in plans]
     assert ops == sorted(ops, key=WRITE_OPS.index)
 
 
 def test_update_value_skipped_without_text_column_transfer_and_delete_remain() -> None:
-    got = run(scopes(RowScope.OWN_ROWS_ONLY), has_text=False)
+    got = run(scopes(RowScope.OWN_ROWS_ONLY), text=None)
     assert [t for t in got if t[0] is Op.UPDATE and not t[6]] == []   # no value-change plans
     assert any(t[0] is Op.UPDATE and t[6] for t in got)               # transfer remains
     assert any(t[0] is Op.DELETE for t in got)

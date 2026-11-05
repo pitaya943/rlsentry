@@ -429,3 +429,4 @@ D2–D4 由 architect 決定並記錄於此。
 - 問題：原設計讓寫入探測共用「每位使用者一筆預先植入的 canary」。一次成功的跨租戶 DELETE 或擁有者轉移會消耗該列，使後續以同一列為目標的探測讀回到錯誤的最終狀態（偽陽性），清理推理也不完整。這正好牴觸 MS3 的焦點（讀回驗證最終狀態、清理完整）。
 - 決定：`plan_writes` 只依政策與身分列出要探測的寫入（不再依賴預先植入列）。每個 UPDATE／DELETE 探測在送出前，由 `seed_work_row` 以所需擁有者的 token 新植入一筆專屬 work row；INSERT 自建 canary；讀回緊接在每次寫入之後。`WritePlan` 以 `work_owner` 取代 `pk`／`row_owner`；`send_write`、`after_filter` 改以傳入的 work row。`seed_known_rows` 僅供 dev／ci 讀取已知列（SPEC「dev／ci 植入已知資料」，讓 C04 這類空資料情境在 dev／ci 可判定），不再餵給寫入探測。所有 canary（讀取植入、work、INSERT）都在最後由各自擁有者清理，殘留回報 CLEANUP_FAILED。
 - 後果：每個情境的寫入探測會植入較多短命 canary（每個破壞性探測一筆），但彼此獨立、判定正確、清理完整。work row 植入失敗（擁有者無法 INSERT）時該寫入 cell 為 not_tested，不會誤判。
+- 補充（T-133）：`plan_writes` 第 4 參數改為 `text_column: str | None`（真實可變文字欄位名稱，由 run 依 target 欄位挑選），value-change UPDATE plan 直接帶入 `WritePlan.text_column`；None 時略過該 plan。避免實作以佔位字串猜欄位名。
