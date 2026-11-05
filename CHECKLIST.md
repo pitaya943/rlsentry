@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 96/98 · 進行中 1 · blocked 1
+自動產生，請勿手改 · 完成 96/99 · 進行中 2 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -113,6 +113,7 @@
 - [x] T-135 修訂寫入判定合約：依 HTTP 狀態分類（401／403→denied、2xx→讀回、其餘→inconclusive）；run() 不做讀取植入、清理所有 canary（architect，done，2 次）
 - [x] T-136 可見測試：寫入狀態分類（新檔 test_write_status）、誠實化 test_scan_writes、test_run_writes 加入 400→inconclusive 與 cleanup 全涵蓋（architect，done，1 次）
 - [x] T-137 probe/verdict.py：write_cell 改為依 HTTP 狀態分類（401／403→denied、2xx→讀回、其餘→inconclusive）（probe-dev，done，1 次）
+- [ ] T-138 修正清理斷言：CLEANUP_FAILED 以 (target, owner) 去重（每位擁有者一筆，非每列一筆）（architect，in_progress，1 次） ← 依賴 T-136✓
 
 ## [ ] MS4 M4 Whitebox（鎖定）
 

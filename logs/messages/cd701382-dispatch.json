@@ -1,0 +1,7 @@
+{
+  "description": "T-130 probe run wiring",
+  "prompt": "Ticket: T-130\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-130.md and follow it, including the updated rlsentry/contracts/probe.py probe() write-path docstring (ADR-029 + 補記 2).\n\nKey points:\n- MS3 does NOT call seed_known_rows (reads stay as MS2: collect_known_rows). Only writes seed canaries.\n- For each UPDATE/DELETE plan, seed a FRESH work row (seed_work_row) just before the probe; INSERT self-seeds. Collect EVERY created canary (work rows + each 2xx INSERT's new_pk) and pass them all to cleanup_seeded at the end; its leftovers become CLEANUP_FAILED findings — never leave a canary unreported.\n- write_cell now classifies by HTTP status (already implemented).\n- Pick text_column = first target column that is not pk/owner/public; pass its NAME to plan_writes and send_write.\n\nDocker and the local Supabase lab are ALREADY running (do NOT run `supabase start`). Iterate ONLY on the fast tests: `python3 -m pytest -q tests/probe/test_run_writes.py tests/probe/test_write_requests.py` (no Docker). As soon as they pass, `git add -A && git commit` and report Branch+Commit immediately — do NOT run the slow lab suite. Keep edits to rlsentry/probe/run.py only.",
+  "subagent_type": "probe-dev",
+  "run_in_background": false,
+  "isolation": "worktree"
+}
