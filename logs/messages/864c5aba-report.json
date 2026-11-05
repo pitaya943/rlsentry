@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a4deb2b990d6e4d1a",
+  "description": "T-162 correlate",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-162\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-162.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/e06fdbe0-c428-5441-a8c2-bcd56a9af2ef/tasks/a4deb2b990d6e4d1a.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}
