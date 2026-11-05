@@ -255,6 +255,17 @@ class ScenarioResult(_Strict):
     cases: list[CaseResult] = []
     unmatched_findings: list[str] = []  # Finding.id of confirmed findings matching no case
     runtime_s: float
+    # ADR-033 (MS4): raw counters behind the aggregate ratios, splinter measurement, NFR-01
+    cells_total: int = 0               # distinct (target, role, op) of scored ACCESS cases
+    cells_tested: int = 0              # … present in the matrix as allowed/denied/inconclusive
+    cells_inconclusive: int = 0        # … present as inconclusive
+    safe_denied_total: int = 0         # scored safe cases expecting denied
+    safe_denied_decided: int = 0       # … whose cell the scanner reported as denied
+    splinter: Literal["reported", "not_reported"] | None = None   # measured (None: not run)
+    splinter_lints: list[str] = []     # "<lint name>:<object>" of SECURITY lints
+    splinter_match: bool | None = None  # measured == expected.yaml (None while "measure")
+    probe_only: list[str] = []         # tp case ids whose finding is correlation probe_only
+    db_writes: int | None = None       # PostgREST-role writes in the DB log during the run
 
 
 class BenchReport(_Strict):
@@ -273,3 +284,4 @@ class BenchReport(_Strict):
     safe_decided_ratio: float          # see module docstring (ADR-014)
     runtime: dict[str, float]          # "5", "20", "50" tables → seconds
     scenarios: list[ScenarioResult]
+    probe_only: dict[str, list[str]] = {}  # scenario → probe-only tp case ids (SPEC §9; ADR-033)
