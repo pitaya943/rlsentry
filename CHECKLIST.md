@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 82/91 · 進行中 1 · blocked 1
+自動產生，請勿手改 · 完成 82/92 · 進行中 2 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -106,6 +106,7 @@
 - [ ] T-128 probe/cleanup.py 與 verdict／diff 寫入判定：write_cell、write_outcome、forbidden_write、write_findings、cleanup_findings、cleanup_seeded（probe-dev，todo，0 次） ← 依賴 T-123… T-124… T-125…
 - [ ] T-129 probe/metadata.py：L03 user_metadata 提權（修改後還原），USER_METADATA_ESCALATION（probe-dev，todo，0 次） ← 依賴 T-123… T-124… T-125…
 - [ ] T-130 probe/run.py：dev／ci 寫入探測串接（seed→plan→write→read_back→verdict→cleanup，含 L03 提權 pass）（probe-dev，todo，0 次） ← 依賴 T-126… T-127… T-128… T-129…
+- [ ] T-131 修正 test_import.py：以子行程檢查無 fcntl，避免 reload 破壞 lab 的 session flock（T-121 缺陷）（architect，in_progress，1 次）
 
 ## [ ] MS4 M4 Whitebox（鎖定）
 
