@@ -1126,3 +1126,5 @@
 {"ts": "2026-11-05T15:02:04", "kind": "subagent_stop", "id": "c64db625", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-05T15:05:28", "kind": "subagent_stop", "id": "219b4e27", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-05T15:07:41", "kind": "stop_blocked", "attempt": 1, "state": "active", "milestone": "MS4"}
+{"ts": "2026-11-05T15:31:53", "kind": "ticket_start", "ticket": "T-150", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T15:35:20", "kind": "ticket_accepted", "ticket": "T-150", "commit": "75d66b21827846e303301083348012d9aee9af7c", "files": ["docs/DECISIONS.md", "docs/PLAN.md"]}
