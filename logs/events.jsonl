@@ -1134,3 +1134,5 @@
 {"ts": "2026-11-05T15:45:36", "kind": "ticket_accepted", "ticket": "T-152", "commit": "8717707886ae5586a11850808fee0a23bc1f5777", "files": ["docs/DECISIONS.md", "rlsentry/bench/__init__.py", "rlsentry/contracts/bench.py", "rlsentry/contracts/ground_truth.py", "rlsentry/contracts/lab.py"]}
 {"ts": "2026-11-05T15:46:46", "kind": "ticket_start", "ticket": "T-153", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T15:51:22", "kind": "ticket_accepted", "ticket": "T-153", "commit": "7902773065b22315368429788652ef66ebbec6b2", "files": ["docs/DECISIONS.md", "rlsentry/contracts/discovery.py", "rlsentry/contracts/probe.py"]}
+{"ts": "2026-11-05T15:52:30", "kind": "ticket_start", "ticket": "T-154", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T15:57:45", "kind": "ticket_accepted", "ticket": "T-154", "commit": "e9411b90538be99c8eefaa0f7fb01693c58be7db", "files": ["tests/lab/test_policies_lab.py", "tests/lab/test_whitebox_lab.py", "tests/lab/test_whitebox_run_lab.py", "tests/whitebox/__init__.py", "tests/whitebox/test_correlate.py", "tests/whitebox/test_vendored.py"]}

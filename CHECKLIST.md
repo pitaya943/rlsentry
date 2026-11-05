@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 104/117 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 105/117 · 進行中 0 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -123,10 +123,10 @@
 - [x] T-151 合約：M4 Whitebox（splinter 固定版本、唯讀連線、pg_policies、交叉比對）；psycopg 相依；ADR-032（architect，done，1 次）
 - [x] T-152 合約：bench runner 與計分（ScenarioResult／BenchReport 增補、splinter_status、probe-only）、labctl.apply_synthetic；ADR-033（architect，done，1 次）
 - [x] T-153 合約：由 OpenAPI 取得欄位型別以植入必填欄位（MS3 核准意見第 1 點 L01／L05）；ADR-034（architect，done，1 次）
-- [ ] T-154 可見測試：whitebox（correlate 純函式、vendored splinter 雜湊、lab 實跑 run_splinter／read_policies 與唯讀）（architect，todo，0 次） ← 依賴 T-153✓
+- [x] T-154 可見測試：whitebox（correlate 純函式、vendored splinter 雜湊、lab 實跑 run_splinter／read_policies 與唯讀）（architect，done，1 次）
 - [ ] T-155 可見測試：bench 計分（score_scenario、aggregate、splinter_status、probe_only）與 apply_synthetic（architect，todo，0 次） ← 依賴 T-153✓
 - [ ] T-156 可見測試：OpenAPI 必填欄位與型別、fill_required、植入／寫入 body 帶入填值（architect，todo，0 次） ← 依賴 T-153✓
-- [ ] T-160 whitebox/db.py 與 splinter.py：唯讀連線、固定版本 splinter SQL、SET LOCAL pgrst.db_schemas（whitebox-dev，todo，0 次） ← 依賴 T-154…
+- [ ] T-160 whitebox/db.py 與 splinter.py：唯讀連線、固定版本 splinter SQL、SET LOCAL pgrst.db_schemas（whitebox-dev，todo，0 次） ← 依賴 T-154✓
 - [ ] T-161 whitebox/policies.py：唯讀讀取 pg_policies（whitebox-dev，todo，0 次） ← 依賴 T-160…
 - [ ] T-162 whitebox/correlate.py 與 whitebox/run.py：confirmed／lint_only／probe_only 交叉比對、SECURITY DEFINER 規則（whitebox-dev，todo，0 次） ← 依賴 T-160…
 - [ ] T-163 bench/score.py：score_scenario、aggregate、splinter_status（ADR-011、ADR-033）（whitebox-dev，todo，0 次） ← 依賴 T-155…
