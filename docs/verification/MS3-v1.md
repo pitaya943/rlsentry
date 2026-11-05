@@ -46,6 +46,7 @@ python3 -c "from lab._shared import labctl; print(labctl.ensure_up().api_url)"  
 - [ ] 【Actions 涵蓋】holdout：`git show origin/rlsentry-holdout:MS3/test_holdout_writes.py | sha256sum`。預期 `94680aedc763b81d32b3c3c9683a2207aa1fdcbd9178fccc7d627c68d9a9c824`（與 PRODUCTION_LOG 派工前紀錄相同；Actions 已跑過它）。
 - [ ] 【本機】打開 `docs/reviews/MS3-high-risk.md`，依逐張（T-126–T-130、T-137）與抽查（合約）清單，以各 accept commit 看 diff。
 - [ ] 【本機】打開 `docs/system_overview.html`：確認「MS3」一節與架構圖 M3 方塊狀態（讀取＋寫入皆完成）與實際一致（ADR-021）。
+- [ ] 【本機】`python3 docs/tools/progress.py && git diff --stat docs/progress.html docs/branch-log.md`（ADR-015）。預期：沒有差異（代表 progress.html／branch-log.md 已是最新；其標頭應為 `24b347327`、MS3 `awaiting_human`）。
 - [ ] 【本機】打開 `docs/verification_steps.html`：確認 Codespaces 準備、四種標籤與必做變異簽章前提（ADR-025／026／028）與本清單一致。
 - [ ] 【本機】**做出決定**：接受第 5 段的延後項（L03 提權與 dev／ci 讀取植入延到 MS6；L01／L05 不可植入；遠端 dev／ci 寫入會 fail-loud）與 P2，或在核准意見中要求改。
 
