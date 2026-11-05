@@ -175,6 +175,7 @@ make verify-milestone MS=MSx</pre></li>
   </li>
   <li>選做變異只影響呈現或便利性，可以不做。每份清單至少一項必做變異；沒有時清單會說明原因。</li>
   <li><b>指令品質保證（ADR-030，MS4 起）</b>：清單中每一條指令都由 architect 先在 lab 以清單標頭的 sha 實跑過，附的是真實輸出；沒有佔位指令、可直接複製貼上、以單行為主、不使用 heredoc；變異的還原與資料刪除都寫出完整指令。若你照貼卻得到不同結果，這本身就是要回報的發現。</li>
+  <li><b>每條指令都是獨立的 code block（ADR-030 補記）</b>：清單第 3 段的指令一律放在自己的 code block，按 Copy 直接貼上執行；變異與還原分成兩個 block。唯一要你填值的是本機 sha 與 Actions sha（以 <code>LOCAL=</code>、<code>ACTIONS=</code> 變數放在指令開頭）。</li>
   <li><b>文件同步自檢（ADR-031）</b>：每份清單都保留 <code>python3 docs/tools/progress.py &amp;&amp; git diff --stat docs/progress.html docs/branch-log.md</code>，預期沒有輸出。</li>
   <li>開啟 <code>docs/system_overview.html</code>：確認「本 milestone」一節與架構圖的狀態色和實際一致（ADR-021）。</li>
 </ul>

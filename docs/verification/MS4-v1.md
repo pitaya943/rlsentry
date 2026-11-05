@@ -16,55 +16,118 @@
 - holdout 在 acceptance 時發現自身 fixture 缺必填欄位（與 T-157 同一缺陷），只改 fixture、斷言不變後重加；新舊 hash 都記在 PRODUCTION_LOG。
 
 ## 3. 請你親手驗證（逐項打勾）
-**Codespaces 準備（ADR-025；完整說明見 `docs/verification_steps.html` 步驟 4.5）**：在 `claude/busy-darwin-asvox3` 開 Codespace，每行分別貼上執行（ADR-030：都是單行）：
-```
+每一條指令都放在獨立的 code block 中（按右上角 Copy 即可貼上執行），都是單行，都在 lab 實跑過（ADR-030 與補記）。
+
+**Codespaces 準備（ADR-025；完整說明見 `docs/verification_steps.html` 步驟 4.5）**：在 `claude/busy-darwin-asvox3` 開 Codespace，依序執行：
+```bash
 pip install -e ".[dev]"
 ```
-```
+```bash
 curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | sudo tar -xz -C /usr/local/bin supabase && supabase --version
 ```
-```
+```bash
 docker info >/dev/null 2>&1 || (sudo dockerd >/tmp/dockerd.log 2>&1 &); sleep 5; docker info >/dev/null 2>&1 && echo DOCKER_OK
 ```
-```
+```bash
 python3 -c "from lab._shared import labctl; print(labctl.ensure_up().api_url)"
 ```
-最後一行預期印出 `http://127.0.0.1:54321`（第一次拉映像約數分鐘）。MS4 新增相依 `psycopg[binary]`，已包含在第一行。確認 `git rev-parse HEAD` 等於本機 sha；不一致時 `git diff --stat <本機 sha> HEAD -- . ':!logs'` 必須沒有輸出。測完一律 `git restore .`、不提交、不推送，刪除 Codespace。
+最後一行預期印出 `http://127.0.0.1:54321`（第一次拉映像約數分鐘）。MS4 新增相依 `psycopg[binary]`，已包含在第一行。確認 Codespace 的 sha 等於本機驗證的 sha：
+```bash
+git rev-parse HEAD
+```
+不一致時（中間多了只改 logs/ 的紀錄 commit），把本機 sha 填入下面的 `LOCAL` 再執行，必須沒有輸出（這是唯一需要你填值的指令，因為本機 sha 只有你知道）：
+```bash
+LOCAL=請貼上本機sha; git diff --stat $LOCAL HEAD -- . ':!logs'
+```
+測完一律還原、不提交、不推送，再刪除 Codespace：
+```bash
+git restore .
+```
 
-- [ ] 【本機】＋【Actions 涵蓋】在容器內執行 `make verify-milestone MS=MS4`，依 ADR-022 三段信任鏈：(a) 本機 `host/review.sh` 第 1、2 步（同步＋防竄改，須 `✓ no changes to frozen files`）；(b) Actions `verify-milestone`，ref=`claude/busy-darwin-asvox3`，最後一行 `MS4: ALL PASSED`（Actions 只證明通過，不顯示細節）；(c) `git diff --stat <本機 sha> <Actions sha> -- . ':!logs'` 沒有輸出。
-- [ ] 【Codespaces 必做變異】**（簽章前提，ADR-026）SECURITY DEFINER 只有拿到資料才算漏洞**。把 `rlsentry/whitebox/correlate.py:20` 的「已證實」條件改成永遠成立：
-      `sed -i '20s/f.evidence is Evidence.CONFIRMED and RULES\[f.rule\].vulnerability/True/' rlsentry/whitebox/correlate.py && python3 -m pytest -q tests/whitebox/test_correlate.py`
-      預期：`2 failed, 8 passed`，失敗的是 `test_security_definer_without_data_is_only_a_configuration_warning` 與 `test_unproven_findings_never_count_as_probe_evidence`。意義：若把 INCONCLUSIVE_CELL 之類未證實的 finding 也當成「實測拿到資料」，L07 `ping_definer` 會被標成 confirmed、警告消失＝把設定警告說成漏洞（MS4 焦點）。還原：`git restore rlsentry/whitebox/correlate.py`
+- [ ] 【本機】＋【Actions 涵蓋】依 ADR-022 三段信任鏈：(a) 本機 `host/review.sh` 第 1、2 步（同步＋防竄改，須看到 `✓ no changes to frozen files`）；(b) GitHub Actions `verify-milestone`，ref=`claude/busy-darwin-asvox3`，最後一行 `MS4: ALL PASSED`（Actions 只證明通過，不顯示細節）；(c) 兩個 sha 的差異排除 logs/ 後為空。容器內的指令：
+  ```bash
+  make verify-milestone MS=MS4
+  ```
+  (c) 的比對（把兩個 sha 填入後執行，預期沒有輸出）：
+  ```bash
+  LOCAL=請貼上本機sha; ACTIONS=請貼上Actions的sha; git diff --stat $LOCAL $ACTIONS -- . ':!logs'
+  ```
+- [ ] 【Codespaces 必做變異】**（簽章前提，ADR-026）SECURITY DEFINER 只有拿到資料才算漏洞**。把 `rlsentry/whitebox/correlate.py:20` 的「已證實」條件改成永遠成立，再跑測試：
+  ```bash
+  sed -i '20s/f.evidence is Evidence.CONFIRMED and RULES\[f.rule\].vulnerability/True/' rlsentry/whitebox/correlate.py && python3 -m pytest -q tests/whitebox/test_correlate.py
+  ```
+  預期：`2 failed, 8 passed`，失敗的是 `test_security_definer_without_data_is_only_a_configuration_warning` 與 `test_unproven_findings_never_count_as_probe_evidence`。意義：若把 INCONCLUSIVE_CELL 之類未證實的 finding 也當成「實測拿到資料」，L07 `ping_definer` 會被標成 confirmed、警告消失＝把設定警告說成漏洞（MS4 焦點）。還原：
+  ```bash
+  git restore rlsentry/whitebox/correlate.py
+  ```
 - [ ] 【Codespaces 必做變異】**（簽章前提）計分必須比對 rule**。把 `rlsentry/bench/score.py:56` 的比對拿掉 rule：
-      `sed -i '56s/(f.target, f.op, f.role, f.rule) == (c.target, c.op, c.role, c.rule)/(f.target, f.op, f.role) == (c.target, c.op, c.role)/' rlsentry/bench/score.py && python3 -m pytest -q tests/bench/test_score.py`
-      預期：`1 failed, 11 passed`，失敗的是 `test_match_requires_rule_role_op_and_confirmed`（訊息含 `assert ('tp' == 'fn'`）。意義：規則錯的 finding 會被算成 TP，recall 被灌水（ADR-011 刻意的嚴格）。還原：`git restore rlsentry/bench/score.py`
+  ```bash
+  sed -i '56s/(f.target, f.op, f.role, f.rule) == (c.target, c.op, c.role, c.rule)/(f.target, f.op, f.role) == (c.target, c.op, c.role)/' rlsentry/bench/score.py && python3 -m pytest -q tests/bench/test_score.py
+  ```
+  預期：`1 failed, 11 passed`，失敗的是 `test_match_requires_rule_role_op_and_confirmed`（訊息含 `assert ('tp' == 'fn'`）。意義：規則錯的 finding 會被算成 TP，recall 被灌水（ADR-011 刻意的嚴格）。還原：
+  ```bash
+  git restore rlsentry/bench/score.py
+  ```
 - [ ] 【Codespaces 必做變異】（需 Docker）**M4 連線唯讀**。同時拿掉兩層唯讀：
-      `sed -i -e 's/default_transaction_read_only=on/default_transaction_read_only=off/' -e '/conn.read_only = True/d' rlsentry/whitebox/db.py && python3 -m pytest -q tests/lab/test_whitebox_lab.py::test_connection_is_read_only`
-      預期：`1 failed`，訊息含 `'off' == 'on'`。（architect 實測：只拿掉其中一層時測試仍通過，證明兩層是各自獨立的防線。）還原：`git restore rlsentry/whitebox/db.py`
+  ```bash
+  sed -i -e 's/default_transaction_read_only=on/default_transaction_read_only=off/' -e '/conn.read_only = True/d' rlsentry/whitebox/db.py && python3 -m pytest -q tests/lab/test_whitebox_lab.py::test_connection_is_read_only
+  ```
+  預期：`1 failed`，訊息含 `'off' == 'on'`。（architect 實測：只拿掉其中一層時測試仍通過，證明兩層是各自獨立的防線。）還原：
+  ```bash
+  git restore rlsentry/whitebox/db.py
+  ```
 - [ ] 【Codespaces 必做】不需 Docker 的 MS4 單元測試：
-      `python3 -m pytest -q tests/whitebox tests/bench tests/probe/test_fill.py tests/probe/test_seed_fill.py tests/probe/test_text_column.py tests/probe/test_insert_fill_actor.py tests/discovery/test_openapi_types.py`
-      預期：`54 passed`。
+  ```bash
+  python3 -m pytest -q tests/whitebox tests/bench tests/probe/test_fill.py tests/probe/test_seed_fill.py tests/probe/test_text_column.py tests/probe/test_insert_fill_actor.py tests/discovery/test_openapi_types.py
+  ```
+  預期：`54 passed`。
 - [ ] 【Codespaces 必做】（需 Docker）M4 在真實 lab：
-      `python3 -m pytest -q tests/lab/test_whitebox_lab.py tests/lab/test_policies_lab.py tests/lab/test_whitebox_run_lab.py`
-      預期：`10 passed`。涵蓋：splinter 實跑、`db_schemas` 生效、連線拒絕寫入且 DB log 無寫入、L05 policy 條件式含 `with_check == "true"`、L07 定義者函式有資料→confirmed／無資料→只有警告、L02／L04／L12 為 probe_only。
+  ```bash
+  python3 -m pytest -q tests/lab/test_whitebox_lab.py tests/lab/test_policies_lab.py tests/lab/test_whitebox_run_lab.py
+  ```
+  預期：`10 passed`。涵蓋：splinter 實跑、`db_schemas` 生效、連線拒絕寫入且 DB log 無寫入、L05 policy 條件式含 `with_check == "true"`、L07 定義者函式有資料→confirmed／無資料→只有警告、L02／L04／L12 為 probe_only。
 - [ ] 【Codespaces 必做】（需 Docker）**splinter_expected 是實測值**：
-      `python3 -m pytest -q tests/lab/test_splinter_expected.py`
-      預期：`17 passed`（16 個情境逐一重跑 splinter，結果等於 expected.yaml，再加 1 個「沒有任何情境仍是 measure」）。這是 ground truth 沒有憑空填寫的唯一實證。
-- [ ] 【Codespaces 必做】（需 Docker）L07 的 audit 結果：先執行
-      `python3 -m rlsentry.bench --scenario L07 --json /tmp/l07.json`
-      預期結尾 `tp 3  fn 0  fp 0  tn 3  fp_safe 0`。再執行
-      `python3 -c "import json; r=json.load(open('/tmp/l07.json')); a=[s for s in r['scenarios'] if s['profile']=='audit'][0]; print(a['db_writes'], a['splinter'], {c['case_id']: c['verdict'] for c in a['cases']})"`
-      預期：`0 reported {'L07-V1': 'tp', 'L07-V2': 'tp', 'L07-V3': 'tp', 'L07-S1': 'tn', 'L07-S2': 'tn', 'L07-S3': 'tn', 'L07-I1': 'inconclusive_ok', 'L07-W1': 'warning_seen'}`。意義：audit 0 次寫入；`ping_definer` 只出現警告（W1）且 cell 是 inconclusive，不是漏洞。
-- [ ] 【Codespaces 必做】（需 Docker）probe-only 案例：先執行
-      `python3 -m rlsentry.bench --scenario L02 --scenario L04 --scenario L12 --json /tmp/po.json | grep -E 'probe-only|precision|fpr'`
-      預期：`precision 6/6 = 1.000`、`fpr 0/16 = 0.000`、`probe-only L02: L02-V1, L02-V2, L02-V3`、`probe-only L04: L04-V1, L04-V2`、`probe-only L12: L12-V1`。再執行
-      `python3 -c "import json; r=json.load(open('/tmp/po.json')); print([(s['scenario'], s['splinter'], s['splinter_lints']) for s in r['scenarios'] if s['profile']=='dev'])"`
-      預期：`[('L02', 'not_reported', []), ('L04', 'not_reported', []), ('L12', 'not_reported', ['rls_enabled_no_policy:audit_log'])]`（L12 唯一的 lint 落在另一張表）。
-- [ ] 【Actions 涵蓋】holdout：`git show origin/rlsentry-holdout:MS4/test_holdout_whitebox.py | sha256sum`。預期 `cc747c1be74d8f2e0a7253bd0ba2af1f2cbc54d3172927c28fb26df985da6db5`（PRODUCTION_LOG 記錄的重加後 hash；舊 hash 與重加原因也在那裡）。
-- [ ] 【本機】splinter 固定版本與上游一致：`sha256sum rlsentry/whitebox/splinter.sql` 與 `curl -sL https://raw.githubusercontent.com/supabase/splinter/2026.09.1/splinter.sql | sha256sum` 兩者都應為 `d8d558baad3e03832e521c527907fa50a9a172fabd899dd0f5c2504a5a0e9349`（等於 `rlsentry/contracts/whitebox.py` 的 `SPLINTER_SHA256`）。
+  ```bash
+  python3 -m pytest -q tests/lab/test_splinter_expected.py
+  ```
+  預期：`17 passed`（16 個情境逐一重跑 splinter，結果等於 expected.yaml，再加 1 個「沒有任何情境仍是 measure」）。這是 ground truth 沒有憑空填寫的唯一實證。
+- [ ] 【Codespaces 必做】（需 Docker）L07 的 audit 結果。先執行：
+  ```bash
+  python3 -m rlsentry.bench --scenario L07 --json /tmp/l07.json
+  ```
+  預期結尾 `tp 3  fn 0  fp 0  tn 3  fp_safe 0`。再執行：
+  ```bash
+  python3 -c "import json; r=json.load(open('/tmp/l07.json')); a=[s for s in r['scenarios'] if s['profile']=='audit'][0]; print(a['db_writes'], a['splinter'], {c['case_id']: c['verdict'] for c in a['cases']})"
+  ```
+  預期：`0 reported {'L07-V1': 'tp', 'L07-V2': 'tp', 'L07-V3': 'tp', 'L07-S1': 'tn', 'L07-S2': 'tn', 'L07-S3': 'tn', 'L07-I1': 'inconclusive_ok', 'L07-W1': 'warning_seen'}`。意義：audit 0 次寫入；`ping_definer` 只出現警告（W1）且 cell 是 inconclusive，不是漏洞。
+- [ ] 【Codespaces 必做】（需 Docker）probe-only 案例。先執行：
+  ```bash
+  python3 -m rlsentry.bench --scenario L02 --scenario L04 --scenario L12 --json /tmp/po.json | grep -E 'probe-only|precision|fpr'
+  ```
+  預期：`precision 6/6 = 1.000`、`fpr 0/16 = 0.000`、`probe-only L02: L02-V1, L02-V2, L02-V3`、`probe-only L04: L04-V1, L04-V2`、`probe-only L12: L12-V1`。再執行：
+  ```bash
+  python3 -c "import json; r=json.load(open('/tmp/po.json')); print([(s['scenario'], s['splinter'], s['splinter_lints']) for s in r['scenarios'] if s['profile']=='dev'])"
+  ```
+  預期：`[('L02', 'not_reported', []), ('L04', 'not_reported', []), ('L12', 'not_reported', ['rls_enabled_no_policy:audit_log'])]`（L12 唯一的 lint 落在另一張表）。
+- [ ] 【Actions 涵蓋】holdout 與派工前紀錄一致：
+  ```bash
+  git fetch -q origin rlsentry-holdout && git show origin/rlsentry-holdout:MS4/test_holdout_whitebox.py | sha256sum
+  ```
+  預期 `cc747c1be74d8f2e0a7253bd0ba2af1f2cbc54d3172927c28fb26df985da6db5  -`（PRODUCTION_LOG 記錄的重加後 hash；舊 hash 與重加原因也在那裡）。
+- [ ] 【本機】splinter 固定版本與上游一致。兩條指令的輸出都應為 `d8d558baad3e03832e521c527907fa50a9a172fabd899dd0f5c2504a5a0e9349`（等於 `rlsentry/contracts/whitebox.py` 的 `SPLINTER_SHA256`）：
+  ```bash
+  sha256sum rlsentry/whitebox/splinter.sql
+  ```
+  ```bash
+  curl -sL https://raw.githubusercontent.com/supabase/splinter/2026.09.1/splinter.sql | sha256sum
+  ```
 - [ ] 【本機】閱讀 `rlsentry/whitebox/correlate.py:19-72` 與 `rlsentry/whitebox/db.py:1-19`。確認：只有 confirmed＋vulnerability 的 finding 算「實測證實」；新加的 finding 一律 lint_only、evidence 取自 RULES（不可能是 confirmed）；連線兩層唯讀、呼叫端 finally 中 rollback。再讀 `rlsentry/probe/write.py:131-145`：INSERT 的 owner 欄位是受害者、其他 uuid 欄位是攻擊者自己（ADR-034 補記 2）。
 - [ ] 【本機】打開 `docs/reviews/MS4-high-risk.md`，依逐張（T-160、T-161、T-162、T-163、T-167、T-172、T-176）與抽查清單，以各 accept commit 看 diff；第 5 類抽查 L02、L07、L12 的 `splinter_expected`。
-- [ ] 【本機】文件同步（ADR-021、ADR-028、ADR-031）：`python3 docs/tools/progress.py && git diff --stat docs/progress.html docs/branch-log.md` 預期沒有輸出；打開 `docs/system_overview.html` 確認架構圖 M4 方塊為完成、第 7 節 MS4 為「等待你審查」、第 8 節有 MS4 段落；打開 `docs/verification_steps.html` 確認步驟 4.5 的 Supabase CLI 安裝已改為單行、步驟 5 有 ADR-030／031 的說明。
+- [ ] 【本機】文件同步（ADR-021、ADR-028、ADR-031）。執行下面這條，預期沒有輸出：
+  ```bash
+  python3 docs/tools/progress.py && git diff --stat docs/progress.html docs/branch-log.md
+  ```
+  再打開 `docs/system_overview.html`，確認架構圖 M4 方塊為完成、第 7 節 MS4 為「等待你審查」、第 8 節有 MS4 段落；打開 `docs/verification_steps.html`，確認步驟 4.5 的 Supabase CLI 安裝已改為單行、步驟 5 有 ADR-030／031 的說明。
 - [ ] 【本機】**做出決定**：閱讀 `BENCHMARK_REPORT.md` 第 1、2、5 節。接受或要求修改：(a) recall 29/32 未達 95%，3 個 FN 是已核准延後項（L03→MS6、L08→MS5）；(b) runtime 50 表 70.7 s 未達 60 s（ADR-033 決定不調高預設 rps）；(c) 展示情境選 L04（ADR-035）；(d) probe-only 以漏洞類型計為 2 類（L12 不另計，ADR-035 補記）；(e) 第 5 段的 P2。
 
 ## 4. 與 SPEC 的偏差與假設

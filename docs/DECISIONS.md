@@ -553,3 +553,7 @@ D2–D4 由 architect 決定並記錄於此。
 ### ADR-035 補記：probe-only 為 2 類，不是 3 類（2026-11-05，MS4 auditor 第 1 次派工的遲到報告）
 - 問題：原本把 L12 算成第 3 類。L12 的漏洞是 `TO anon USING (true)` 的 SELECT policy（lab/L12_openapi_restricted/migration.sql:12），與 L02 同類；「OpenAPI 受限」描述的是目標怎麼被發現，不是漏洞類型（SPEC §9「漏洞類型」）。ADR-033 #5 的「類＝情境」定義在此過寬。
 - 決定：probe-only 以漏洞類型計，MS4 為 2 類（L02、L04），6 個案例（含 L12-V1）；仍達 ≥ 2 類目標。bench JSON 的 `probe_only` 欄位維持逐情境列出（原始資料），類別的歸併在 BENCHMARK_REPORT 說明。
+
+### ADR-030 補記：每條指令都是獨立的 code block（2026-11-05，人類於 MS4 審查前要求）
+- 決定（自 MS4-v1 起，之後每份驗證清單）：第 3 段中所有要人類執行的指令，一律放在獨立的 fenced code block（```bash），一個 block 一條單行指令，讓人類直接按 Copy 執行，不需用滑鼠選取。變異指令與其還原指令（`git restore …`）分成兩個 block。行內反引號只用於檔名、預期輸出與測試名稱，不用於要執行的指令。
+- 佔位例外：只有本機 sha 與 Actions sha（只有人類知道）以 `LOCAL=請貼上本機sha` 這類變數放在 block 開頭，其餘不得有佔位。
