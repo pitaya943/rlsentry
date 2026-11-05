@@ -1,0 +1,7 @@
+{
+  "description": "T-176 insert fill actor",
+  "prompt": "Ticket: T-176\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-176.md and follow it.",
+  "subagent_type": "probe-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

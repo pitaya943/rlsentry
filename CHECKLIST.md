@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 122/124 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 123/124 · 進行中 0 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -141,7 +141,7 @@
 - [x] T-173 修訂 bench 合約：沒有 lint 也記為已量測、audit 也跑 M4（benchmark 發現 L11 splinter 為 None、L07-W1 在 audit 顯示缺少）（architect，done，1 次）
 - [x] T-174 bench/run.py：空 lint 清單也記為已量測、audit 也跑 M4（whitebox-dev，done，1 次）
 - [x] T-175 稽核修正（合約與測試）：INSERT 探測的其他 uuid 必填欄位改填攻擊者自己的 id；補 L12 probe-only 與 bench exit 1 測試（architect，done，1 次）
-- [ ] T-176 probe/write.py：INSERT 探測的其他 uuid 必填欄位填攻擊者自己的 id（稽核 P1-1）（probe-dev，todo，0 次） ← 依賴 T-175✓
+- [x] T-176 probe/write.py：INSERT 探測的其他 uuid 必填欄位填攻擊者自己的 id（稽核 P1-1）（probe-dev，done，1 次）
 
 ## [ ] MS5 M1 Recon（鎖定）
 
