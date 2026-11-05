@@ -126,6 +126,13 @@ def canary_rows(fake: FakeRest) -> list[str]:
             if any(isinstance(v, str) and v.startswith(CANARY_PREFIX) for v in row.values())]
 
 
+def canary_owners(fake: FakeRest) -> set[Role]:
+    role_of = {A: Role.USER_A, B: Role.USER_B}
+    return {role_of[row["owner_id"]] for t in fake.tables.values() for row in t.rows.values()
+            if any(isinstance(v, str) and v.startswith(CANARY_PREFIX) for v in row.values())
+            and row.get("owner_id") in role_of}
+
+
 def test_vulnerable_table_writes_are_confirmed_and_cleaned_up() -> None:
     vuln = Table(select_vis=ANY, insert_check=ANY, update_using=ANY, update_check=ANY, delete_using=ANY)
     cells, rules, findings, _rec, fake = scan(FakeRest({"t": vuln}), [tgt("t")])
@@ -164,9 +171,9 @@ def test_uncleanable_canaries_each_get_a_cleanup_failed_finding() -> None:
     # must be reported, never left silently (SPEC §5 M3).
     stuck = Table(select_vis=ANY, insert_check=ANY, update_using=ANY, update_check=ANY, delete_using=NONE)
     _cells, _rules, findings, _rec, fake = scan(FakeRest({"t": stuck}), [tgt("t")])
-    leftover = canary_rows(fake)
-    cleanup_failed = [f for f in findings if f.rule == "CLEANUP_FAILED"]
-    assert leftover and len(cleanup_failed) == len(leftover)
+    # CLEANUP_FAILED is deduped by (target, owner): one per owner with leftovers, not one per row.
+    cf_owners = {f.role for f in findings if f.rule == "CLEANUP_FAILED"}
+    assert canary_rows(fake) and cf_owners == canary_owners(fake)
 
 
 def test_audit_sends_no_write_and_marks_not_tested() -> None:

@@ -126,8 +126,12 @@ def cleanup_problems(gt: GroundTruth, findings: list[Finding]) -> list[str]:
             errs.append(f"{table}: seeded rows were deleted (missing {sorted(want - got)})")
         leftover = got - want
         cf = [f for f in findings if f.rule == "CLEANUP_FAILED" and f.target == table]
-        if len(leftover) != len(cf):
-            errs.append(f"{table}: {len(leftover)} leftover canary rows but {len(cf)} CLEANUP_FAILED findings")
+        # CLEANUP_FAILED is deduped by (target, owner), so counts need not match; but leftover
+        # canaries must be reported, and a report must correspond to real leftovers.
+        if leftover and not cf:
+            errs.append(f"{table}: {len(leftover)} leftover canary rows but no CLEANUP_FAILED finding")
+        if cf and not leftover:
+            errs.append(f"{table}: CLEANUP_FAILED finding but no leftover canary row")
     return errs
 
 
