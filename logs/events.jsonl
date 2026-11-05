@@ -1075,3 +1075,6 @@
 {"ts": "2026-11-05T06:24:51", "kind": "report", "id": "e52f17dd", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/e52f17dd-report.json"}
 {"ts": "2026-11-05T06:26:09", "kind": "ticket_start", "ticket": "T-138", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T06:34:47", "kind": "ticket_accepted", "ticket": "T-138", "commit": "63a8ac322d2decff77415d40bcd7c5b6353c6e3a", "files": ["docs/DECISIONS.md", "tests/lab/test_scan_writes.py", "tests/probe/test_run_writes.py"]}
+{"ts": "2026-11-05T06:40:44", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "shell command appears to modify protected path docs/tickets/T-139.md"}
+{"ts": "2026-11-05T06:40:57", "kind": "guard_block", "agent": "architect", "tool": "Write", "reason": "docs/tickets/T-139.md is protected. Only the harness (or the architect, for its own files) may change it."}
+{"ts": "2026-11-05T06:41:28", "kind": "ticket_start", "ticket": "T-139", "agent": "architect", "attempt": 1}
