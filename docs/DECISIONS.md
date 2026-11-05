@@ -341,3 +341,61 @@ D2–D4 由 architect 決定並記錄於此。
   - D2：`SENSITIVE_COLUMN_PUBLIC` 與嚴重度升級依表的所有欄位名判斷，沒有測試欄位層級的 GRANT。
   - D3：OpenAPI 只有 `/rpc/x` 時，bundle 的 `.from('x')` 會被略過。
   - FR-05 的「覆蓋率與未發現不代表安全」聲明屬於報告，延到 MS6；MS2 只提供 `openapi_available` 與每個目標的 confidence。
+
+## ADR-025：驗證清單的四種標籤與「Codespaces 準備」（MS2 核准意見第 1 點）
+- 日期：2026-11-05 · Milestone：MS3 · 相關：ADR-022、ADR-026、ADR-028；SPEC §11 模組關卡
+- 背景：人類本機（Windows）沒有 Docker；GitHub Actions 只顯示通過或失敗，看不到細節。親手變異、`docker logs`、需要看輸出原文的項目，必須在 GitHub Codespaces 執行。簽章金鑰只能留在本機。
+- 考慮過的選項：
+  1. 不標註，由人類自己判斷每一項要在哪裡做（缺點：每次都要重新判斷，容易把需要看原文的項目當成 Actions 已涵蓋）
+  2. 每一項固定標註執行地點與理由（採用，人類決定）
+- 決定（自 MS3 起，每份驗證清單第 3 段）：
+  1. 每一項只能有一個標籤：
+     - 【Actions 涵蓋】：寫明涵蓋它的測試檔或檢查名稱，並註明「Actions 只證明通過，不顯示細節」。
+     - 【Codespaces 必做】：Actions 會略過或無法顯示的項目（親手變異、docker logs、需要看輸出原文的測試）。附完整指令、預期輸出與還原方式。
+     - 【Codespaces 必做變異】：見 ADR-026。
+     - 【本機】：只有以下項目留在本機：防竄改檢查（`host/review.sh` 第 1、2 步，與本機的 harness-frozen tag 比對）、sha 比對、閱讀程式碼、做出決定、簽章。金鑰不得放進 Codespaces。
+  2. 第 3 段開頭固定放「Codespaces 準備」：
+     - 安裝指令；
+     - 確認 `git rev-parse HEAD` 與本機驗證的 sha 一致。不一致時（中間多了只改 logs/ 的 commit），以排除 logs/ 的 diff 為空為準。
+  3. 結尾固定提醒：不要從 Codespaces 提交或推送；測完先 `git restore .`，再刪除該 Codespace。
+- 理由：標籤讓人類一眼看出「哪些只能信 Actions、哪些必須親眼看」；把信任邊界（金鑰、防竄改基準）固定在本機。
+- 後果與風險：
+  - Codespaces 的 clone 可能與本機驗證的 sha 不同，所以準備步驟必須先比對 sha。
+  - Codespaces 預設映像不一定有 Supabase CLI。準備步驟必須列出安裝方式，並在 MS3 的清單中實測一次。
+  - `vc-check` 不檢查標籤，標籤是否齊全由 architect 在撰寫時自查，並由人類審查。
+
+## ADR-026：親手變異測試分級：必做變異與選做變異（MS2 核准意見第 2 點）
+- 日期：2026-11-05 · Milestone：MS3 · 相關：ADR-022 #3、ADR-005 補記、ADR-025
+- 背景：自動測試全部通過，只證明「測試認為沒問題」；親手弄壞一行、看測試失敗，才能證明測試真的在檢查那一行。人類的時間有限，所以要分出哪些一定要做。
+- 決定：
+  1. 「必做變異」：錯誤會造成下列任一後果時，就是必做：
+     - 把不安全說成安全；
+     - 讓判定錯誤；
+     - 讓唯讀、遮罩、授權、NFR-01 偵測等防線失效。
+     例如三態判定、safety、oracle、ground truth、計分。
+  2. 清單中每一項必做變異都要寫明：改哪一個 file:line（改成什麼）、預期的失敗訊息（測試名稱與訊息片段）、它能抓到什麼錯誤、為什麼重要、如何還原（`git restore <file>`）。
+  3. 人類必須在 Codespaces 實際做過、結果符合預期之後才簽章。每份清單把它列為「簽章前提」。
+  4. 「選做變異」：只影響呈現或便利性，可以不做，標為選做。
+  5. 每份清單至少一項必做變異；若某個 milestone 真的沒有，第 3 段要說明原因。
+- 理由：必做變異針對的是「測試與實作同時錯、所有自動檢查仍然全綠」這種共模失效（ADR-005 補記）。
+- 後果與風險：變異寫錯位置或行號漂移，人類會看到「沒有失敗」。所以 architect 在撰寫清單前要自己實際做一次，並以清單標頭的 sha 為準。
+
+## ADR-027：worktree 規則：origin/main 必須是 HEAD 的祖先（MS2 核准意見第 4 點）
+- 日期：2026-11-05 · Milestone：MS3 · 相關：ADR-022；MS2-v1 第 4 段「開發環境」
+- 背景：MS2 時，main 上有人類新增的 workflow commit，它不是 session 分支的祖先，所以 `sync_worktree.py` 拒絕從 session 分支建立 subagent 的 worktree。architect 當時在本機執行了 `git remote set-head` 作為變通。人類已把 main 的 workflow commit 合併進 session 分支（`2c1ee1b`）。
+- 決定：
+  1. 每個 milestone 開始時（§0），確認 `git rev-list --count origin/main ^HEAD` 為 0，也就是 origin/main 是 HEAD 的祖先。
+  2. 若不是，停下來回報人類，不得自行變通。禁止 `git remote set-head`，也禁止任何改寫 origin/HEAD 或分支的做法。
+  3. MS3 開始時已確認：結果為 0，HEAD 為 `65ad96a`，且不是 shallow clone。
+- 理由：worktree 的基準由人類控制的分支決定；agent 改本機 metadata，等於自己決定 subagent 從哪裡開始，人類看不到。
+- 後果與風險：人類若之後又只在 main 加 commit，下一個 milestone 會在開始時停下來，需要人類先合併。
+
+## ADR-028：`docs/verification_steps.html` 是固定的審查流程文件（MS2 核准意見第 6 點）
+- 日期：2026-11-05 · Milestone：MS3 · 相關：ADR-021、ADR-022、ADR-025、ADR-026
+- 背景：審查流程分散在多個 ADR 與核准意見中，人類需要一份照著做的步驟文件。
+- 決定：
+  1. `docs/verification_steps.html` 與 ADR-021 的 `system_overview.html` 地位相同：單一自包含檔，繁體中文，由 architect 維護。
+  2. 審查流程有任何改變（包括 Codespaces 的步驟），都要在同一個 commit 中更新它，並在當次驗證清單中提醒人類。
+  3. 本 ADR 的 commit 已依 ADR-025、ADR-026 更新該文件，加入 Codespaces 準備、四種標籤與必做變異的簽章前提。
+- 理由：CLAUDE.md 是凍結檔；流程文件若與實際流程脫節，人類會照著過期的步驟簽章。
+- 後果與風險：文件是手寫的，可能漂移。緩解方式：驗證清單第 3 段第一項引用它的步驟編號；若步驟不符，人類可直接要求修改。

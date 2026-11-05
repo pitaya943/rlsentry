@@ -24,7 +24,7 @@
   .note { background:#fff8e1; border:1px solid #ffe08a; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
   .bad { background:#fff0f0; border:1px solid #ffc9c9; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
   .tag { display:inline-block; font-size:.8em; padding: 0 8px; border-radius: 10px; color:#fff; margin-right: 6px; }
-  .t-you { background: var(--ok); } .t-gh { background: var(--info); } .t-never { background: var(--bad); }
+  .t-you { background: var(--ok); } .t-gh { background: var(--info); } .t-never { background: var(--bad); } .t-cs { background: #7048e8; }
   ul.check { list-style: none; padding-left: 0; } ul.check li::before { content: "☐ "; }
 </style>
 </head>
@@ -32,7 +32,7 @@
 <main>
 
 <h1>每個 milestone 的固定審查流程</h1>
-<p class="sub">適用於 MS2 之後的每個 milestone（以下以 <code>MSx</code> 表示）。依據 ADR-022（三段信任鏈）、ADR-005 補記（審查分級）、ADR-021。本文件由 architect 撰寫，只說明「怎麼做」；判斷仍以你自己的執行結果為準。</p>
+<p class="sub">適用於 MS2 之後的每個 milestone（以下以 <code>MSx</code> 表示）。依據 ADR-022（三段信任鏈）、ADR-025（清單標籤與 Codespaces）、ADR-026（必做變異）、ADR-028（本文件的維護）、ADR-005 補記（審查分級）、ADR-021。本文件由 architect 撰寫，只說明「怎麼做」；判斷仍以你自己的執行結果為準。</p>
 
 <h2>0. 為什麼是這個流程（一張圖）</h2>
 <svg viewBox="0 0 960 250" width="100%" role="img" aria-label="三段信任鏈">
@@ -124,6 +124,18 @@ git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'
 </div>
 
 <div class="step">
+<h3>步驟 4.5　Codespaces 準備 <span class="tag t-cs">Codespaces</span></h3>
+<p>清單第 3 段開頭的「Codespaces 準備」會寫出本次的安裝指令。固定流程：</p>
+<ol>
+  <li>GitHub repo → Code → Codespaces → 在 <code>claude/busy-darwin-asvox3</code> 建立一個新的 Codespace。</li>
+  <li>依清單安裝（Python 相依套件、Supabase CLI），並依 CLAUDE.md 啟動 Docker。</li>
+  <li><code>git rev-parse HEAD</code> 必須等於步驟 2 的本機 sha。不一致時（中間多了只改 logs/ 的 commit），<code>git diff --stat &lt;本機 sha&gt; HEAD -- . ':!logs'</code> 必須沒有輸出。</li>
+  <li>做完所有【Codespaces 必做】與【Codespaces 必做變異】的項目，每一項變異都要依清單還原。</li>
+  <li><b>不要從 Codespaces 提交或推送</b>，也不要把簽章金鑰放進去。測完先 <code>git restore .</code>，再刪除這個 Codespace。</li>
+</ol>
+</div>
+
+<div class="step">
 <h3>步驟 5　逐項看驗證清單 <span class="tag t-you">你</span></h3>
 <ul>
   <li>打開 <code>docs/verification/MSx-vN.md</code>：
@@ -134,7 +146,16 @@ git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'
       <li>第 4 段：與 SPEC 的偏差；第 5 段：已知限制與 blocked ticket。</li>
     </ul>
   </li>
-  <li>需要 Docker 的項目：可在有 Docker 的環境（WSL2、雲端 session）親手執行；或接受 Actions 的結果。<b>建議至少親手做一項「親手變異」</b>（故意弄壞一行、確認測試會失敗、再 <code>git restore</code>），這是確認測試真的有在檢查的最直接方法。</li>
+  <li>第 3 段每一項都有一個標籤（ADR-025），標籤決定在哪裡做：
+    <table>
+      <tr><th>標籤</th><th>在哪裡做</th><th>內容</th></tr>
+      <tr><td>【Actions 涵蓋】</td><td>不必再做</td><td>寫明涵蓋它的測試檔或檢查名稱。Actions 只證明通過，不顯示細節。</td></tr>
+      <tr><td>【Codespaces 必做】</td><td>Codespaces</td><td>Actions 會略過或看不到的項目（docker logs、需要看輸出原文的測試）。附完整指令、預期輸出與還原方式。</td></tr>
+      <tr><td>【Codespaces 必做變異】</td><td>Codespaces</td><td>故意弄壞一行、確認指定的測試以指定的訊息失敗、再還原（ADR-026）。<b>簽章前提</b>。</td></tr>
+      <tr><td>【本機】</td><td>你的電腦</td><td>只有防竄改檢查、sha 比對、閱讀程式碼、做出決定與簽章。</td></tr>
+    </table>
+  </li>
+  <li>選做變異只影響呈現或便利性，可以不做。每份清單至少一項必做變異；沒有時清單會說明原因。</li>
   <li>開啟 <code>docs/system_overview.html</code>：確認「本 milestone」一節與架構圖的狀態色和實際一致（ADR-021）。</li>
 </ul>
 </div>
@@ -164,6 +185,7 @@ python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519</pre>
   <li>步驟 2 出現 <code>✓ no changes to frozen files</code></li>
   <li>步驟 3 最後一行為 <code>MSx: ALL PASSED</code></li>
   <li>步驟 4 的 diff 沒有任何輸出</li>
+  <li>每一項【Codespaces 必做變異】都已在 Codespaces 實際做過，結果符合預期（ADR-026）</li>
   <li>驗證清單第 3 段已逐項勾選，需要你決定的項目已寫進核准意見</li>
 </ul>
 </div>
@@ -205,9 +227,11 @@ python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519</pre>
    → 「Show exact commit under test」的 sha；最後一行 MSx: ALL PASSED
 3. git -C rlsentry fetch origin claude/busy-darwin-asvox3
    git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'   → 沒有輸出
-4. 驗證清單 docs/verification/MSx-vN.md 第 3 段逐項；docs/reviews/MSx-high-risk.md 看 diff
-5. python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519
-6. 雲端 session 傳「繼續」</pre>
+4. Codespaces（ref=claude/busy-darwin-asvox3）：確認 HEAD 與本機 sha 一致
+   → 做完【Codespaces 必做】與【Codespaces 必做變異】；git restore .；不提交、不推送；刪除 Codespace
+5. 驗證清單 docs/verification/MSx-vN.md 第 3 段逐項；docs/reviews/MSx-high-risk.md 看 diff
+6. python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519
+7. 雲端 session 傳「繼續」</pre>
 
 </main>
 </body>
