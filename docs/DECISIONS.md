@@ -489,3 +489,21 @@ D2–D4 由 architect 決定並記錄於此。
   - target 層級比對可能過寬：例如 L05 `projects` 的 lint 是關於 UPDATE 的 `WITH CHECK (true)`，若同表另有 SELECT 漏洞也會標 `confirmed`。報告會附 lint 名稱，讓人判斷。
   - splinter 0024 依設計不檢查 SELECT `USING (true)`、0023 只檢查未啟用 RLS 的表（見 splinter 原始碼註解），所以 L02、L04 等成為 probe-only 是兩種工具回答不同問題，不是 splinter 的缺陷（SPEC §5 M4 解讀）。
   - 新增相依 `psycopg[binary]`（ADR-012 的「需要時才加」）。
+
+## ADR-033：Benchmark runner 與計分的補充定義（coverage、0/0、splinter 狀態、probe-only、runtime）
+- 日期：2026-11-05 · Milestone：MS4 · 相關：SPEC §8 執行方式、§9 評估指標；ADR-011、ADR-014
+- 背景：ADR-011 定義了 TP／FP／FN／TN 與 FPR；SPEC §9 另要求 coverage、runtime（5／20／50 張表，50 張 < 60 秒）與 probe-only 案例（≥ 2 類），但沒有寫清楚分母、空集合與量測條件。
+- 考慮過的選項（runtime 的量測條件）：
+  1. dev profile、lab 用的高 rps（缺點：數字好看，但不是使用者會遇到的情況）
+  2. audit profile、預設 rps 5（NFR-04）（採用：真實專案應以 audit 掃描，這是使用者實際會等的時間）
+- 決定：
+  1. **計分只用 dev**：metrics 只加總 `profile == dev` 且 `scored`（非 P2）的情境；audit 也逐情境執行，結果列在 `scenarios`，用來檢查唯讀（`db_writes == 0`，否則 exit 1）與 inconclusive，不計入指標。
+  2. **coverage**：分母＝該 profile 計分的 ACCESS 案例（漏洞＋safe＋inconclusive）的相異格子 (target, role, op)；「測到」＝矩陣中結果為 allowed／denied／inconclusive；`inconclusive_ratio` 同分母。warning、key、storage 案例不算格子。
+  3. **0/0 一律記 0.0**，旁邊必有原始數量（SPEC §9 統計上的誠實）；不使用 NaN（JSON 不合法）。
+  4. **splinter 狀態**：情境的 `splinter_expected = reported`，若且唯若固定版本 splinter 有一條 SECURITY 類 lint 落在該情境某個 ACCESS／STORAGE 漏洞案例的 target 上；其餘（含只落在其他物件的 lint，如 L12 `audit_log`）為 `not_reported`。所有 SECURITY lint 仍逐條列在 `splinter_lints`。`expected.yaml` 由 architect 依實測填入（T-170），之後 bench 以 `splinter_match` 標出偏離。
+  5. **probe-only 的「類」＝情境**：每個情境埋一種漏洞類型；某情境有 TP 且其 finding 的 correlation 為 `probe_only`，該情境即為一類 probe-only（附 case id 為證據）。
+  6. **runtime**：`apply_synthetic(n)` 建 n 張 C01 型 owner-scoped 表，計時 discover＋登入＋probe（audit、rps 5、concurrency 4）；M4 與 lab 設定不計時。情境的 `runtime_s` 只計 M2＋M3。
+  7. 情境執行使用 rps 50（lab 在本機且可丟棄）。
+  8. **bench 的範圍**：MS4 的 bench 只串 M2＋M3＋M4；M1（L08 key，MS5）與 L03 提權（MS6，MS3 核准意見第 1 點）尚未串接，對應案例在 MS4 會誠實記為 FN，並在 BENCHMARK_REPORT 註明原因，不從分母剔除。
+- 理由：每個比率都能由 JSON 裡的原始數量重算；量測條件寫死在合約常數，避免挑對自己有利的設定。
+- 後果與風險：MS4 的 recall 會因 L03／L08 延後而低於 95% 目標，這是誠實的中間狀態；runtime 在 rps 5 下，50 張表可能超過 60 秒（每張表數十個請求），若如此會在報告中列為未達標並說明，不調高 rps 來湊數字。

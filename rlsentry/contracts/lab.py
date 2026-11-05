@@ -18,6 +18,7 @@ from typing import Protocol
 from pydantic import BaseModel, ConfigDict
 
 from rlsentry.contracts.models import Role
+from rlsentry.contracts.policy import ExpectedPolicy
 
 LAB_PROJECT_DIR = Path("lab/_shared")
 """Supabase CLI workdir (relative to the repo root); config in lab/_shared/supabase/config.toml."""
@@ -42,6 +43,12 @@ accounts on localhost; never used anywhere else."""
 LAB_LOCK_FILE = Path("/tmp/rlsentry-lab.lock")
 """fcntl lock serializing every process that applies a scenario or tests against the lab
 (parallel tickets share the one lab)."""
+
+SYNTHETIC_TABLE_FMT = "rt_{:03d}"
+"""Table names of apply_synthetic (rt_001 …)."""
+
+SYNTHETIC_PK_FMT = "5ce0f{table:03d}-0000-4000-8000-{row:012d}"
+"""Seed primary keys of apply_synthetic (valid uuids, readable in DB logs)."""
 
 LOG_LINE_PREFIX = "%h %m [%p] %q%u@%d "
 """log_line_prefix that ensure_up sets explicitly (Supabase's current default); db_writes_since
@@ -190,6 +197,20 @@ class LabCtl(Protocol):
         until that sentinel appears (≤ 10 s, else RuntimeError). Only records before the
         sentinel record are considered; the sentinel and anything after it are never
         returned. A fixed sleep alone is not enough to prove the log is complete."""
+        ...
+
+    def apply_synthetic(self, n_tables: int) -> ExpectedPolicy:
+        """Runtime fixture (SPEC §9 Runtime; ADR-033). Like apply() steps 1–3 and 5, but instead
+        of a scenario's files it creates n_tables tables public.<SYNTHETIC_TABLE_FMT.format(i)>
+        for i = 1..n_tables, each `(id uuid PRIMARY KEY, owner_id uuid NOT NULL, title text)`,
+        RLS enabled, GRANT SELECT, INSERT, UPDATE, DELETE TO anon, authenticated, and four
+        policies TO authenticated (select/update/delete USING owner_id = auth.uid(); insert and
+        update WITH CHECK owner_id = auth.uid()), i.e. the C01 owner-scoped pattern. Seeds two
+        rows per table, one owned by each LAB_USERS account, pks
+        SYNTHETIC_PK_FMT.format(table=i, row=1 or 2). Returns the matching ExpectedPolicy:
+        tables[name] = {primary_key [id], owner_column owner_id, select/insert/update/delete
+        {anon: deny, user: own_rows_only}}. n_tables outside 1..200 → ValueError before any
+        change. Must hold lock() while running; a later apply(scenario) removes everything."""
         ...
 
     def scenario_dir(self, scenario: str) -> Path:
