@@ -1003,3 +1003,4 @@
 {"ts": "2026-11-05T03:43:37", "kind": "ticket_start", "ticket": "T-124", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-05T03:51:34", "kind": "ticket_accepted", "ticket": "T-124", "commit": "ebfc6dfa923480049843931704dd6f4d568ee227", "files": ["tests/probe/test_metadata.py", "tests/probe/test_plan_writes.py", "tests/probe/test_write_findings.py", "tests/probe/test_write_requests.py", "tests/probe/test_write_verdict.py"]}
 {"ts": "2026-11-05T03:52:38", "kind": "ticket_start", "ticket": "T-125", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T03:55:26", "kind": "ticket_start", "ticket": "T-132", "agent": "architect", "attempt": 1}
