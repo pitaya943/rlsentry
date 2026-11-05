@@ -1035,3 +1035,4 @@
 {"ts": "2026-11-05T04:32:06", "kind": "ticket_accepted", "ticket": "T-126", "commit": "fe87da6eecf0e1539031fe5171a815ba58ad4d4b", "files": ["rlsentry/probe/seed.py"]}
 {"ts": "2026-11-05T04:38:04", "kind": "ticket_accepted", "ticket": "T-129", "commit": "e00e9e80255b86df8e5a8e0f56f750336a9ea4f4", "files": ["rlsentry/probe/metadata.py"]}
 {"ts": "2026-11-05T04:39:21", "kind": "ticket_start", "ticket": "T-133", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T04:45:39", "kind": "ticket_accepted", "ticket": "T-133", "commit": "df3abb8fa490b14c72c75be1dce9ba62b5dd4df8", "files": ["docs/DECISIONS.md", "rlsentry/contracts/probe.py", "tests/probe/test_plan_writes.py"]}
