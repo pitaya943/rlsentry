@@ -10,7 +10,7 @@ import httpx
 
 from rlsentry.contracts.models import Op, Outcome, Profile, Role, Target
 from rlsentry.contracts.policy import ExpectedPolicy, RoleScopes, RowScope, TablePolicy
-from rlsentry.contracts.probe import AUDIT_WRITE_REASON, WRITE_PENDING_REASON, Sessions
+from rlsentry.contracts.probe import AUDIT_WRITE_REASON, Sessions
 from rlsentry.probe.run import probe
 from tests.fakes import ANON, URL, Recorder, fake_jwt, run
 
@@ -102,13 +102,13 @@ def test_missing_session_is_not_tested_and_never_denied() -> None:
     assert cells[("todos", Role.USER_A, Op.SELECT)][0] is Outcome.INCONCLUSIVE
 
 
-def test_write_cells_not_tested_and_only_reads_sent() -> None:
-    for profile, reason in ((Profile.AUDIT, AUDIT_WRITE_REASON), (Profile.DEV, WRITE_PENDING_REASON),
-                            (Profile.CI, WRITE_PENDING_REASON)):
-        cells, _, rec = scan(FakeRest({"todos": Rel(TWO)}), [todos()], profile=profile)
-        writes = [v for k, v in cells.items() if k[2] is not Op.SELECT]
-        assert len(writes) == 9 and set(writes) == {(Outcome.NOT_TESTED, 0, reason)}
-        assert rec.methods() <= {"GET", "HEAD"}
+def test_audit_write_cells_not_tested_and_only_reads_sent() -> None:
+    # audit is read-only in every milestone (NFR-01); dev/ci write probing is covered by
+    # tests/probe/test_run_writes.py (fast fake) and tests/lab/test_scan_writes.py (MS3).
+    cells, _, rec = scan(FakeRest({"todos": Rel(TWO)}), [todos()], profile=Profile.AUDIT)
+    writes = [v for k, v in cells.items() if k[2] is not Op.SELECT]
+    assert len(writes) == 9 and set(writes) == {(Outcome.NOT_TESTED, 0, AUDIT_WRITE_REASON)}
+    assert rec.methods() <= {"GET", "HEAD"}
 
 
 def test_table_without_owner_column_is_review_not_vulnerable() -> None:
