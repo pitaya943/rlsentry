@@ -17,7 +17,7 @@ from rlsentry.contracts.probe import (
 )
 from rlsentry.probe.cleanup import cleanup_seeded
 from rlsentry.probe.seed import seed_known_rows
-from rlsentry.probe.write import after_filter, read_back, send_write
+from rlsentry.probe.write import after_filter, read_back, seed_work_row, send_write
 from tests.fakes import ANON, URL, Recorder, fake_jwt, run
 
 A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
@@ -71,51 +71,76 @@ def test_seed_non_2xx_adds_note_not_row() -> None:
     assert rows == [] and any("403" in n for n in notes)
 
 
+# --- seed_work_row -------------------------------------------------------------------------
+
+def test_seed_work_row_creates_one_fresh_owned_canary() -> None:
+    rec = Recorder(created)
+    row = run(lambda c: seed_work_row(c, URL, ANON, tgt(), Role.USER_B, "name", "owner_id", SESS),
+              rec, Profile.DEV)
+    (req,) = rec.requests
+    assert req.method == "POST" and req.headers["prefer"] == "return=minimal"
+    assert req.headers["authorization"] == f"Bearer {SESS.tokens[Role.USER_B]}"
+    body = json.loads(req.content)
+    assert body["owner_id"] == B and body["name"].startswith(CANARY_PREFIX)
+    assert row is not None and row.owner is Role.USER_B and row.pk == body["id"]
+
+
+def test_seed_work_row_none_on_refusal() -> None:
+    rec = Recorder(lambda r: httpx.Response(403, json={"code": "42501"}))
+    row = run(lambda c: seed_work_row(c, URL, ANON, tgt(), Role.USER_B, "name", "owner_id", SESS),
+              rec, Profile.DEV)
+    assert row is None
+
+
 # --- send_write ----------------------------------------------------------------------------
 
 def insert_plan() -> WritePlan:
     return WritePlan(op=Op.INSERT, actor=Role.ANON, rule="ANON_WRITE", reader=Role.USER_A, new_owner=Role.USER_A)
 
 
+def work(owner: Role = Role.USER_B, pk: str = "wrk") -> SeededRow:
+    return SeededRow(target="customers", pk=pk, owner=owner, marker="rlsentry_canary_w", text_column="name")
+
+
 def test_send_insert_posts_canary_owned_by_new_owner() -> None:
     rec = Recorder(created)
-    att = run(lambda c: send_write(c, URL, ANON, tgt(), insert_plan(), [], SESS), rec, Profile.DEV)
+    att = run(lambda c: send_write(c, URL, ANON, tgt(), insert_plan(), None, "owner_id", SESS), rec, Profile.DEV)
     (req,) = rec.requests
     assert req.method == "POST" and req.headers["prefer"] == "return=minimal"
     body = json.loads(req.content)
     assert body["owner_id"] == A and body["id"] == att.new_pk and att.status == 201
 
 
-def test_send_update_value_patches_text_column_with_marker() -> None:
+def test_send_update_value_patches_work_row_text_column_with_marker() -> None:
     plan = WritePlan(op=Op.UPDATE, actor=Role.USER_A, rule="CROSS_TENANT_WRITE", reader=Role.USER_B,
-                     pk="sB", row_owner=Role.USER_B, text_column="name")
+                     work_owner=Role.USER_B, text_column="name")
     rec = Recorder(created)
-    att = run(lambda c: send_write(c, URL, ANON, tgt(), plan, [], SESS), rec, Profile.DEV)
+    att = run(lambda c: send_write(c, URL, ANON, tgt(), plan, work(), "owner_id", SESS), rec, Profile.DEV)
     (req,) = rec.requests
-    assert req.method == "PATCH" and dict(req.url.params)["id"] == "eq.sB"
+    assert req.method == "PATCH" and dict(req.url.params)["id"] == "eq.wrk"
+    assert req.headers["authorization"] == f"Bearer {SESS.tokens[Role.USER_A]}"  # the ACTOR writes
     assert json.loads(req.content)["name"] == att.new_value and att.new_value.startswith(CANARY_PREFIX)
 
 
 def test_send_update_transfer_sets_owner_column() -> None:
     plan = WritePlan(op=Op.UPDATE, actor=Role.USER_A, rule="CROSS_TENANT_WRITE", reader=Role.USER_B,
-                     pk="sA", row_owner=Role.USER_A, new_owner=Role.USER_B, transfer=True)
+                     work_owner=Role.USER_A, new_owner=Role.USER_B, transfer=True)
     rec = Recorder(created)
-    run(lambda c: send_write(c, URL, ANON, tgt(), plan, [], SESS), rec, Profile.DEV)
+    run(lambda c: send_write(c, URL, ANON, tgt(), plan, work(Role.USER_A), "owner_id", SESS), rec, Profile.DEV)
     assert json.loads(rec.requests[0].content)["owner_id"] == B
 
 
-def test_send_delete_filters_on_pk() -> None:
-    plan = WritePlan(op=Op.DELETE, actor=Role.ANON, rule="ANON_WRITE", reader=Role.USER_A,
-                     pk="sA", row_owner=Role.USER_A)
+def test_send_delete_filters_on_work_pk() -> None:
+    plan = WritePlan(op=Op.DELETE, actor=Role.ANON, rule="ANON_WRITE", reader=Role.USER_A, work_owner=Role.USER_A)
     rec = Recorder(created)
-    run(lambda c: send_write(c, URL, ANON, tgt(), plan, [], SESS), rec, Profile.DEV)
-    assert rec.requests[0].method == "DELETE" and dict(rec.requests[0].url.params)["id"] == "eq.sA"
+    run(lambda c: send_write(c, URL, ANON, tgt(), plan, work(Role.USER_A, "dpk"), "owner_id", SESS), rec, Profile.DEV)
+    assert rec.requests[0].method == "DELETE" and dict(rec.requests[0].url.params)["id"] == "eq.dpk"
 
 
 def test_audit_refuses_every_write() -> None:
     plan = insert_plan()
     with pytest.raises(WriteRefused):
-        run(lambda c: send_write(c, URL, ANON, tgt(), plan, [], SESS), Recorder(created), Profile.AUDIT)
+        run(lambda c: send_write(c, URL, ANON, tgt(), plan, None, "owner_id", SESS), Recorder(created), Profile.AUDIT)
 
 
 # --- after_filter --------------------------------------------------------------------------
@@ -123,20 +148,21 @@ def test_audit_refuses_every_write() -> None:
 def test_after_filter_per_op() -> None:
     ins = WritePlan(op=Op.INSERT, actor=Role.ANON, rule="ANON_WRITE", reader=Role.USER_A, new_owner=Role.USER_A)
     att = WriteAttempt(status=201, curl="c", new_pk="np1")
-    assert after_filter(ins, att, "id", "owner_id", {Role.USER_A: A}) == {"id": "eq.np1"}
+    assert after_filter(ins, att, None, "id", "owner_id", {Role.USER_A: A}) == {"id": "eq.np1"}
 
-    dele = WritePlan(op=Op.DELETE, actor=Role.ANON, rule="ANON_WRITE", reader=Role.USER_A, pk="sA")
-    assert after_filter(dele, WriteAttempt(status=200, curl="c"), "id", "owner_id", {}) == {"id": "eq.sA"}
+    dele = WritePlan(op=Op.DELETE, actor=Role.ANON, rule="ANON_WRITE", reader=Role.USER_A, work_owner=Role.USER_A)
+    assert after_filter(dele, WriteAttempt(status=200, curl="c"), work(Role.USER_A, "dpk"),
+                        "id", "owner_id", {}) == {"id": "eq.dpk"}
 
     upd = WritePlan(op=Op.UPDATE, actor=Role.USER_A, rule="CROSS_TENANT_WRITE", reader=Role.USER_B,
-                    pk="sB", text_column="name")
+                    work_owner=Role.USER_B, text_column="name")
     assert after_filter(upd, WriteAttempt(status=200, curl="c", new_value="rlsentry_canary_z"),
-                        "id", "owner_id", {}) == {"id": "eq.sB", "name": "eq.rlsentry_canary_z"}
+                        work(Role.USER_B, "wpk"), "id", "owner_id", {}) == {"id": "eq.wpk", "name": "eq.rlsentry_canary_z"}
 
     tr = WritePlan(op=Op.UPDATE, actor=Role.USER_A, rule="CROSS_TENANT_WRITE", reader=Role.USER_B,
-                   pk="sA", new_owner=Role.USER_B, transfer=True)
-    assert after_filter(tr, WriteAttempt(status=200, curl="c"), "id", "owner_id",
-                        {Role.USER_B: B}) == {"id": "eq.sA", "owner_id": f"eq.{B}"}
+                   work_owner=Role.USER_A, new_owner=Role.USER_B, transfer=True)
+    assert after_filter(tr, WriteAttempt(status=200, curl="c"), work(Role.USER_A, "tpk"), "id", "owner_id",
+                        {Role.USER_B: B}) == {"id": "eq.tpk", "owner_id": f"eq.{B}"}
 
 
 # --- read_back -----------------------------------------------------------------------------

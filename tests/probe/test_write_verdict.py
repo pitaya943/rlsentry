@@ -43,7 +43,7 @@ def test_write_outcome_reads_only_the_after_state(op: Op, after: bool | None,
 
 def plan(op: Op = Op.UPDATE) -> WritePlan:
     return WritePlan(op=op, actor=Role.USER_A, rule="CROSS_TENANT_WRITE", reader=Role.USER_B,
-                     pk="p1", row_owner=Role.USER_B, text_column="body")
+                     work_owner=Role.USER_B, text_column="body")
 
 
 def obs(op: Op = Op.UPDATE, *, has_plan: bool = True, attempt: WriteAttempt | None = None,
