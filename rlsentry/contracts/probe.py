@@ -495,7 +495,7 @@ async def seed_known_rows(client: SafeClientContract, supabase_url: str, anon_ke
 
 def plan_writes(expected_by_op: Mapping[tuple[Op, Role], ExpectedAccess],
                 user_ids: Mapping[Role, str], tokens: Mapping[Role, str],
-                has_text_column: bool) -> list[WritePlan]:
+                text_column: str | None) -> list[WritePlan]:
     """Contract only; implemented by rlsentry.probe.write.plan_writes. Pure.
 
     The forbidden writes worth attempting, in (op INSERT→UPDATE→DELETE, actor PROBE_ROLES)
@@ -509,8 +509,8 @@ def plan_writes(expected_by_op: Mapping[tuple[Op, Role], ExpectedAccess],
     - UPDATE / DELETE cross-tenant: work_owner = the first USER_ROLE != actor with id + token
       (the owner of a fresh row the actor then tries to touch). reader = work_owner. Add iff
       forbidden_write(scope, actor_id, user_ids[work_owner], False). For UPDATE this is the
-      value-change plan: text_column is set (the caller passes has_text_column=False to skip it
-      when the table has no mutable text column).
+      value-change plan: WritePlan.text_column = the given `text_column` NAME; it is skipped
+      when `text_column` is None (the table has no mutable text column).
     - UPDATE transfer: actor is a user (actor_id present); work_owner = actor (its own fresh
       row); new_owner = the other user with id + token; reader = new_owner, transfer=True. Add
       iff forbidden_write(expected_by_op[(UPDATE, actor)].scope, actor_id, user_ids[new_owner],
