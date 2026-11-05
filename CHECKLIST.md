@@ -94,7 +94,7 @@
 - [x] T-113 labctl：write_command、識別字與 $$ 感知的常值移除、log flush sentinel（ADR-024 補記）（lab-dev，done，1 次）
 - 驗證清單：docs/verification/MS2-v1.md（v1）
 
-## [ ] MS3 M3 寫入（進行中）
+## [ ] MS3 M3 寫入（等待你審查）
 - [x] T-120 ADR：驗證清單標籤與 Codespaces 準備、必做變異分級、worktree 規則、verification_steps.html 維護（MS2 核准意見第 1、2、4、6、7 點）（architect，done，1 次）
 - [x] T-121 可見測試：write_command 分類測試移出 tests/lab/；labctl 在沒有 fcntl 時仍可 import（MS2 核准意見第 5 點）（architect，done，2 次）
 - [x] T-122 labctl：只在 lock() 內 import fcntl（MS2 核准意見第 5 點）（lab-dev，done，1 次）
@@ -116,6 +116,7 @@
 - [x] T-138 修正清理斷言：CLEANUP_FAILED 以 (target, owner) 去重（每位擁有者一筆，非每列一筆）（architect，done，1 次）
 - [x] T-139 寫入路徑只對 table（RPC／view 不寫）合約釐清；變異測試改用 disable RLS（architect，done，1 次）
 - [x] T-140 test_scan_writes 補上 NFR-01 流量證據：DB log 寫入只由 PostgREST 角色發出、seed.sql 既有列未被更動（稽核 P1）（architect，done，1 次）
+- 驗證清單：docs/verification/MS3-v1.md（v1）
 
 ## [ ] MS4 M4 Whitebox（鎖定）
 
