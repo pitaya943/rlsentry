@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 92/95 · 進行中 2 · blocked 1
+自動產生，請勿手改 · 完成 93/95 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -109,7 +109,7 @@
 - [x] T-131 修正 test_import.py：以子行程檢查無 fcntl，避免 reload 破壞 lab 的 session flock（T-121 缺陷）（architect，done，1 次）
 - [x] T-132 修訂寫入合約與可見測試：每個破壞性寫入探測使用各自新植入的 work row（修正共享列順序危害）（architect，done，1 次）
 - [x] T-133 修訂 plan_writes 合約：第 4 參數改為 text_column 名稱（str｜None），不用布林或佔位字串（architect，done，1 次）
-- [ ] T-134 可見測試：probe() 寫入路徑的 fast fake-client 測試（test_run_writes），並讓 MS2 的寫入 cell 斷言與 milestone 無關（architect，in_progress，1 次）
+- [x] T-134 可見測試：probe() 寫入路徑的 fast fake-client 測試（test_run_writes），並讓 MS2 的寫入 cell 斷言與 milestone 無關（architect，done，1 次）
 
 ## [ ] MS4 M4 Whitebox（鎖定）
 

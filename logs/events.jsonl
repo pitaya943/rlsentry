@@ -1051,3 +1051,4 @@
 {"ts": "2026-11-05T05:08:41", "kind": "report", "id": "5a2659b7", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/5a2659b7-report.json"}
 {"ts": "2026-11-05T05:08:41", "kind": "subagent_start", "id": "c586fe2f", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T05:21:14", "kind": "ticket_start", "ticket": "T-134", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T05:29:50", "kind": "ticket_accepted", "ticket": "T-134", "commit": "736cc8e53a919b099ca514b2f37fd9bd95dca3e5", "files": ["tests/probe/test_run.py", "tests/probe/test_run_writes.py"]}
