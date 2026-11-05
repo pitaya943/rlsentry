@@ -1102,3 +1102,5 @@
 {"ts": "2026-11-05T08:54:30", "kind": "acceptance_run", "scope": "MS3", "failed": ["tests", "safety invariants"]}
 {"ts": "2026-11-05T09:23:39", "kind": "acceptance_run", "scope": "MS3", "failed": []}
 {"ts": "2026-11-05T09:25:17", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS3"}
+{"ts": "2026-11-05T09:25:21", "kind": "subagent_stop", "id": "d3cf80c9", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-05T13:12:36", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS3"}
