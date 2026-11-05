@@ -982,3 +982,6 @@
 {"ts": "2026-11-05T02:20:12", "kind": "subagent_stop", "id": "07beb35d", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-05T02:21:40", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS2"}
 {"ts": "2026-11-05T02:22:02", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS2"}
+{"ts": "2026-11-05T02:37:54", "kind": "stop_blocked", "attempt": 1, "state": "active", "milestone": "MS3"}
+{"ts": "2026-11-05T02:39:00", "kind": "ticket_start", "ticket": "T-120", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-05T02:39:15", "kind": "ticket_start", "ticket": "T-121", "agent": "architect", "attempt": 1}
