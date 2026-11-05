@@ -539,7 +539,7 @@ D2–D4 由 architect 決定並記錄於此。
 - 背景：SPEC 要求 `splinter_expected` 以 MS4 實測填入、probe-only 至少 2 類，並以實測選定展示情境。
 - 決定：
   1. `splinter_expected`：L01、L03、L05、L06、L07、L09 為 `reported`；其餘 10 個為 `not_reported`（依 ADR-033 #4 的定義，固定版本 splinter 2026.09.1 實測）。`tests/lab/test_splinter_expected.py` 每次重跑實測並與 expected.yaml 比對；splinter 升版或情境改動時，必須重新實測並以 ADR 記錄，不得直接改值。
-  2. Probe-only 類別：L02（SELECT `USING (true)`）、L04（只檢查已登入的跨租戶讀取）、L12（OpenAPI 受限下由 bundle／policy 找到的表），共 3 類 6 個案例。L02 與 L04 是 splinter 的設計範圍之外（0024 排除 SELECT；靜態 lint 不知道預期的擁有者範圍），不是 splinter 的缺陷。
+  2. Probe-only 類別：L02（SELECT `USING (true)`）、L04（只檢查已登入的跨租戶讀取），共 2 類；L12-V1 也是 probe-only，但其漏洞同為 SELECT `USING (true)`，不另計一類（見下方補記）。L02 與 L04 是 splinter 的設計範圍之外（0024 排除 SELECT；靜態 lint 不知道預期的擁有者範圍），不是 splinter 的缺陷。
   3. 展示情境：**L04**（SPEC §9 的首選候選，實測確認 splinter 無任何 SECURITY lint，RLSentry 以 Confirmed 證實 User B 讀到 User A 的列）。
 - 理由：所有數值由程式實測，並有測試把關，ground truth 不會在無人察覺下漂移。
 - 後果與風險：MS4 recall 為 29/32（L03 延後 MS6、L08 延後 MS5），未達 95% 目標；runtime 50 張表 70.7 s 未達 60 s 目標。兩者都在 BENCHMARK_REPORT.md 誠實列出，不調整計分或 rps 來湊數字。
@@ -549,3 +549,7 @@ D2–D4 由 architect 決定並記錄於此。
 - 決定：actor 是有 id 的使用者時，其他 uuid 必填欄位填 actor 自己的 id；anon 沒有 id，維持 new_owner 的 id。owner 欄位不變（new_owner）。
 - 理由：填值只影響請求能否通過 WITH CHECK；最終狀態以 pk 讀回判定，所以這個改變只會減少錯誤的 denied，不會產生錯誤的 allowed。
 - 仍存在的限制：每個 plan 只嘗試一種填法；需要特定欄位組合（例如外鍵指向其他表）才能通過的政策，仍可能是 inconclusive 或 denied。稽核 P1-2（anon INSERT 送空字串 uuid）不成立：所有 INSERT plan 都有 new_owner。
+
+### ADR-035 補記：probe-only 為 2 類，不是 3 類（2026-11-05，MS4 auditor 第 1 次派工的遲到報告）
+- 問題：原本把 L12 算成第 3 類。L12 的漏洞是 `TO anon USING (true)` 的 SELECT policy（lab/L12_openapi_restricted/migration.sql:12），與 L02 同類；「OpenAPI 受限」描述的是目標怎麼被發現，不是漏洞類型（SPEC §9「漏洞類型」）。ADR-033 #5 的「類＝情境」定義在此過寬。
+- 決定：probe-only 以漏洞類型計，MS4 為 2 類（L02、L04），6 個案例（含 L12-V1）；仍達 ≥ 2 類目標。bench JSON 的 `probe_only` 欄位維持逐情境列出（原始資料），類別的歸併在 BENCHMARK_REPORT 說明。

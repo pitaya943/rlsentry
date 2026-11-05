@@ -259,6 +259,7 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 | 稽核 P1-1：INSERT 以受害者 id 填其他 uuid 欄位，可能把漏洞說成 denied | T-175／T-176 改填攻擊者 id（ADR-034 補記 2）；P1-2 經查不成立 |
 | auditor 第 1 次派工用罄回合未回報（嘗試跑 lab） | 第 2 次限定只讀程式碼，完成；轉錄於 traceability.md |
 | acceptance 第 1 次背景執行被 30 分鐘上限中止 | 以 2 小時上限重跑 |
+| 第 1 次 auditor 的遲到報告：probe-only「3 類」把 L12（與 L02 同類）另計 | 更正為 2 類（ADR-035 補記）；提交 bench JSON 作為數字的原始證據 |
 
 ### Ticket（27 張，全部 done）
 | 批次 | ticket | 嘗試次數 |
@@ -273,7 +274,7 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 030（清單指令品質）、031（progress 同步）、032（M4 設計）、033＋補記（計分補充定義；空 lint、audit 跑 M4）、034＋補記 1、2（OpenAPI 型別植入；文字欄位依型別；INSERT 填攻擊者 id）、035（splinter_expected 實測、probe-only 3 類、展示情境 L04）。
 
 ### 指標（BENCHMARK_REPORT.md）
-- recall 29/32、precision 29/29、FPR 0/72、coverage 1.0、safe_decided 1.0；probe-only L02／L04／L12；audit 寫入 16/16 情境為 0。
+- recall 29/32、precision 29/29、FPR 0/72、coverage 1.0、safe_decided 1.0；probe-only 2 類（L02、L04；L12 同 L02 類，ADR-035 補記）；原始 JSON docs/benchmark/MS4-bench.json；audit 寫入 16/16 情境為 0。
 - runtime（audit、rps 5）：5 張 7.4 s、20 張 28.5 s、50 張 70.7 s（未達 60 s）。
 - FN：L03 ×2（MS6）、L08（MS5）。L11 為 P2 不計。
 - subagent tokens（約）：whitebox-dev 每張 19k–41k；probe-dev 15k–30k；lab-dev 22k–30k；auditor 80k（第 2 次）＋102k（第 1 次未完成）。

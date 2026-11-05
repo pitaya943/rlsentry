@@ -112,3 +112,12 @@
 - P1-2（不成立）：「anon INSERT 送出空字串 uuid」。plan_writes 對所有 INSERT plan 都設定 new_owner（合約），不會發生。
 - P2：correlate 以裸物件名比對（多 schema 同名會合併；不同類型 lint 也標 confirmed，已揭露於 BENCHMARK_REPORT §6）；finally 中的 rollback 在連線已斷時可能蓋掉原始錯誤；BENCHMARK_REPORT 章節引用錯誤（已修）；lab 以 superuser 執行 splinter（唯讀由 GUC＋BEGIN READ ONLY 保證，真實專案應建議低權限角色，記入 MS6 USAGE）；test_splinter_expected 的非 Docker 部分是固定值釘選，真正的實測證據是 Docker 參數化部分。
 - 抽查情境：L07（W1 在 audit 為 warning_seen、get_all_accounts confirmed、ping_definer 無 confirmed）、L02／L04（probe_only）、L12（diary_entries probe_only、audit_log lint_only）。
+
+### MS4 auditor 第 1 次派工的遲到報告（審到 aa7a8e6，早於 T-175／T-176；實跑全套 `pytest -q`：955 passed）
+- 已由 T-175 處理：bench 的 NFR-01 exit 1 路徑沒有測試（現有 tests/bench/test_main_exit.py）；L12 probe-only 沒有測試（現已加入 test_whitebox_run_lab.py）。
+- P1（採納，文件更正）：probe-only「3 類」灌水。L12 的漏洞與 L02 同為 SELECT `USING (true)`，「OpenAPI 受限」是發現方式而非漏洞類型 → 更正為 2 類（ADR-035 補記）。
+- P1（延後，已記入 PLAN 的 MS6 表）：`ScanReport.policies` 尚無人填入（ADR-032 #8）。
+- P2（文件）：BENCHMARK_REPORT 的數字缺原始檔 → 提交 docs/benchmark/MS4-bench.json。
+- P2（列入 MS4-v1 第 5 段）：SECURITY DEFINER 警告會因任一角色有資料而全部被抑制；SECURITY_DEFINER_RPC_DATA 名稱套用於所有 RPC 越權讀取；splinter_status 寫死 public、DEFAULT_DB_SCHEMAS 尚未由設定傳入；read_policies 沒有 DB log 唯讀測試；runtime 沒有自動化測試（數字見 bench JSON）。
+- P2（不成立）：write.py 在 new_owner 為 None 時送出空字串 uuid —— 所有 INSERT plan 都有 new_owner。
+- 安全：P0 無；寫入閘門未變；M4 兩層唯讀、一律 rollback。上游 splinter 2026.09.1 的 sha256 與 vendored 檔相同（auditor 也獨立確認）。
