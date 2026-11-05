@@ -87,7 +87,8 @@ def gt() -> GroundTruth:
 
 
 def pr(target: str, role: Role, op: Op, o: Outcome) -> ProbeResult:
-    return ProbeResult(target=target, role=role, op=op, outcome=o, known_rows_checked=1, reason="x")
+    return ProbeResult(target=target, role=role, op=op, outcome=o, known_rows_checked=1, reason="x",
+                       evidence_curl="curl -I http://127.0.0.1:54321/rest/v1/wallets")
 
 
 def test_score_dev_and_aggregate() -> None:
