@@ -30,11 +30,14 @@ from rlsentry.contracts.lab import (
     LOG_LINE_PREFIX,
     POSTGREST_ROLES,
     SQL_QUOTED_RE,
+    SYNTHETIC_PK_FMT,
+    SYNTHETIC_TABLE_FMT,
     WRITE_KEYWORD_RE,
     DbWrite,
     LabInfo,
 )
 from rlsentry.contracts.models import Role
+from rlsentry.contracts.policy import ExpectedPolicy, RoleScopes, RowScope, TablePolicy
 
 _REPO = Path(__file__).resolve().parents[2]
 _DB = f"supabase_db_{LAB_PROJECT_ID}"
@@ -271,6 +274,46 @@ def apply(scenario: str) -> None:
         deadline = time.monotonic() + 10
         time.sleep(0.3)
         _wait_postgrest(_info_cached(), deadline)
+
+
+def _synthetic_sql(n_tables: int) -> str:
+    """One script creating every synthetic table, its policies and its two seed rows."""
+    owners = [u["id"] for u in LAB_USERS.values()][:2]
+    parts: list[str] = []
+    for i in range(1, n_tables + 1):
+        t = SYNTHETIC_TABLE_FMT.format(i)
+        rows = ", ".join(
+            f"('{SYNTHETIC_PK_FMT.format(table=i, row=r)}', '{owners[r - 1]}', 'row {r}')" for r in (1, 2))
+        parts.append(
+            f"CREATE TABLE public.{t} (id uuid PRIMARY KEY, owner_id uuid NOT NULL, title text);\n"
+            f"ALTER TABLE public.{t} ENABLE ROW LEVEL SECURITY;\n"
+            f"GRANT SELECT, INSERT, UPDATE, DELETE ON public.{t} TO anon, authenticated;\n"
+            f"CREATE POLICY {t}_sel ON public.{t} FOR SELECT TO authenticated USING (owner_id = auth.uid());\n"
+            f"CREATE POLICY {t}_ins ON public.{t} FOR INSERT TO authenticated WITH CHECK (owner_id = auth.uid());\n"
+            f"CREATE POLICY {t}_upd ON public.{t} FOR UPDATE TO authenticated "
+            f"USING (owner_id = auth.uid()) WITH CHECK (owner_id = auth.uid());\n"
+            f"CREATE POLICY {t}_del ON public.{t} FOR DELETE TO authenticated USING (owner_id = auth.uid());\n"
+            f"INSERT INTO public.{t} (id, owner_id, title) VALUES {rows};\n")
+    return "".join(parts)
+
+
+def apply_synthetic(n_tables: int) -> ExpectedPolicy:
+    """Load n owner-scoped tables for runtime measurement; apply(scenario) removes them."""
+    if not 1 <= n_tables <= 200:
+        raise ValueError(f"n_tables must be within 1..200, got {n_tables}")
+    scopes = RoleScopes(anon=RowScope.DENY, user=RowScope.OWN_ROWS_ONLY)
+    tables = {SYNTHETIC_TABLE_FMT.format(i): TablePolicy(
+        primary_key=["id"], owner_column="owner_id",
+        select=scopes, insert=scopes, update=scopes, delete=scopes) for i in range(1, n_tables + 1)}
+    with lock():
+        _psql("BEGIN;" + _RESET_SQL + "COMMIT;")
+        _create_users()
+        _psql(_synthetic_sql(n_tables), args=("-1", "-f", "-"))
+        _psql("NOTIFY pgrst, 'reload schema'; NOTIFY pgrst, 'reload config';")
+        deadline = time.monotonic() + 10
+        time.sleep(0.3)
+        _wait_postgrest(_info_cached(), deadline)
+    return ExpectedPolicy(tables=tables)
 
 
 def query(sql: str) -> list[tuple[str, ...]]:
