@@ -612,7 +612,10 @@ async def send_write(client: SafeClientContract, supabase_url: str, anon_key: st
     INSERT).
     - INSERT: POST <base> a private canary body (new uuid pk, owner_column = new_owner's id,
       text_column CANARY_PREFIX+uuid when the target has one, plus fill_required(target,
-      new_owner's id, the keys already set), ADR-034); new_pk = that uuid; new_value None.
+      fill_id, the keys already set), ADR-034) where fill_id = the ACTOR's id when the actor is
+      a user with an id (an attacker sets the other uuid columns, e.g. created_by, to itself;
+      ADR-034 補記 2, MS4 audit P1-1), else new_owner's id (anon has no id); the owner column
+      still gets new_owner's id; new_pk = that uuid; new_value None.
       fill_required None → no request: WriteAttempt(status=None, curl="") (the cell becomes
       inconclusive, never denied).
     - UPDATE value-change: PATCH <base>?<pk>=eq.<work.pk> with {plan.text_column:

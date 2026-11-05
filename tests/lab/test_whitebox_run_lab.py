@@ -58,12 +58,13 @@ def test_l07_definer_with_data_confirmed_without_data_warning_only(lab_info: Lab
 
 
 def test_probe_only_cases_are_real(lab_info: LabInfo) -> None:
-    for sid, target in (("L02", "messages"), ("L04", "notes")):
+    for sid, target in (("L02", "messages"), ("L04", "notes"), ("L12", "diary_entries")):
         fs = scan_and_correlate(lab_info, sid)
         hits = [f for f in proven(fs) if f.target == target]
         assert hits, f"{sid}: the probe must prove access to {target}"
         assert all(f.correlation == "probe_only" and f.lint is None for f in hits), sid
-        assert not [f for f in fs if f.rule == "LINT_ONLY"], f"{sid}: splinter has no security lint here"
+        lint_only = {f.target for f in fs if f.rule == "LINT_ONLY"}
+        assert target not in lint_only, f"{sid}: splinter has no security lint on {target}"
 
 
 def test_l12_lint_on_unreachable_table_is_lint_only(lab_info: LabInfo) -> None:
