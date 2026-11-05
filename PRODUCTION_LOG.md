@@ -278,3 +278,16 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - runtime（audit、rps 5）：5 張 7.4 s、20 張 28.5 s、50 張 70.7 s（未達 60 s）。
 - FN：L03 ×2（MS6）、L08（MS5）。L11 為 P2 不計。
 - subagent tokens（約）：whitebox-dev 每張 19k–41k；probe-dev 15k–30k；lab-dev 22k–30k；auditor 80k（第 2 次）＋102k（第 1 次未完成）。
+
+
+## MS5 M1 Recon（進行中）
+
+### Holdout（派工前紀錄，§2）
+| 檔案 | sha256 |
+| --- | --- |
+| rlsentry-holdout:MS5/test_holdout_recon.py | 6babb1ec8849f28cfa9ed27c82b09e6ef4c4274a62c6c1a8f1b75207f1a1ebd5 |
+
+### 派工前參考實測（architect，草稿程式未提交）
+- 以 Next.js 15.5、Vite 8、CRA 5 實際建置三個 supabase-js 專案（`tests/recon/fixtures/`）。發現：壓縮後看不到 `createClient(`、Vite 用反引號、source map 內含 supabase-js 文件範例 URL、Next.js／CRA 的延遲 chunk 只在 `_buildManifest`／webpack chunk map 中、phoenix 常數 entropy 3.52 → 全部寫進合約（ADR-036）。
+- 草稿參考實作跑全部可見測試＋holdout：抓到 2 個問題並在派工前修正——可見測試的 SPA fallback 頁缺 `<!doctype`；合約的 key 語境漏了 supabase-js 自己的參數名 `supabaseKey`（holdout 抓到）。
+- lab 參考實測（草稿 bench 接線）：L08-V1 在 dev／audit 皆 TP、L08-S1 TN、audit 0 寫入、L12-V1 以 recon 抓到的 bundle 仍 TP。
