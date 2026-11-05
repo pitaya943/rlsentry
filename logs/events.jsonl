@@ -1061,3 +1061,4 @@
 {"ts": "2026-11-05T05:51:10", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "copying files between branches bypasses the acceptance gate"}
 {"ts": "2026-11-05T05:53:27", "kind": "ticket_start", "ticket": "T-135", "agent": "architect", "attempt": 2}
 {"ts": "2026-11-05T06:00:35", "kind": "ticket_accepted", "ticket": "T-135", "commit": "b8f16d9dee6031a468c45481b7d4bf22c341c815", "files": ["docs/DECISIONS.md", "rlsentry/contracts/probe.py"]}
+{"ts": "2026-11-05T06:02:05", "kind": "ticket_start", "ticket": "T-136", "agent": "architect", "attempt": 1}
