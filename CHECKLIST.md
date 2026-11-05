@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 118/120 · 進行中 1 · blocked 1
+自動產生，請勿手改 · 完成 119/122 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -135,9 +135,11 @@
 - [x] T-165 bench/run.py 與 bench/__main__.py：`python -m rlsentry.bench`（逐情境 dev＋audit、whitebox、runtime、JSON）（whitebox-dev，done，1 次）
 - [x] T-166 discovery/openapi.py：擷取 required 與 column_formats（probe-dev，done，1 次）
 - [x] T-167 probe/fill.py＋seed.py＋write.py：植入與 INSERT body 填入必填欄位（probe-dev，done，1 次）
-- [ ] T-170 第一次完整 benchmark：依實測填入 splinter_expected、lab 測試、BENCHMARK_REPORT 初版；ADR-035（probe-only 與 demo 情境）（architect，in_progress，1 次） ← 依賴 T-161✓ T-165✓ T-166✓ T-172✓
+- [ ] T-170 第一次完整 benchmark：依實測填入 splinter_expected、lab 測試、BENCHMARK_REPORT 初版；ADR-035（probe-only 與 demo 情境）（architect，in_progress，1 次） ← 依賴 T-161✓ T-165✓ T-166✓ T-172✓ T-174…
 - [x] T-171 合約與測試：寫入探測的文字欄位依 OpenAPI 型別挑選（pick_text_column；benchmark 發現 L05 仍無法植入）（architect，done，1 次）
 - [x] T-172 probe/run.py：以 pick_text_column 挑選寫入探測的文字欄位（probe-dev，done，1 次）
+- [x] T-173 修訂 bench 合約：沒有 lint 也記為已量測、audit 也跑 M4（benchmark 發現 L11 splinter 為 None、L07-W1 在 audit 顯示缺少）（architect，done，1 次）
+- [ ] T-174 bench/run.py：空 lint 清單也記為已量測、audit 也跑 M4（whitebox-dev，todo，0 次） ← 依賴 T-173✓
 
 ## [ ] MS5 M1 Recon（鎖定）
 
