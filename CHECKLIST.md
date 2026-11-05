@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 116/118 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 116/118 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -135,7 +135,7 @@
 - [x] T-165 bench/run.py 與 bench/__main__.py：`python -m rlsentry.bench`（逐情境 dev＋audit、whitebox、runtime、JSON）（whitebox-dev，done，1 次）
 - [x] T-166 discovery/openapi.py：擷取 required 與 column_formats（probe-dev，done，1 次）
 - [x] T-167 probe/fill.py＋seed.py＋write.py：植入與 INSERT body 填入必填欄位（probe-dev，done，1 次）
-- [ ] T-170 第一次完整 benchmark：依實測填入 splinter_expected、lab 測試、BENCHMARK_REPORT 初版；ADR-035（probe-only 與 demo 情境）（architect，todo，0 次） ← 依賴 T-161✓ T-165✓ T-166✓
+- [ ] T-170 第一次完整 benchmark：依實測填入 splinter_expected、lab 測試、BENCHMARK_REPORT 初版；ADR-035（probe-only 與 demo 情境）（architect，in_progress，1 次） ← 依賴 T-161✓ T-165✓ T-166✓
 
 ## [ ] MS5 M1 Recon（鎖定）
 
