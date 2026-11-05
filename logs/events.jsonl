@@ -1084,3 +1084,17 @@
 {"ts": "2026-11-05T06:53:22", "kind": "subagent_stop", "id": "ca0da5a6", "agent": "probe-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T06:53:33", "kind": "report", "id": "6acd82a0", "agent": "probe-dev", "ticket": "T-130", "review": null, "body": "logs/messages/6acd82a0-report.json"}
 {"ts": "2026-11-05T07:11:18", "kind": "ticket_accepted", "ticket": "T-130", "commit": "1436632b341aa70000788d34c1fbef0cfabee3f1", "files": ["rlsentry/probe/run.py"]}
+{"ts": "2026-11-05T07:12:59", "kind": "dispatch", "id": "04864ab5", "agent": "auditor", "ticket": null, "review": "MS3\\nBase:", "body": "logs/messages/04864ab5-dispatch.json"}
+{"ts": "2026-11-05T07:13:03", "kind": "subagent_start", "id": "cc7d1f08", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-05T07:13:03", "kind": "report", "id": "843d03f2", "agent": "auditor", "ticket": null, "review": "MS3\\nBase:", "body": "logs/messages/843d03f2-report.json"}
+{"ts": "2026-11-05T07:13:08", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-05T07:13:32", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
+{"ts": "2026-11-05T07:13:55", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-05T07:14:24", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-05T07:15:05", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-05T07:15:18", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-05T07:15:21", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-05T07:15:29", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-05T07:19:07", "kind": "subagent_stop", "id": "ab52872a", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-05T07:30:44", "kind": "acceptance_run", "scope": "MS3", "failed": []}
+{"ts": "2026-11-05T07:31:35", "kind": "ticket_start", "ticket": "T-140", "agent": "architect", "attempt": 1}
