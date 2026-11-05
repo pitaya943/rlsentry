@@ -30,18 +30,9 @@ python3 -c "from lab._shared import labctl; print(labctl.ensure_up().api_url)"  
 - [ ] 【Codespaces 必做】（需 Docker）`python3 -m pytest -q tests/lab/test_scan_writes.py`。預期 `15 passed`。這驗證真實 lab 上：脆弱寫入被 confirmed、安全 cell 無誤報、清理完整、且 NFR-01 流量證據（`traffic_problems`：seed.sql 既有列未變、PostgREST 寫入只有 INSERT／UPDATE／DELETE）。
 - [ ] 【Codespaces 必做變異】（需 Docker，共模變異）`python3 -m pytest -q tests/lab/test_write_mutations.py`。預期 `2 passed`：C01 todos 在 `disable row level security` 後，掃描器把原本 denied 的 cell 翻成 confirmed CROSS_TENANT_WRITE／ANON_WRITE（讀回驗證）。先看它綠，再想：若掃描器寫入判定被弱化，這兩個會變紅。
 - [ ] 【Codespaces 必做】`python3 -m pytest -q tests/probe/test_run_writes.py`（stateful fake，免 Docker）。預期全綠：seed→write→read_back→verdict→cleanup 編排；含「INSERT 回 400→inconclusive 非 denied」與「無法刪除→每位擁有者一筆 CLEANUP_FAILED」。
-- [ ] 【Codespaces 必做】確認無 canary 殘留。清理由 `tests/lab/test_scan_writes.py` 的 `cleanup_problems`／`traffic_problems` 斷言（每個殘留 canary 必對應一筆 CLEANUP_FAILED、seed.sql 既有列未被更動）——先讀這兩個函式確認邏輯。要親手查，對 lab 跑下列查詢（掃描所有 public 文字欄位找 `rlsentry_canary_` 前綴）：
-      ```
-      docker exec -i supabase_db_rlsentry-lab psql -U postgres -d postgres <<'SQL'
-      DO $$ DECLARE r record; n bigint; BEGIN
-        FOR r IN SELECT table_name, column_name FROM information_schema.columns
-                 WHERE table_schema='public' AND data_type IN ('text','character varying') LOOP
-          EXECUTE format('SELECT count(*) FROM public.%I WHERE %I LIKE ''rlsentry_canary_%%''', r.table_name, r.column_name) INTO n;
-          IF n > 0 THEN RAISE NOTICE 'residue %.% = %', r.table_name, r.column_name, n; END IF;
-        END LOOP; END $$;
-      SQL
-      ```
-      預期：沒有任何 `NOTICE: residue ...`。注意 `test_scan_writes` 在每個情境後會 `labctl.apply` 還原，所以 `pytest` 跑完後資料庫是乾淨狀態（此查詢回 0 筆）；清理行為本身由上述斷言把關。（自我驗證：先手動 `insert ... title='rlsentry_canary_demo'` 再跑查詢會印出 `NOTICE: residue todos.title = 1`。）
+- [ ] 【Codespaces 必做】確認無 canary 殘留。清理由 `tests/lab/test_scan_writes.py` 的 `cleanup_problems`／`traffic_problems` 斷言（每個殘留 canary 必對應一筆 CLEANUP_FAILED、seed.sql 既有列未被更動）——先讀這兩個函式確認邏輯。要親手查，在 repo 根目錄貼下面這**一行**（用 repo 既有、唯讀的 `labctl.query`，掃所有 public 文字欄位找 `rlsentry_canary_` 前綴；勿用多行 heredoc，貼進去會卡在續行）：
+      `python3 -c "from lab._shared import labctl; cols=labctl.query(\"select table_name,column_name from information_schema.columns where table_schema='public' and data_type in ('text','character varying')\"); print('residue:', [(t,c,n) for t,c in cols for (n,) in [labctl.query(f\"select count(*) from public.{t} where {c} like 'rlsentry_canary_%'\")[0]] if n!='0'] or 'none')"`
+      預期印出 `residue: none`。注意 `test_scan_writes` 在每個情境後會 `labctl.apply` 還原，所以 `pytest` 跑完後資料庫是乾淨狀態（本查詢回 none）；清理行為本身由上述斷言把關。（自我驗證：先 `docker exec -i supabase_db_rlsentry-lab psql -U postgres -c "insert into public.todos(id,owner_id,title) values (gen_random_uuid(),'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','rlsentry_canary_demo')"`，再跑上面那行會印出 `residue: [('todos', 'title', '1')]`，然後 `delete` 還原。）
 - [ ] 【本機】閱讀 `rlsentry/probe/verdict.py:95-111`（write_cell）。確認：plan None→not_tested；401／403→denied；非 2xx 其他→inconclusive；2xx 依 read_back（無效果→denied）。沒有任何路徑把送不出的寫入當成安全。
 - [ ] 【本機】閱讀 `rlsentry/probe/run.py` 的寫入段。確認：只對 `kind=="table"` 跑寫入；audit 整段跳過（AUDIT_WRITE_REASON）；每個 work row 與 2xx INSERT canary 都收集後交 `cleanup_seeded`。
 - [ ] 【本機】閱讀 `tests/lab/test_scan_writes.py` 的 `judge`／`cleanup_problems`／`traffic_problems`。確認：不可植入的脆弱寫入（L01／L05）記為限制而非漏抓；殘留 canary 必對應 CLEANUP_FAILED；真實列未變。
