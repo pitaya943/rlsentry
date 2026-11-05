@@ -989,3 +989,7 @@
 {"ts": "2026-11-05T02:40:30", "kind": "ticket_start", "ticket": "T-121", "agent": "architect", "attempt": 2}
 {"ts": "2026-11-05T02:44:51", "kind": "ticket_accepted", "ticket": "T-121", "commit": "1be13844e30d662baf5afeca788cd5b9abbd17c6", "files": ["rlsentry/contracts/lab.py", "tests/labctl/__init__.py", "tests/labctl/test_classify.py", "tests/labctl/test_import.py"]}
 {"ts": "2026-11-05T02:45:26", "kind": "ticket_start", "ticket": "T-122", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-05T02:46:00", "kind": "dispatch", "id": "4177b88a", "agent": "lab-dev", "ticket": "T-122", "review": null, "body": "logs/messages/4177b88a-dispatch.json"}
+{"ts": "2026-11-05T02:46:03", "kind": "report", "id": "cc49457a", "agent": "lab-dev", "ticket": "T-122", "review": null, "body": "logs/messages/cc49457a-report.json"}
+{"ts": "2026-11-05T02:46:03", "kind": "subagent_start", "id": "0e922621", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-05T02:48:57", "kind": "ticket_accepted", "ticket": "T-120", "commit": "b7ce3d397a6e61b1f12fea70798e4f78844acdd2", "files": ["docs/DECISIONS.md", "docs/verification_steps.html"]}
