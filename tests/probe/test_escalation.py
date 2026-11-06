@@ -119,3 +119,24 @@ def test_remote_host_in_dev_is_refused_and_nothing_changes() -> None:
     assert findings == [] and puts(fake) == [] and fake.metadata_role == {}
     assert notes == [n for n in notes if n.startswith("user_metadata escalation refused by the safety gate: ")]
     assert len(notes) == 1
+
+
+B2 = "33333333-0000-4000-8000-00000000000b"
+
+
+def test_rows_already_visible_before_escalation_never_count() -> None:
+    # ADR-042 補記 (L05 in the reference benchmark): a write probe can make one of B's rows
+    # visible to A after the matrix was built. The fresh baseline excludes it; only the row
+    # that escalation really reveals counts.
+    rows = [*notes_table().rows, {"id": B2, "owner_id": B, "title": "b2"}]
+    fake = FakeSupabase(tables={"notes": Table(rows=rows, admin_metadata=True,
+                                               shared=frozenset({"22222222-0000-4000-8000-00000000000b"}))})
+    findings, _ = esc(fake, matrix=AccessMatrix(cells=[cell(Role.USER_A, Outcome.DENIED)]))
+    [f] = findings
+    assert f.role is Role.USER_A and f.probes[0].known_rows_checked == 1 and "1/1" in f.probes[0].reason
+
+
+def test_everything_already_visible_means_nothing_is_written() -> None:
+    fake = FakeSupabase(tables={"notes": Table(rows=notes_table().rows, admin_metadata=True, rls="all")})
+    findings, _ = esc(fake)                       # stale DENIED cells, but A and B now see all rows
+    assert findings == [] and puts(fake) == []

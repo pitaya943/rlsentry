@@ -817,15 +817,21 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
        e = resolve_expected(policy, name, SELECT, role, columns) is not review, and whose
        forbidden list is non-empty: known = collect_known_rows(..., e.owner_column,
        e.public_column, sessions) with the ORIGINAL sessions; forbidden = split_known(e,
-       known.rows, sessions.user_ids)[0]. No candidate → nothing is written for this role.
+       known.rows, sessions.user_ids)[0]; then a FRESH baseline with the ORIGINAL token,
+       res0 = visible_pks(client, ..., target, sessions.tokens[role], forbidden): untrustworthy
+       (visible None or status not 200/206) → not a candidate; hidden = [pk for pk in forbidden
+       if pk not in res0.visible] (input order); hidden empty → not a candidate. The baseline is
+       re-measured here because the write probes that ran after the matrix was built may have
+       changed which rows the role sees (e.g. an L05-style owner transfer of a canary the role
+       created; ADR-042 補記). No candidate → nothing is written for this role.
     3. (status, changed) = escalate_user_metadata(client, ..., sessions.tokens[role]).
        Not changed → note "<role>: user_metadata not changed (<status>)", next role.
     4. try: token2, _ = login(client, ..., user.email, password); for each candidate:
-       res = visible_pks(client, ..., target, token2, forbidden); trustworthy (res.visible not
+       res = visible_pks(client, ..., target, token2, hidden); trustworthy (res.visible not
        None, status 200/206) and n = len(res.visible) > 0 → one Finding: rule
        USER_METADATA_ESCALATION, evidence/severity from RULES, target=name, role, op SELECT,
        probes=[ProbeResult(target=name, role, op=SELECT, outcome=ALLOWED,
-       known_rows_checked=len(forbidden), reason=ESCALATION_REASON + f": {n}/{len(forbidden)}
+       known_rows_checked=len(hidden), reason=ESCALATION_REASON + f": {n}/{len(hidden)}
        known rows outside the expected scope are visible", http_status=res.status,
        evidence_curl=res.curl)], id=finding_id(name, role, SELECT, rule).
        LoginFailed → note "<role>: re-login after escalation failed (<exc>)".

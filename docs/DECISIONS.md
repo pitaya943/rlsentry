@@ -683,3 +683,8 @@ D2–D4 由 architect 決定並記錄於此。
 - 背景：`tests/lab/test_whitebox_lab.py::test_l01_rls_disabled_is_reported` 斷言「所有有物件名的 lint 都在 public schema」。容器被強制終止後，Postgres 的 crash recovery 會重設統計，`_realtime.extensions` 的索引 idx_scan 變成 0，PERFORMANCE 類的 `unused_index` 就出現在非 public schema，測試因此失敗；乾淨啟動的 lab 不受影響。
 - 決定：不 reopen MS4。T-201 把斷言改成只檢查含 `SECURITY` 類別的 lint。M4 的交叉比對本來就只使用 SECURITY 類（ADR-032 #4），所以這個斷言檢查的仍是產品實際依賴的性質。
 - 後果與風險：PERFORMANCE 類 lint 在其他 schema 出現不再被這個測試注意到；它們本來就不參與判定。
+
+### ADR-042 補記：L03 提權前重新量測基準（2026-11-06，派工前參考 benchmark）
+- 問題：參考 benchmark 在 L05（dev）產生 2 個 USER_METADATA_ESCALATION 偽陽性。原因：提權在 M3 寫入探測之後執行；L05 的擁有者轉移把使用者自己建立的 canary 轉給對方，這些列因 `created_by = auth.uid()` 仍對原使用者可見；以 M3 一開始的 DENIED 讀取當基準，就把「本來就看得到」誤認為「提權後才看得到」。
+- 決定：`escalation_pass` 在提權前以原 token 對同一批「不該看到的已知列」重新量測一次；只有「此刻看不到」的列（hidden）才進入提權後的比較，`known_rows_checked` 與比例也以 hidden 計。hidden 為空就不寫入 metadata。測試：`tests/probe/test_escalation.py` 新增兩個案例。
+- 後果：每個候選表多一個 GET（只在 dev／ci）。
