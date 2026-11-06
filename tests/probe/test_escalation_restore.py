@@ -46,7 +46,8 @@ def test_absent_role_is_restored_as_null() -> None:
 
 
 def test_role_already_admin_is_never_touched() -> None:
-    fake = l03(metadata_role={A: "admin", B: "admin"})
+    # a policy that ignores metadata, so the rows stay hidden and both users are candidates
+    fake = FakeSupabase(tables={"notes": notes_table()}, metadata_role={A: "admin", B: "admin"})
     findings, notes = esc(fake)
     assert findings == [] and role_puts(fake) == [] and fake.metadata_role == {A: "admin", B: "admin"}
     assert notes == [f"{r}: user_metadata.role is already admin; escalation skipped (nothing written)"
