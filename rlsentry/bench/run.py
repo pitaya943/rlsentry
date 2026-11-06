@@ -1,78 +1,68 @@
-"""Bench runner: drives the lab through M2+M3 (+M4) and scores it (SPEC §8, §9; ADR-033)."""
+"""Bench runner: drives the lab through the product path, run_scan, and scores it (SPEC §8, §9).
+
+Why run_scan: the bench measures what a user gets, so the only SafeClient is pipeline.py's
+(ADR-042, ADR-020 #6)."""
 from __future__ import annotations
 
 import asyncio
-import time
 from collections.abc import Sequence
 
 import yaml
 
 from lab._shared import labctl
+from rlsentry import pipeline
 from rlsentry.bench.score import aggregate, score_scenario
-from rlsentry.contracts.bench import BENCH_RPS, RUNTIME_PROFILE, RUNTIME_RPS, RUNTIME_TABLES
+from rlsentry.contracts.bench import (
+    BENCH_ANON_KEY_ENV,
+    BENCH_DB_URL_ENV,
+    BENCH_RPS,
+    RUNTIME_PROFILE,
+    RUNTIME_RPS,
+    RUNTIME_TABLES,
+)
 from rlsentry.contracts.ground_truth import LAB_USERS, BenchReport, GroundTruth, ScenarioResult
 from rlsentry.contracts.lab import POSTGREST_ROLES, LabInfo
-from rlsentry.contracts.models import AccessMatrix, Finding, Profile
-from rlsentry.contracts.policy import ExpectedPolicy, TestUser
-from rlsentry.discovery.discover import discover
-from rlsentry.probe.run import probe
-from rlsentry.probe.session import build_sessions
-from rlsentry.recon.run import recon
-from rlsentry.safety.http import SafeClient
-from rlsentry.safety.ratelimit import RateLimiter
-from rlsentry.whitebox.correlate import correlate
+from rlsentry.contracts.models import Profile
+from rlsentry.contracts.policy import ExpectedPolicy, ScanConfig, TestUser
 from rlsentry.whitebox.splinter import run_splinter
 
-_USERS = [TestUser(name=role, email=u["email"], password_env=u["password_env"])
-          for role, u in LAB_USERS.items()]
 
-
-async def _pipeline(profile: Profile, info: LabInfo, policy: ExpectedPolicy, sources: list[str],
-                    rps: float) -> tuple[AccessMatrix, list[Finding]]:
-    """M2 + M3 exactly as the scan pipeline runs them, through one SafeClient."""
+def bench_config(target_url: str, info: LabInfo, policy: ExpectedPolicy, profile: Profile,
+                 rps: float, with_db: bool) -> tuple[ScanConfig, dict[str, str]]:
+    """The ScanConfig a lab user would write, plus the in-memory env run_scan reads (ADR-042)."""
+    config = ScanConfig(
+        target=target_url, authorized=True, profile=profile, rate_limit_rps=rps,
+        test_users=[TestUser(name=role, email=u["email"], password_env=u["password_env"])
+                    for role, u in LAB_USERS.items()],
+        supabase_url=info.api_url, anon_key_env=BENCH_ANON_KEY_ENV,
+        db_url_env=BENCH_DB_URL_ENV if with_db else None,
+        tables=policy.tables, defaults=policy.defaults)
     env = {u["password_env"]: labctl.lab_password(role) for role, u in LAB_USERS.items()}
-    async with SafeClient(profile=profile, limiter=RateLimiter(rps=rps, concurrency=4)) as client:
-        found = await discover(client, info.api_url, info.anon_key, policy, sources)
-        sessions = await build_sessions(client, info.api_url, info.anon_key, _USERS, env)
-        return await probe(client, info.api_url, info.anon_key, found.targets, sessions,
-                           policy, profile)
-
-
-async def _scenario_pipeline(sid: str, profile: Profile, info: LabInfo, policy: ExpectedPolicy,
-                             rps: float) -> tuple[AccessMatrix, list[Finding], list[Finding], float]:
-    """M1 (untimed) then M2+M3 (timed) through one SafeClient; returns M1 findings and runtime."""
-    env = {u["password_env"]: labctl.lab_password(role) for role, u in LAB_USERS.items()}
-    async with SafeClient(profile=profile, limiter=RateLimiter(rps=rps, concurrency=4)) as client:
-        with labctl.serve_frontend(sid) as url:
-            rec = await recon(client, url)
-        start = time.monotonic()
-        found = await discover(client, info.api_url, info.anon_key, policy, rec.sources)
-        sessions = await build_sessions(client, info.api_url, info.anon_key, _USERS, env)
-        matrix, probe_findings = await probe(client, info.api_url, info.anon_key, found.targets,
-                                             sessions, policy, profile)
-        return matrix, probe_findings, rec.findings, time.monotonic() - start
+    env[BENCH_ANON_KEY_ENV] = info.anon_key
+    if with_db:
+        env[BENCH_DB_URL_ENV] = info.db_url
+    return config, env
 
 
 def run_scenario(sid: str, profile: Profile, info: LabInfo, *,
                  rps: float = BENCH_RPS, with_whitebox: bool = True) -> ScenarioResult:
-    """Apply one scenario, scan it and score against its expected.yaml (writes only in dev).
+    """Apply one scenario, scan it via run_scan and score it against expected.yaml.
 
-    Why: M1 key findings skip correlate (a key is outside splinter's scope) and recon is not timed.
-    """
+    Why: runtime counts M2+M3 only (ADR-033 #6); the extra splinter run only feeds
+    splinter_status, since run_scan already correlated."""
     with labctl.lock():
         labctl.apply(sid)
-        sdir = labctl.scenario_dir(sid)
         gt = GroundTruth.model_validate(
-            yaml.safe_load((sdir / "expected.yaml").read_text("utf-8")))
+            yaml.safe_load((labctl.scenario_dir(sid) / "expected.yaml").read_text("utf-8")))
         marker = labctl.db_log_marker()
-        matrix, probe_findings, rec_findings, runtime_s = asyncio.run(
-            _scenario_pipeline(sid, profile, info, gt.policy, rps))
+        with labctl.serve_frontend(sid) as url:
+            config, env = bench_config(url, info, gt.policy, profile, rps, with_whitebox)
+            report = asyncio.run(pipeline.run_scan(config, confirmed_by="rlsentry-bench", env=env))
+        runtime_s = report.timings.get("M2", 0) + report.timings.get("M3", 0)
         db_writes = sum(1 for w in labctl.db_writes_since(marker) if w.role in POSTGREST_ROLES)
-        lints = run_splinter(info.db_url) if with_whitebox else None
-        if lints is not None:
-            probe_findings = correlate(probe_findings, lints)
-        return score_scenario(gt, profile, matrix, probe_findings + rec_findings, runtime_s,
-                              lints=lints, db_writes=db_writes)
+        lints = run_splinter(info.db_url, config.db_schemas) if with_whitebox else None
+        return score_scenario(gt, profile, report.matrix, report.findings, runtime_s,
+                              lints=lints, db_writes=db_writes, db_schemas=config.db_schemas)
 
 
 def run_runtime(info: LabInfo, tables: Sequence[int] = RUNTIME_TABLES) -> dict[str, float]:
@@ -81,9 +71,10 @@ def run_runtime(info: LabInfo, tables: Sequence[int] = RUNTIME_TABLES) -> dict[s
     for n in tables:
         with labctl.lock():
             policy = labctl.apply_synthetic(n)
-            start = time.monotonic()
-            asyncio.run(_pipeline(RUNTIME_PROFILE, info, policy, [], RUNTIME_RPS))
-            out[str(n)] = round(time.monotonic() - start, 1)
+            config, env = bench_config(info.api_url, info, policy, RUNTIME_PROFILE, RUNTIME_RPS,
+                                       with_db=False)
+            report = asyncio.run(pipeline.run_scan(config, confirmed_by="rlsentry-bench", env=env))
+            out[str(n)] = round(report.timings["M2"] + report.timings["M3"], 1)
     return out
 
 

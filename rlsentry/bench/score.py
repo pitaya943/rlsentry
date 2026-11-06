@@ -27,14 +27,15 @@ from rlsentry.contracts.whitebox import Lint
 _TESTED = (Outcome.ALLOWED, Outcome.DENIED, Outcome.INCONCLUSIVE)
 
 
-def splinter_status(gt: GroundTruth, lints: list[Lint]) -> Literal["reported", "not_reported"]:
+def splinter_status(gt: GroundTruth, lints: list[Lint],
+                    db_schemas: Sequence[str] = ("public",)) -> Literal["reported", "not_reported"]:
     """Whether splinter flags an object planted as vulnerable (ADR-033).
 
     Only ACCESS/STORAGE vulnerable targets count, so lints on unrelated objects cannot make a
     scenario look reported."""
     targets = {c.target for c in gt.vulnerable_cases if c.kind in (CaseKind.ACCESS, CaseKind.STORAGE)}
     for lint in lints:
-        if "SECURITY" in lint.categories and lint.object_schema == "public" \
+        if "SECURITY" in lint.categories and lint.object_schema in db_schemas \
                 and lint.object_name in targets:
             return "reported"
     return "not_reported"
@@ -65,7 +66,8 @@ def _find_cell(matrix: AccessMatrix, c: Case) -> ProbeResult | None:
 
 def score_scenario(gt: GroundTruth, profile: Profile, matrix: AccessMatrix,
                    findings: list[Finding], runtime_s: float, *,
-                   lints: list[Lint] | None = None, db_writes: int | None = None) -> ScenarioResult:
+                   lints: list[Lint] | None = None, db_writes: int | None = None,
+                   db_schemas: Sequence[str] = ("public",)) -> ScenarioResult:
     """Score one scenario run against its ground truth (definitions in contracts/bench.py)."""
     def in_profile(cases: list[Case]) -> list[Case]:
         return [c for c in cases if profile in c.profiles]
@@ -127,7 +129,7 @@ def score_scenario(gt: GroundTruth, profile: Profile, matrix: AccessMatrix,
         safe_denied_total=len(denied_safe), safe_denied_decided=len(decided),
         probe_only=sorted(probe_only), db_writes=db_writes)
     if lints is not None:
-        status = splinter_status(gt, lints)
+        status = splinter_status(gt, lints, db_schemas)
         res.splinter = status
         res.splinter_lints = lint_labels(lints)
         res.splinter_match = None if gt.splinter_expected == "measure" \
