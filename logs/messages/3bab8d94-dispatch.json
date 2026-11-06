@@ -1,0 +1,6 @@
+{
+  "description": "T-244 lab CLI",
+  "prompt": "Ticket: T-244\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-244.md and follow it.",
+  "subagent_type": "lab-dev",
+  "isolation": "worktree"
+}

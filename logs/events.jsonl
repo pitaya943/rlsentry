@@ -1501,3 +1501,24 @@
 {"ts": "2026-11-06T11:09:03", "kind": "holdout_added", "milestone": "MS7", "commit": "5a98ae54871724452e25eb5cd649f00b9718dc55", "files": {"MS7/.ruff_cache/.gitignore": "9e3a60f1e6ec4ae60215c11d54b171392745ec25e9dded433d5bd921363af316", "MS7/.ruff_cache/0.16.9/14387715198616345136": "53cc56e374ab9d3dcc1267458be3d39effb39409e3a25a650b06c6315333c4e8", "MS7/.ruff_cache/CACHEDIR.TAG": "5953156d7e0c564a427251316eaf26f8870e6483ae2197f916b630e4f93e31ae", "MS7/__pycache__/test_ms7_holdout.cpython-313-pytest-9.2.0.pyc": "6c6bebc3006200edf78e2209d50b7b909e2e14eed0b47cfccb2f24fa35db1e3a", "MS7/test_ms7_holdout.py": "37964c0288a2dcd2075eac272ff501b44cfea8b81a776ea93591c4e58b02a52b"}}
 {"ts": "2026-11-06T11:12:03", "kind": "ticket_start", "ticket": "T-240", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-06T11:17:34", "kind": "ticket_accepted", "ticket": "T-240", "commit": "ab0ff5071242f701cf814482b3bf5000b02cd371", "files": ["docs/DECISIONS.md", "rlsentry/contracts/lab.py", "rlsentry/contracts/probe.py", "rlsentry/contracts/report.py", "rlsentry/contracts/whitebox.py", "tests/lab/test_labctl_cli.py", "tests/pipeline/fake_supabase.py", "tests/probe/test_escalation_restore.py", "tests/report/test_fix_sql.py", "tests/report/test_fix_sql_roles.py", "tests/whitebox/test_correlate_severity.py"]}
+{"ts": "2026-11-06T11:20:42", "kind": "ticket_start", "ticket": "T-241", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T11:21:59", "kind": "ticket_start", "ticket": "T-242", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T11:23:16", "kind": "ticket_start", "ticket": "T-243", "agent": "probe-dev", "attempt": 1}
+{"ts": "2026-11-06T11:24:33", "kind": "ticket_start", "ticket": "T-244", "agent": "lab-dev", "attempt": 1}
+{"ts": "2026-11-06T11:25:06", "kind": "dispatch", "id": "c31a571d", "agent": "whitebox-dev", "ticket": "T-241", "review": null, "body": "logs/messages/c31a571d-dispatch.json"}
+{"ts": "2026-11-06T11:25:07", "kind": "dispatch", "id": "28667bb6", "agent": "whitebox-dev", "ticket": "T-242", "review": null, "body": "logs/messages/28667bb6-dispatch.json"}
+{"ts": "2026-11-06T11:25:08", "kind": "dispatch", "id": "ecb223c4", "agent": "probe-dev", "ticket": "T-243", "review": null, "body": "logs/messages/ecb223c4-dispatch.json"}
+{"ts": "2026-11-06T11:25:09", "kind": "dispatch", "id": "3bab8d94", "agent": "lab-dev", "ticket": "T-244", "review": null, "body": "logs/messages/3bab8d94-dispatch.json"}
+{"ts": "2026-11-06T11:25:42", "kind": "report", "id": "878fb1dd", "agent": "whitebox-dev", "ticket": "T-241", "review": null, "body": "logs/messages/878fb1dd-report.json"}
+{"ts": "2026-11-06T11:25:42", "kind": "subagent_start", "id": "d4a81c45", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T11:25:42", "kind": "subagent_start", "id": "8860ecae", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T11:25:42", "kind": "report", "id": "a713efe5", "agent": "whitebox-dev", "ticket": "T-242", "review": null, "body": "logs/messages/a713efe5-report.json"}
+{"ts": "2026-11-06T11:25:44", "kind": "subagent_start", "id": "cf2f5d82", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T11:25:44", "kind": "report", "id": "874f38b6", "agent": "probe-dev", "ticket": "T-243", "review": null, "body": "logs/messages/874f38b6-report.json"}
+{"ts": "2026-11-06T11:25:45", "kind": "report", "id": "b97f4f3a", "agent": "lab-dev", "ticket": "T-244", "review": null, "body": "logs/messages/b97f4f3a-report.json"}
+{"ts": "2026-11-06T11:25:45", "kind": "subagent_start", "id": "302c3002", "agent": "lab-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T11:26:12", "kind": "subagent_stop", "id": "4656ebe6", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T11:26:32", "kind": "subagent_stop", "id": "208994cc", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T11:27:02", "kind": "subagent_stop", "id": "5154a1e8", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T11:28:27", "kind": "stop_blocked", "attempt": 2, "state": "active", "milestone": "MS7"}
+{"ts": "2026-11-06T11:32:13", "kind": "ticket_accepted", "ticket": "T-242", "commit": "42ee9578b844ffdf8ffa986acef6e9057b2ac58e", "files": ["rlsentry/report/fix_sql.py"]}
