@@ -1,0 +1,44 @@
+All checks passed!
+....                                                                     [100%]
+4 passed in 0.08s
+........................................................................ [  6%]
+........................................................................ [ 13%]
+........................................................................ [ 20%]
+........................................................................ [ 26%]
+........................................................................ [ 33%]
+........................................................................ [ 40%]
+........................................................................ [ 46%]
+........................................................................ [ 53%]
+........................................................................ [ 60%]
+........................................................................ [ 66%]
+........................................................................ [ 73%]
+.......................................................F................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 93%]
+.....................................................................    [100%]
+=================================== FAILURES ===================================
+___________________ test_dev_writes_match_ground_truth[L07] ____________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+sid = 'L07'
+
+    @pytest.mark.safety
+    @pytest.mark.parametrize("sid", [s for s in SCENARIO_IDS if s != "L11"])
+    def test_dev_writes_match_ground_truth(lab_info: LabInfo, sid: str) -> None:
+        gt = load_gt(sid)
+        labctl.apply(sid)
+        try:
+            before = seed_snapshot(gt)
+            marker = labctl.db_log_marker()
+            matrix, findings = scan(lab_info, sid, gt)
+            problems = (judge(gt, matrix, findings) + cleanup_problems(gt, findings)
+                        + traffic_problems(gt, marker, before))
+>           assert not problems, f"{sid}: " + "; ".join(problems)
+E           AssertionError: L07: L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (2/2 known rows outside the expected scope are visible); L07-V2: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (1/1 known rows outside the expected scope are visible); L07-V3: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (1/1 known rows outside the expected scope are visible); unexpected confirmed findings (FP): ['get_all_accounts/anon/select/ANON_READ_OWNER_SCOPED', 'get_all_accounts/user_a/select/CROSS_TENANT_READ', 'get_all_accounts/user_b/select/CROSS_TENANT_READ']
+E           assert not ['L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (2/2 known rows outside the expected scop...WNER_SCOPED', 'get_all_accounts/user_a/select/CROSS_TENANT_READ', 'get_all_accounts/user_b/select/CROSS_TENANT_READ']"]
+
+tests/lab/test_scan_writes.py:178: AssertionError
+=========================== short test summary info ============================
+FAILED tests/lab/test_scan_writes.py::test_dev_writes_match_ground_truth[L07]
+1 failed, 1076 passed in 195.63s (0:03:15)
+make: *** [Makefile:15: check] Error 1
