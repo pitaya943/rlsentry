@@ -1315,3 +1315,9 @@
 {"ts": "2026-11-06T00:20:34", "kind": "ticket_start", "ticket": "T-188", "agent": "lab-dev", "attempt": 3}
 {"ts": "2026-11-06T00:24:03", "kind": "ticket_accepted", "ticket": "T-188", "commit": "1b1aacef34c6bdd88d5fd8a944fb1a5b56b725df", "files": ["lab/_shared/labctl.py"]}
 {"ts": "2026-11-06T00:28:20", "kind": "ticket_accepted", "ticket": "T-186", "commit": "c7eced0fdf489bedc69898c3df7f356261d63896", "files": ["rlsentry/recon/fetch.py"]}
+{"ts": "2026-11-06T00:29:14", "kind": "ticket_start", "ticket": "T-187", "agent": "recon-dev", "attempt": 1}
+{"ts": "2026-11-06T00:29:33", "kind": "dispatch", "id": "3a2228a0", "agent": "recon-dev", "ticket": "T-187", "review": null, "body": "logs/messages/3a2228a0-dispatch.json"}
+{"ts": "2026-11-06T00:29:40", "kind": "subagent_start", "id": "59458813", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T00:29:40", "kind": "report", "id": "a1b47328", "agent": "recon-dev", "ticket": "T-187", "review": null, "body": "logs/messages/a1b47328-report.json"}
+{"ts": "2026-11-06T00:30:23", "kind": "subagent_stop", "id": "74b20ade", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T00:34:42", "kind": "ticket_accepted", "ticket": "T-187", "commit": "ee1c4b23fa8c5a7c09c3234e1367422b27946f0c", "files": ["rlsentry/recon/run.py"]}

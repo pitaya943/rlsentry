@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a79954454df2f49a4",
+  "description": "T-187 recon run",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-187\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-187.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/a4a95e9a-1b66-5bd0-bc52-f3cba4cd691e/tasks/a79954454df2f49a4.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}
