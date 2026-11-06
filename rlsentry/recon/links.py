@@ -19,6 +19,7 @@ from rlsentry.contracts.recon import (
     WEBPACK_CHUNK_URL_RE,
     WEBPACK_MAP_ENTRY_RE,
 )
+from rlsentry.safety.mask import mask_text
 
 _DEFAULT_PORTS = {"http": 80, "https": 443}
 
@@ -26,6 +27,8 @@ _DEFAULT_PORTS = {"http": 80, "https": 443}
 def _origin(url: str) -> tuple[str, str, int] | None:
     try:
         parts = urlsplit(url)
+        if parts.username is not None or parts.password is not None or "@" in parts.netloc:
+            return None
         scheme = parts.scheme.lower()
         host = parts.hostname
         if scheme not in _DEFAULT_PORTS or not host:
@@ -40,6 +43,27 @@ def same_origin(url: str, origin_url: str) -> bool:
     """True iff both are http(s) with equal scheme, host and effective port (ADR-036 #1)."""
     a, b = _origin(url), _origin(origin_url)
     return a is not None and a == b
+
+
+def report_url(url: str) -> str:
+    """The only form in which a URL may be written to the report (NFR-03).
+
+    Why: query strings carry tokens in any format, userinfo is a credential, and JWT/sb_ keys
+    can sit in paths or source-map names; so drop query and userinfo, then mask what remains.
+    """
+    base, hash_sep, fragment = url.partition("#")
+    base, query_sep, query = base.partition("?")
+    if query_sep and query:
+        base += "?\u2026"
+    scheme_sep = base.find("://")
+    if scheme_sep != -1:
+        start = scheme_sep + 3
+        slash = base.find("/", start)
+        end = len(base) if slash == -1 else slash
+        at = base.rfind("@", start, end)
+        if at != -1:
+            base = base[:start] + base[at + 1:]
+    return mask_text(base + hash_sep + fragment)
 
 
 def public_base(url: str) -> str:
