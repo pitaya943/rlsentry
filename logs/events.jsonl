@@ -1482,3 +1482,5 @@
 {"ts": "2026-11-06T08:12:05", "kind": "ticket_accepted", "ticket": "T-235", "commit": "253bd06bdacf3047d61f0fa2013754db5a2f3959", "files": ["rlsentry/report/html.py", "rlsentry/report/json.py"]}
 {"ts": "2026-11-06T08:24:03", "kind": "ticket_accepted", "ticket": "T-233", "commit": "028a6d504b161ccb732f3d04c61cb034242da655", "files": ["rlsentry/probe/escalation.py", "rlsentry/probe/metadata.py", "rlsentry/probe/seed_pass.py"]}
 {"ts": "2026-11-06T08:36:37", "kind": "ticket_accepted", "ticket": "T-234", "commit": "81b084c857815786134f7ae79801d11771b30a0f", "files": ["rlsentry/cli.py", "rlsentry/pipeline.py", "rlsentry/whitebox/correlate.py"]}
+{"ts": "2026-11-06T08:38:04", "kind": "ticket_start", "ticket": "T-231", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-06T08:38:09", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
