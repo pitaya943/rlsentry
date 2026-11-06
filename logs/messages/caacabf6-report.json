@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a70c158c454272ffb",
+  "description": "T-220 Typer CLI",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-220\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-220.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/b227dfcb-caa8-5c73-a736-a08c80d6e4d5/tasks/a70c158c454272ffb.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

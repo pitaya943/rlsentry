@@ -1429,3 +1429,12 @@
 {"ts": "2026-11-06T06:51:33", "kind": "ticket_accepted", "ticket": "T-219", "commit": "eb35e5e1fabca442759ea6a79bd4ebd17450a4b1", "files": ["rlsentry/pipeline.py"]}
 {"ts": "2026-11-06T06:52:47", "kind": "ticket_start", "ticket": "T-220", "agent": "whitebox-dev", "attempt": 1}
 {"ts": "2026-11-06T06:53:25", "kind": "ticket_start", "ticket": "T-222", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T06:53:51", "kind": "dispatch", "id": "ea7c9c1e", "agent": "whitebox-dev", "ticket": "T-220", "review": null, "body": "logs/messages/ea7c9c1e-dispatch.json"}
+{"ts": "2026-11-06T06:53:52", "kind": "dispatch", "id": "1ad29ba6", "agent": "whitebox-dev", "ticket": "T-222", "review": null, "body": "logs/messages/1ad29ba6-dispatch.json"}
+{"ts": "2026-11-06T06:54:04", "kind": "report", "id": "caacabf6", "agent": "whitebox-dev", "ticket": "T-220", "review": null, "body": "logs/messages/caacabf6-report.json"}
+{"ts": "2026-11-06T06:54:04", "kind": "subagent_start", "id": "12b95ed8", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:54:05", "kind": "report", "id": "00911de7", "agent": "whitebox-dev", "ticket": "T-222", "review": null, "body": "logs/messages/00911de7-report.json"}
+{"ts": "2026-11-06T06:54:05", "kind": "subagent_start", "id": "b7c08e57", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:55:13", "kind": "subagent_stop", "id": "ed46e7f4", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:55:16", "kind": "subagent_stop", "id": "7ca60424", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:03:22", "kind": "ticket_accepted", "ticket": "T-222", "commit": "f4368528e016992aee50e9cabb4552b3d135fc16", "files": ["rlsentry/bench/run.py", "rlsentry/bench/score.py"]}
