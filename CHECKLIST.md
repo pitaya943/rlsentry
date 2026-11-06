@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 146/156 · 進行中 4 · blocked 1
+自動產生，請勿手改 · 完成 147/156 · 進行中 3 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -167,14 +167,14 @@
 - [x] T-202 Lab 測試：read_policies 以 DB log 驗證唯讀（MS4 稽核 P2 (d)）；L03 提權前重測基準（參考 benchmark 發現）；report 套件標記（architect，done，1 次）
 - [x] T-203 既有 lab 測試 test_scan_writes 改為經 M4 後再比對（ADR-039；T-212 驗收兩次失敗的根因）（architect，done，1 次）
 - [x] T-211 whitebox/correlate.py：依 (物件, 角色) 抑制警告；SECURITY DEFINER 函式才標 SECURITY_DEFINER_RPC_DATA（P2 a、b）（whitebox-dev，done，1 次）
-- [ ] T-212 rules/severity.py：RPC 越權讀取改依角色給規則（P2 b）（probe-dev，in_progress，3 次） ← 依賴 T-201✓ T-211✓ T-203✓
+- [x] T-212 rules/severity.py：RPC 越權讀取改依角色給規則（P2 b）（probe-dev，done，3 次）
 - [x] T-213 probe：同一身分的已知主鍵合併為單一請求；遠端 WriteRefused → inconclusive 寫入 cell（probe-dev，done，1 次）
 - [ ] T-214 probe：dev／ci 讀取植入與 L03 user_metadata 提權（seed_pass.py、escalation.py）（probe-dev，in_progress，1 次） ← 依賴 T-213✓ T-202✓
 - [x] T-215 safety/endpoint.py：Supabase URL 必須來自設定檔或 CLI 確認（MS5 稽核 S4）（recon-dev，done，1 次）
 - [x] T-216 report：修補 SQL 模板與 finding 補充（fix_sql.py、enrich.py）（whitebox-dev，done，1 次）
 - [x] T-217 report：JSON 與 HTML 報告（json.py、html.py）（whitebox-dev，done，1 次）
 - [ ] T-218 report：SARIF 2.1.0 與 fail_on exit code（sarif.py、exit_code.py）（whitebox-dev，in_progress，1 次） ← 依賴 T-201✓
-- [ ] T-219 pipeline.py：run_scan 與 run_init（授權 → M1 → S4 → M2 → M3 → M4 → M5，單一 SafeClient）（whitebox-dev，todo，0 次） ← 依賴 T-211✓ T-212… T-213✓ T-214… T-215✓ T-216✓
+- [ ] T-219 pipeline.py：run_scan 與 run_init（授權 → M1 → S4 → M2 → M3 → M4 → M5，單一 SafeClient）（whitebox-dev，todo，0 次） ← 依賴 T-211✓ T-212✓ T-213✓ T-214… T-215✓ T-216✓
 - [ ] T-220 cli.py：Typer CLI（scan、init）（whitebox-dev，todo，0 次） ← 依賴 T-217✓ T-218… T-219…
 - [ ] T-221 GitHub Action（action/action.yml）（whitebox-dev，in_progress，1 次） ← 依賴 T-201✓
 - [ ] T-222 bench：改經 run_scan 執行；splinter_status 依設定的曝露 schema（P2 c）（whitebox-dev，todo，0 次） ← 依賴 T-219…
