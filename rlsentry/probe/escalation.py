@@ -25,7 +25,11 @@ from rlsentry.contracts.rules import RULES
 from rlsentry.contracts.safety import SafeClientContract
 from rlsentry.policy.resolve import resolve_expected
 from rlsentry.probe.cross_tenant import collect_known_rows
-from rlsentry.probe.metadata import escalate_user_metadata, restore_user_metadata
+from rlsentry.probe.metadata import (
+    escalate_user_metadata,
+    read_user_metadata_role,
+    restore_user_metadata,
+)
 from rlsentry.probe.read import visible_pks
 from rlsentry.probe.session import login
 from rlsentry.probe.verdict import split_known
@@ -82,6 +86,16 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
         if not candidates:
             continue
 
+        ok, original = await read_user_metadata_role(client, supabase_url, anon_key, token)
+        if not ok:
+            notes.append(f"{role.value}: user_metadata could not be read; escalation skipped "
+                         "(nothing written)")
+            continue
+        if original == "admin":
+            notes.append(f"{role.value}: user_metadata.role is already admin; escalation "
+                         "skipped (nothing written)")
+            continue
+
         token2: str | None = None
         needs_restore = True
         try:
@@ -132,7 +146,8 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
         finally:
             if needs_restore:
                 restored = await restore_user_metadata(
-                    client, supabase_url, anon_key, token2 if token2 is not None else token)
+                    client, supabase_url, anon_key, token2 if token2 is not None else token,
+                    original)
                 if not restored:
                     notes.append(f"{role.value}: user_metadata restore failed; the test account "
                                  "may still carry role=admin and must be cleared by hand")
