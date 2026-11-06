@@ -1427,3 +1427,5 @@
 {"ts": "2026-11-06T06:43:20", "kind": "subagent_stop", "id": "436f0d06", "agent": "whitebox-dev", "ticket": null, "review": null}
 {"ts": "2026-11-06T06:43:45", "kind": "stop_blocked", "attempt": 2, "state": "active", "milestone": "MS6"}
 {"ts": "2026-11-06T06:51:33", "kind": "ticket_accepted", "ticket": "T-219", "commit": "eb35e5e1fabca442759ea6a79bd4ebd17450a4b1", "files": ["rlsentry/pipeline.py"]}
+{"ts": "2026-11-06T06:52:47", "kind": "ticket_start", "ticket": "T-220", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T06:53:25", "kind": "ticket_start", "ticket": "T-222", "agent": "whitebox-dev", "attempt": 1}

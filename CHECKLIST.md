@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 151/156 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 151/156 · 進行中 2 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -175,9 +175,9 @@
 - [x] T-217 report：JSON 與 HTML 報告（json.py、html.py）（whitebox-dev，done，1 次）
 - [x] T-218 report：SARIF 2.1.0 與 fail_on exit code（sarif.py、exit_code.py）（whitebox-dev，done，1 次）
 - [x] T-219 pipeline.py：run_scan 與 run_init（授權 → M1 → S4 → M2 → M3 → M4 → M5，單一 SafeClient）（whitebox-dev，done，1 次）
-- [ ] T-220 cli.py：Typer CLI（scan、init）（whitebox-dev，todo，0 次） ← 依賴 T-217✓ T-218✓ T-219✓
+- [ ] T-220 cli.py：Typer CLI（scan、init）（whitebox-dev，in_progress，1 次） ← 依賴 T-217✓ T-218✓ T-219✓
 - [x] T-221 GitHub Action（action/action.yml）（whitebox-dev，done，1 次）
-- [ ] T-222 bench：改經 run_scan 執行；splinter_status 依設定的曝露 schema（P2 c）（whitebox-dev，todo，0 次） ← 依賴 T-219✓
+- [ ] T-222 bench：改經 run_scan 執行；splinter_status 依設定的曝露 schema（P2 c）（whitebox-dev，in_progress，1 次） ← 依賴 T-219✓
 - [ ] T-230 Profile 端到端（e2e_profiles）、展示情境 L04 修補後重掃、L03 提權 lab、Python API 匯出（architect，todo，0 次） ← 依賴 T-220… T-221✓ T-222…
 - [ ] T-231 完整 benchmark 重跑、BENCHMARK_REPORT 與 docs/benchmark/MS6-bench.json（architect，todo，0 次） ← 依賴 T-230…
 
