@@ -27,6 +27,7 @@ from rlsentry.probe.run import probe
 from rlsentry.probe.session import build_sessions
 from rlsentry.safety.http import SafeClient
 from rlsentry.safety.ratelimit import RateLimiter
+from rlsentry.whitebox.run import whitebox
 from tests.lab.oracle import load_gt, scenario_path
 
 Cell = tuple[str | None, Role | None, Op | None]
@@ -47,7 +48,10 @@ def scan(info: LabInfo, sid: str, gt: GroundTruth) -> tuple[AccessMatrix, list[F
             sessions = await build_sessions(client, info.api_url, info.anon_key, users, env)
             assert sessions.missing == {}, f"{sid}: lab login failed: {sessions.missing}"
             return await probe(client, info.api_url, info.anon_key, disc.targets, sessions, gt.policy, Profile.DEV)
-    return asyncio.run(go())
+    matrix, findings = asyncio.run(go())
+    # MS6 (ADR-039): only M4 may label a read SECURITY_DEFINER_RPC_DATA, so findings are compared
+    # with the ground truth after the read-only M4 correlation, as the pipeline does.
+    return matrix, whitebox(info.db_url, findings)
 
 
 def dev_cases(cases: list[Case]) -> list[Case]:
