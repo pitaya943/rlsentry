@@ -783,3 +783,20 @@ D2–D4 由 architect 決定並記錄於此。
   2. **嚴重度保證依賴合約常數**：`RELABEL_KEEPS_HIGHER_SEVERITY` 為 True 且 pipeline 不傳 `keep_higher`；有測試把關（`test_correlate_severity.py`、`test_ci_definer_severity.py`、holdout），沒有執行期的防護。
   3. **M4 部分失敗**（MS6 既有）：`read_policies` 失敗時 M4 從 `modules` 移除，但 correlate 已完成的改標保留；不會降低嚴重度。
   4. **lab 命令列入口**（測試基礎設施，非產品）：`serve --port` 未檢查範圍（被占用或超出範圍時以 traceback 結束）；`serve` 安裝的 SIGTERM／SIGINT handler 不還原（測試只以子程序呼叫 serve）；情境名稱直接進入 glob（只影響本機）；`env` 會把 lab 密碼印到 stdout（只有 lab 的值；doctest 以 `eval` 使用，不回顯）。
+
+## ADR-053：更新三個因已核准的行為變更而過時的 holdout 測試（MS2 ×2、MS6 ×1）
+- 日期：2026-11-06 · Milestone：MS7 · 相關：§7（make acceptance）、ADR-039、ADR-040、ADR-051 #1、MS4 核准意見第 2、5 點
+- 背景：`make acceptance` 會執行**所有** milestone 的 holdout；每個 milestone 的 `verify-milestone` 只執行該 milestone 的 holdout，所以舊 holdout 被後來的行為變更打破時沒有人發現。MS7 第一次 `make acceptance` 有 3 個失敗：
+  1. MS2 `test_rpc_user_leak_finding`：斷言 M3 給 SECURITY_DEFINER_RPC_DATA；MS6 依 MS4 核准意見第 5 點 (b)（ADR-039）改為只有 M4 能用這個規則，M3 給 CROSS_TENANT_READ（同為 Medium）。
+  2. MS2 `test_public_profiles_anon_sensitive_warning_and_401_never_denied`：以 Profile.CI 寫的唯讀測試；MS3 起 ci 會做寫入探測（假伺服器把寫入當成功），MS6 起同一角色的已知主鍵合併為一個 GET（ADR-040，MS4 核准意見第 2 點），假伺服器不認得這種請求。
+  3. MS6 `test_holdout_fix_sql_quotes_schema_and_policy`：不安全的 policy 名稱放在 `roles=[]` 的 policy 上；MS7 的 ADR-051 #1 只 DROP 能服務該角色的 policy，所以名稱根本不會寫進 SQL（仍然安全），但斷言要求回傳 None。
+- 決定：以 `holdout.py add` 覆寫這兩個檔案（舊版留在 rlsentry-holdout 分支的歷史中），只改上述測試，其他測試不動：
+  1. 斷言改為 CROSS_TENANT_READ、Medium。
+  2. 改以 Profile.AUDIT 執行（回到 MS2 的唯讀意圖）；假伺服器支援合併讀取；拆成兩個參數：anon 收到 401 → inconclusive（絕不是 denied）且沒有敏感欄位提示；anon 收到 200 → denied 且有 SENSITIVE_COLUMN_PUBLIC。
+  3. 不安全的名稱改放在 `roles=["anon"]` 的 policy 上（pg_policies 的 roles 不會是空的；沒有 TO 時為 `{public}`），仍斷言回傳 None。
+- 新雜湊：`MS2/test_holdout_probe.py` 9ffdacaafd0bdf3e340c95787bf6d5e5fdc871518e41c0c11f7789b861ad0557；`MS6/test_holdout_ms6.py` db638a8bcd4fbeebc15ee5f1e14c7519806080bbcd0a9fa48f390e79038f55e9。
+- 理由：這三個失敗都是 holdout 寫下的舊行為與人類核准的新行為衝突，不是產品缺陷；不更新的話 `make acceptance` 永遠無法通過。保留每個測試原本要守的性質（401 不是 denied、不安全的名稱不產生 SQL、使用者的 RPC 越權讀取是 Medium finding）。
+- 後果與風險：
+  - 第 2 點揭露了 ADR-040 的副作用：anon 的合併讀取只要一個 401，就整格 inconclusive，也就失去「公開表含敏感欄位」的提示。實際的 PostgREST 不會對單列回 401（沒有權限時整張表都是 401，本來就看不到任何列），所以實務影響有限；列為已知限制。
+  - holdout 是在實作者看不到的情況下寫的；這次更新是 architect 在知道實作之後改的，獨立性較低。所以每個修改都只換掉衝突的輸入或斷言，並在本 ADR 逐項說明。若你不同意，可要求 reopen MS2／MS6 重新核准。
+  - 流程教訓：派工前的參考實測應該跑**所有** milestone 的 holdout（MS7 的參考實測只跑了 MS7 的，所以 ADR-051 #1 對 MS6 holdout 的影響到 acceptance 才發現）。

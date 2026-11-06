@@ -22,7 +22,7 @@
 | §5 M5 嚴重度與證據表 | test_rule_catalog_matches_spec_severity_table、test_only_confirmed_rules_are_vulnerabilities | OK | — |
 | §8 16 個情境齊全、結構正確 | test_gt_complete.py、test_gt_format.py | OK | — |
 | §8 ground truth 與自身 policy 一致 | test_gt_consistency.py | OK（只是自我一致） | — |
-| §8 ground truth 與真實 Postgres 一致 | 無；L05 紙上即不成立（G1） | MISSING P0 | L05 已修（T-029）；實測在 MS1 tests/lab |
+| §8 ground truth 與真實 Postgres 一致 | 審查時無；L05 紙上即不成立（G1） | 審查時缺（P0）；已於 MS1 解決 | L05 已修（T-029）；`tests/lab/test_l*.py`／`test_c*.py` 以 oracle 在真實 Postgres 驗證每個情境、`tests/lab/test_oracle_mutations.py` 證明 oracle 會抓到被破壞的情境（MS1 起；MS7 依 `make acceptance` 的 traceability 檢查改寫此列的狀態文字，原文見 git 歷史） |
 | §9 bench.json 鍵 | 無 | MISSING P1 | test_bench_report_has_spec_section_9_keys（T-028） |
 | §9／ADR-011 計分規則 | 只有 docstring | MISSING P1 | MS4 bench ticket 前補測試 |
 | ADR-011 #9 key 以標籤比對 | 無，docstring 矛盾（O5） | MISSING P1 | docstring 已修（T-028）；測試隨 MS4 bench |
