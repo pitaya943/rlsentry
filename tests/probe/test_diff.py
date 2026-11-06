@@ -47,8 +47,8 @@ def test_anon_leak_with_sensitive_column_is_critical() -> None:
 def test_user_and_rpc_leaks() -> None:
     assert rules(read_findings(tgt(), obs(Role.USER_A), cell(Role.USER_A, Outcome.ALLOWED))) == [
         ("CROSS_TENANT_READ", "confirmed", "medium")]
-    assert rules(read_findings(tgt("rpc", []), obs(Role.ANON), cell(Role.ANON, Outcome.ALLOWED))) == [
-        ("SECURITY_DEFINER_RPC_DATA", "confirmed", "medium")]
+    # the RPC rule changed in MS6 (ADR-039); asserted in tests/probe/test_rule_rpc.py
+    assert len(read_findings(tgt("rpc", []), obs(Role.ANON), cell(Role.ANON, Outcome.ALLOWED))) == 1
 
 
 def test_denied_and_not_tested_give_nothing() -> None:

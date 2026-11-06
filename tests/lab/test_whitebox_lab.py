@@ -22,7 +22,9 @@ def test_l01_rls_disabled_is_reported(lab_info: LabInfo) -> None:
     labctl.apply("L01")
     lints = run_splinter(lab_info.db_url)
     assert ("rls_disabled_in_public", "customers") in security(lints)
-    assert all(x.object_schema in (None, "public") for x in lints if x.object_name)
+    # SECURITY lints only (MS5 approval note 7, ADR-045): after a crash recovery Postgres resets
+    # index statistics, so PERFORMANCE lints such as unused_index appear in non-public schemas.
+    assert all(x.object_schema in (None, "public") for x in lints if x.object_name and "SECURITY" in x.categories)
     assert lints == sorted(lints, key=lambda x: (x.name, x.object_schema or "", x.object_name or "", x.cache_key))
 
 

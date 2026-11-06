@@ -8,7 +8,8 @@ What this proves beyond the unit tests:
 - nothing but primary keys is downloaded, HEAD responses carry no body, the only non-GET
   request is the login POST, and the database logs no write by a PostgREST role (NFR-01).
 Needs Docker (tests/lab/conftest.py). Key (M1) and storage (P2) cases are out of MS2 scope;
-SECURITY_DEFINER_EXECUTABLE warnings come from M4 (MS4).
+SECURITY_DEFINER_EXECUTABLE warnings come from M4 (MS4); findings pass through M4 before
+scoring (MS6, ADR-039).
 """
 from __future__ import annotations
 
@@ -29,6 +30,7 @@ from rlsentry.probe.run import probe
 from rlsentry.probe.session import build_sessions
 from rlsentry.safety.http import SafeClient
 from rlsentry.safety.ratelimit import RateLimiter
+from rlsentry.whitebox.run import whitebox
 from tests.lab.oracle import load_gt, scenario_path
 
 M3_READ_WARNINGS = {"SENSITIVE_COLUMN_PUBLIC"}
@@ -69,7 +71,10 @@ def scan(info: LabInfo, sid: str, gt: GroundTruth, rec: Recording) -> tuple[list
             matrix, findings = await probe(client, info.api_url, info.anon_key, disc.targets, sessions,
                                            gt.policy, Profile.AUDIT)
             return [f"{t.name}:{t.discovered_by}:{t.confidence}" for t in disc.targets], matrix, findings
-    return asyncio.run(go())
+    targets, matrix, findings = asyncio.run(go())
+    # MS6 (ADR-039): only M4 may label a read SECURITY_DEFINER_RPC_DATA, so the ground-truth
+    # rules are compared after the read-only M4 correlation, as the pipeline does.
+    return targets, matrix, whitebox(info.db_url, findings)
 
 
 def audit_select(cases: list[Case]) -> list[Case]:

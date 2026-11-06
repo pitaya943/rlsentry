@@ -15,7 +15,7 @@ def test_sensitive_columns(name: str, hit: bool) -> None:
 @pytest.mark.parametrize("kind,role,rule", [
     ("table", Role.ANON, "ANON_READ_OWNER_SCOPED"), ("view", Role.ANON, "ANON_READ_OWNER_SCOPED"),
     ("table", Role.USER_A, "CROSS_TENANT_READ"), ("table", Role.USER_B, "CROSS_TENANT_READ"),
-    ("rpc", Role.ANON, "SECURITY_DEFINER_RPC_DATA"), ("rpc", Role.USER_B, "SECURITY_DEFINER_RPC_DATA"),
+    # RPC rows moved to tests/probe/test_rule_rpc.py (ADR-039: the RPC rule changed in MS6)
 ])
 def test_read_rule(kind: str, role: Role, rule: str) -> None:
     assert read_rule(kind, role) == rule

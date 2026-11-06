@@ -66,7 +66,8 @@ def test_security_definer_with_data_keeps_confirmed_and_gets_no_warning() -> Non
     lints = [lint("authenticated_security_definer_function_executable", "get_all_accounts"),
              lint("anon_security_definer_function_executable", "get_all_accounts")]
     out = correlate([f], lints)
-    assert len(out) == 1
+    # only the anon role is proven here: per-role warnings are tests/whitebox/test_correlate_roles.py
+    assert [x.role for x in by_rule(out, "SECURITY_DEFINER_EXECUTABLE") if x.role is Role.ANON] == []
     assert out[0].correlation == "confirmed"
     assert out[0].lint == ("anon_security_definer_function_executable,"
                            "authenticated_security_definer_function_executable")
