@@ -7,9 +7,9 @@ from rlsentry.contracts.models.
 """
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime
-from typing import Protocol
+from typing import Any, Protocol
 
 from rlsentry.contracts.models import (
     AccessMatrix,
@@ -101,6 +101,10 @@ class RunScan(Protocol):
     """pipeline.run_scan (FR-16): the single entry point shared by CLI, API and Action."""
 
     async def __call__(self, config: ScanConfig, *, cli_confirmed: bool = False,
-                       cli_profile: Profile | None = None) -> ScanReport: ...
+                       cli_profile: Profile | None = None, cli_supabase_url: str | None = None,
+                       confirmed_by: str | None = None, env: Mapping[str, str] | None = None,
+                       transport: Any = None, now: datetime | None = None) -> ScanReport: ...
     # ADR-014: effective profile = the stricter of config.profile and cli_profile
     # (audit > ci > dev); audit can never be relaxed by either source.
+    # ADR-042/043: full rules in rlsentry.contracts.pipeline.run_scan (cli_supabase_url = S4
+    # confirmation; env and transport are injectable for tests).

@@ -113,6 +113,14 @@ class ScanConfig(ExpectedPolicy):
     db_url_env: str | None = None            # enables M4 when set
     fail_on: FailOn = FailOn()
     write_hosts: list[str] = []              # ADR-017: remote hosts ci may write to (exact)
+    # ADR-043 (MS5 audit S4): the Supabase API base URL (scheme://host[:port], no path, query,
+    # fragment or userinfo; checked by safety.endpoint.normalize_api_url at scan time). The pipeline sends API requests only here, or to the URL given
+    # with the CLI flag --supabase-url; a URL found in the target's bundle is never used alone.
+    supabase_url: str | None = Field(default=None, pattern=r"^https?://")
+    anon_key_env: str | None = Field(default=None, pattern=r"^[A-Z_][A-Z0-9_]*$")  # ADR-042
+    # ADR-042, MS4 audit P2 (c): schemas PostgREST exposes; passed to M4 (splinter,
+    # read_policies, correlate). Each must match discovery.IDENT_RE.
+    db_schemas: list[str] = ["public"]
 
     @field_validator("write_hosts")
     @classmethod
@@ -131,6 +139,14 @@ class ScanConfig(ExpectedPolicy):
             if host not in out:
                 out.append(host)
         return out
+
+    @field_validator("db_schemas")
+    @classmethod
+    def _schemas(cls, v: list[str]) -> list[str]:
+        from rlsentry.contracts.discovery import IDENT_RE  # local: discovery imports this module
+        if not v or not all(IDENT_RE.match(x) for x in v):
+            raise ValueError("db_schemas must be a non-empty list of plain identifiers")
+        return v
 
     @model_validator(mode="after")
     def _unique_users(self) -> ScanConfig:

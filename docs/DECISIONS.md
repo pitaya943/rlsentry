@@ -604,3 +604,76 @@ D2–D4 由 architect 決定並記錄於此。
   3. `KeyFinding` 加 validator：`jwt:anon`／`sb_publishable` 必須是 publishable，`jwt:service_role`／`sb_secret` 必須是 secret，其他標籤必須是 unverified；`masked` 必須含 `****`。
 - 後果：報告少了 query string（掃描範圍仍可辨識到檔案路徑）；這是刻意的取捨，因為 query string 是 token 最常出現的位置。
 - 未處理（P2，列入已知限制或 MS6）：S4 `supabase_url` 來自目標的 bundle，惡意 bundle 可讓 M2／M3 把 anon key 與探測送往別處——MS6 pipeline 必須把它顯示給使用者確認或要求設定檔提供（已記入 PLAN 的 MS6 表）；S5 大檔先完整下載才檢查大小；generic key 偵測依 key 語境，名稱被壓縮時會漏掉。
+
+## ADR-038：明確的高權限 JWT role 判為 secret（MS5 核准意見第 4 點，選項 B）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：FR-03、SPEC §5 M5、ADR-036 #5
+- 背景：MS5 只把 `service_role` 判為 secret，`supabase_admin` 等其他 role 列為 unverified（Low）。人類選 B：明確的高權限 role 也必須是 Critical。
+- 考慮過的選項：
+  1. 手寫一份「看起來很危險」的 role 清單（缺點：主觀，難以審查）
+  2. 以實測定義：stock Supabase 專案中 superuser 或 BYPASSRLS 的 role（採用）
+- 決定：`contracts/recon.SECRET_JWT_ROLES` = 在 lab（Supabase CLI 3.0.0）實測 `SELECT rolname FROM pg_roles WHERE rolsuper OR rolbypassrls` 的結果：`service_role`、`supabase_admin`、`postgres`、`supabase_etl_admin`、`supabase_read_only_user`。這些 JWT → `secret` → `SECRET_KEY_IN_BUNDLE`（Confirmed、Critical）；rule catalog 的說明改為「service_role／secret key 或其他高權限 JWT（supabase_admin、postgres 等）出現在前端」。沒有新增規則：SPEC 的 Confirmed 條件「secret key 出現在前端」已涵蓋。`authenticated` 與其他 role 仍是 unverified；`anon` 仍是 publishable，不產生 finding。`KeyFinding` 的一致性 validator 依同一集合檢查 kind。
+- 理由：「會繞過 RLS」是可驗證的定義，與 RLSentry 的威脅模型一致；`classify` 直接引用合約常數，所以改常數即改行為（原 T-210 併入 T-200）。
+- 後果與風險：Supabase 新增高權限 role 時需要重新實測並更新常數（新 ADR）；`postgres` 等 role 的 JWT 不一定能被 PostgREST 使用，但它證明簽發者持有 JWT secret，仍應視為 Critical。
+
+## ADR-039：SECURITY DEFINER 規則只由 M4 判定；依（物件, 角色）抑制警告（MS4 核准意見第 5 點 (a)(b)）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：SPEC §5 M4 解讀、§5 M5 嚴重度、ADR-032 #6–#7
+- 背景：(a) 某物件只要有任一角色取得資料，其他角色的 SECURITY DEFINER 警告就被抑制；(b) M3 對所有 RPC 的越權讀取都標 `SECURITY_DEFINER_RPC_DATA`，但 M3 無法知道函式是不是 SECURITY DEFINER。
+- 考慮過的選項（b）：
+  1. 新增規則 `RPC_READ_BEYOND_SCOPE`（缺點：多一條規則，報告與 ground truth 都要改，而且它和表的越權讀取是同一件事）
+  2. M3 一律依角色給規則（anon → ANON_READ_OWNER_SCOPED，使用者 → CROSS_TENANT_READ）；M4 在 splinter 證實該物件是「該角色可執行的 SECURITY DEFINER 函式」時改標為 `SECURITY_DEFINER_RPC_DATA`（採用）
+- 決定：
+  1. `rules.read_rule` 不再看 target_kind。
+  2. `correlate`：proven 的 SELECT finding（ANON_READ_OWNER_SCOPED／CROSS_TENANT_READ）所在物件，若有涵蓋其角色的 `*_security_definer_function_executable` lint（anon lint → anon；authenticated lint → user_a、user_b，`DEFINER_LINT_ROLES`），改標 `SECURITY_DEFINER_RPC_DATA`（Medium，SPEC §5 M5），id 依新規則重算。
+  3. SECURITY_DEFINER_EXECUTABLE 警告依（物件, 角色）判斷：只有該 lint 涵蓋的角色中有 proven finding 時才抑制。LINT_ONLY 仍只在物件上完全沒有 proven finding 時產生。
+- 理由：只有能證明的事才寫進規則名稱；M4 本來就負責「與 splinter 對照」。
+- 後果與風險：沒有 DB 連線（無 M4）時，L07 型漏洞的規則是 ANON_READ_OWNER_SCOPED（High）而不是 SECURITY_DEFINER_RPC_DATA（Medium）：嚴重度較高但仍是正確的「讀到不該讀的列」。`tests/lab/test_scan_reads.py` 改為先經 M4 再比對 L07 的 ground truth。這修改了 MS4 的 M4 行為（已核准），屬於核准意見要求的修正，不 reopen。
+
+## ADR-040：同一身分的已知主鍵合併為單一請求（MS4 核准意見第 2 點）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：FR-06、NFR-04、ADR-023 #3、ADR-033 #6
+- 背景：每個（目標, 角色）原本送兩個 HEAD count（「不該看到的已知列」與「應該看到的已知列」各一），50 張表在 audit、rps 5 需 70.7 s。
+- 考慮過的選項：
+  1. 調高預設 rps（人類禁止）
+  2. 省略「應該看到」的計數（缺點：失去 EXPECTED_ACCESS_DENIED、SENSITIVE_COLUMN_PUBLIC 提示）
+  3. 一個 `GET ?select=<pk>&<pk>=in.(全部已知主鍵)&limit=n`，回應只含主鍵，在本機拆回兩個計數（採用）
+- 決定：`probe.visible_pks` + `observation_counts`。回應中出現查詢集合以外的主鍵、非 200／206、非 list 等一律視為不可信（total None → inconclusive），保留 ADR-023 #3 的「過濾沒套用就不可信」檢查。只下載掃描器本來就知道的主鍵（不下載資料，NFR-03／CLAUDE.md）。
+- 實測（派工前，草稿程式）：audit、rps 5、concurrency 4、50 張 C01 型表：**50.6 s**（原 70.7 s）；請求數由每表 7 個降為 5 個。
+- 後果與風險：讀取改用 GET 而不是 HEAD；`tests/probe/test_run.py` 的 HEAD 斷言改為 `<= {GET, HEAD}`，新測試斷言每個角色只有一個請求。
+
+## ADR-041：遠端寫入被閘門拒絕時，寫入 cell 為 inconclusive（MS3 核准意見第 1 點）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：NFR-01、ADR-014 #4、ADR-017、ADR-029
+- 決定：dev 對遠端主機、或 ci 對不在 `write_hosts` 的主機寫入時，SafeClient 閘門在送出前拋 `WriteRefused`。probe 攔下後，該表所有寫入 cell 為 INCONCLUSIVE（reason 以 `WRITE_REFUSED_REASON` 開頭，附閘門訊息：只含 profile、方法、主機），掃描繼續；pipeline 在報告 notes 中加一行統計。讀取植入與 L03 提權遇到 WriteRefused 時只記 note、跳過。
+- 理由：沒有測就不是 denied（SPEC 三態）；讓掃描崩潰則連讀取結果都拿不到。
+- 後果與風險：使用者可能沒注意到寫入沒測；報告 notes 與矩陣中的 reason 會明示。
+
+## ADR-042：pipeline 的流程、profile 與模組、設定檔增補、讀取植入與 L03 提權、bench 改經 run_scan
+- 日期：2026-11-06 · Milestone：MS6 · 相關：SPEC §2、§4、§5 M3、FR-16；ADR-020 #6、ADR-029 補記 2、ADR-033、ADR-036 #7
+- 決定：
+  1. **順序**（`contracts/pipeline.run_scan`）：授權（不送任何請求）→ 無網路檢查 → 建立唯一的 SafeClient → M1 → S4 端點確認（ADR-043）→ M2 → 登入、dev／ci 讀取植入、M3、dev／ci L03 提權、清理植入 → M4（選配）→ M1 finding 附在 correlate 之後 → M5 enrich。
+  2. **profile 與模組**：dev M1–M5；ci M2–M5（不掃前端）；audit M1–M3、M5，**有 DB 連線時也跑 M4**（M4 唯讀，ADR-032 #2；沿用 ADR-033 補記的 bench 行為）。M4 只在 `db_url_env` 指向非空的環境變數時執行；失敗只記 note（類別名稱，不含訊息，避免洩漏 DB URL）。偏離 SPEC §2 表格的字面（audit 沒有 M4）。
+  3. **設定檔增補**（§6）：`supabase_url`、`anon_key_env`、`db_schemas`（預設 `["public"]`，傳給 splinter、read_policies、correlate；MS4 稽核 P2 (c)）。
+  4. **ScanReport 增補**：`modules`、`notes`、`timings`；**Finding 增補**：`title`、`repro`、`references`（M5 填入）。
+  5. **dev／ci 讀取植入**（SPEC §4 第 4 步）：`seed_reads` 在 probe 前讓每位使用者在每張表植入一筆自己的 canary，probe 內的 collect_known_rows 自然會找到它們；最後 `cleanup_reads` 清除，刪不掉回報 CLEANUP_FAILED。**實測**：C04（沒有 INSERT policy）植入回 403，所以 C04 在 dev 仍為 inconclusive；PLAN 原寫「C04 在 dev 可判定」不成立（ground truth 不變）。
+  6. **L03 提權**（ADR-029 #9）：`escalation_pass` 只對「基準讀取為 denied」的表，把使用者自己的 user_metadata 設成 role=admin、以密碼重新登入、重讀不該看到的已知列；看得到 → USER_METADATA_ESCALATION（Confirmed、High）。還原一律在 finally。**實測**：L03 user_a 在提權前看到 B 的列 0 筆、提權後 1 筆、還原後 0 筆。
+  7. **bench 改經 run_scan**：benchmark 量測的就是產品路徑；`SafeClient(` 只出現在 `pipeline.py`（ADR-020 #6 的靜態測試）。runtime 仍只計 M2＋M3（`report.timings`）。
+- 後果與風險：dev／ci 掃描多出植入與提權的寫入（只寫 canary 與測試帳號自己的 Auth 記錄）；提權中斷時測試帳號可能殘留 admin metadata（沿用 ADR-029 已知限制）。
+
+## ADR-043：S4：Supabase URL 必須由使用者明列，bundle 中的 URL 不會單獨被使用（MS5 核准意見第 6 點）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：NFR-02、SPEC §7、ADR-036 補記（S4）
+- 背景：`ReconOutput.supabase_url` 來自目標的 bundle（不可信輸入）。若直接使用，惡意 bundle 可讓掃描器把測試帳號的密碼（登入）與所有探測送到使用者沒有授權的主機。
+- 考慮過的選項：
+  1. bundle 的 URL 與 target 同源時自動接受（缺點：多一條例外規則，且同源不代表使用者知道 API 在哪）
+  2. 只接受設定檔 `supabase_url` 或 CLI `--supabase-url`；bundle 的 URL 只用來在拒絕訊息中提示（採用）
+- 決定：`safety/endpoint.resolve_endpoint`：兩者都有但不同 → 拒絕；有設定檔 → 用設定檔；有 CLI → 用 CLI；都沒有 → `EndpointRefused`，訊息附 bundle 中的 URL（經 report_url）與確認方式。比較一律用 `normalize_api_url`（scheme、host 小寫、去預設埠、拒絕 path／query／fragment／userinfo）。結果與方式記入 `AuthorizationRecord.supabase_url`／`supabase_url_method`。M1 只對已授權的 target 同源送 GET，所以拒絕發生時 API 主機沒有收到任何請求（以 MockTransport 計數的測試證明）。
+- 後果與風險：第一次掃描未設定 URL 的使用者會被拒絕一次，需要照訊息確認；這是刻意的摩擦。
+
+## ADR-044：M5 報告、修補 SQL、SARIF、exit code、CLI 與 GitHub Action
+- 日期：2026-11-06 · Milestone：MS6 · 相關：SPEC §5 M5、§2、FR-12、FR-13、FR-16、NFR-03；MS4 核准意見第 3 點
+- 決定：
+  1. **遮罩**：每個 renderer 的最終字串都經 `mask_text`；target 經 `report_url`。HTML 自包含，沒有 script 與外部資源（開啟報告不會對外連線）。
+  2. **修補 SQL**：依規則與目標種類的模板（表：ENABLE RLS、DROP 過寬的 permissive policy（名稱來自 M4 的 pg_policies；沒有 M4 時以註解提醒）、依預期範圍 CREATE POLICY；view：`security_invoker = true`；RPC：REVOKE EXECUTE／SECURITY INVOKER；key：輪替步驟）。識別字一律經 `quote_ident`（含控制字元的名稱不產生 SQL，避免跳出註解）；**工具絕不執行**。L04 的模板已在 lab 實測：套用後 `notes` 只剩 owner-scoped SELECT policy。
+  3. **排序**：證據等級 → 嚴重度（SPEC §5 M5）。
+  4. **exit code**：只有 ci 有門檻（SPEC §2）；預設 Confirmed 且 ≥ high → 1；ci 中有 CLEANUP_FAILED → 4（ADR-014 補記）；設定錯誤 2；授權／端點／寫入被拒 3。dev、audit 一律 0。
+  5. **SARIF 2.1.0**：以官方 OASIS schema 驗證；location 指向設定檔（漏洞在資料庫，不在原始碼行）；`partialFingerprints` 用 finding id，讓 GitHub 分辨新舊問題。
+  6. **CLI**：`rlsentry scan`、`rlsentry init`；密碼與 key 只從設定檔指名的環境變數讀取，不接受命令列參數。
+  7. **GitHub Action**：composite action，輸入只經 `env:` 進入 shell（避免 script injection），不代入 `--i-own-this-target`（授權必須提交在設定檔中）。
+- 後果與風險：SARIF 的 location 不指向程式碼行，GitHub code scanning 會把所有結果顯示在設定檔上；這是資料庫層問題的誠實呈現。

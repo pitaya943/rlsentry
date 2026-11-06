@@ -48,7 +48,8 @@ RULES: dict[str, RuleSpec] = {r.id: r for r in (
     _r("PUBLIC_BUCKET_PRIVATE_OBJECT", _C, Severity.HIGH, True,
        "公開 Storage bucket 中的私人檔案可被 anon 存取（P2）"),
     # --- M1 recon ---
-    _r("SECRET_KEY_IN_BUNDLE", _C, Severity.CRITICAL, True, "service_role／secret key 出現在前端"),
+    _r("SECRET_KEY_IN_BUNDLE", _C, Severity.CRITICAL, True,
+       "service_role／secret key 或其他高權限 JWT（supabase_admin、postgres 等）出現在前端"),
     _r("UNVERIFIED_KEY", _W, Severity.LOW, False, "無法辨識的疑似 key，請人工確認"),
     # --- configuration-level signals (never confirmed) ---
     _r("SECURITY_DEFINER_EXECUTABLE", _W, Severity.LOW, False,
@@ -85,9 +86,12 @@ def is_sensitive_column(name: str) -> bool:
 def read_rule(target_kind: str, role: Role) -> str:
     """Contract only; implemented by rlsentry.rules.severity.read_rule. Pure.
 
-    Rule id for a confirmed read beyond the expected scope: target_kind "rpc" →
-    SECURITY_DEFINER_RPC_DATA (any role: an RPC that returns rows RLS would hide is the L07
-    pattern); role ANON → ANON_READ_OWNER_SCOPED; user_a / user_b → CROSS_TENANT_READ.
+    Rule id for a confirmed read beyond the expected scope, by role only: ANON →
+    ANON_READ_OWNER_SCOPED; user_a / user_b → CROSS_TENANT_READ. `target_kind` (table, view,
+    rpc) no longer changes the rule (MS4 approval note 5 (b), ADR-039): M3 cannot tell whether
+    an RPC is SECURITY DEFINER, so it never claims SECURITY_DEFINER_RPC_DATA; M4 correlate
+    relabels the finding when splinter proves the function is SECURITY DEFINER and executable
+    by that role. The argument is kept so callers need not change.
     """
     raise NotImplementedError
 

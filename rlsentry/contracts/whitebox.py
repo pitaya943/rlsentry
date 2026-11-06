@@ -25,7 +25,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from rlsentry.contracts.models import Finding, PolicyRow
+from rlsentry.contracts.models import Finding, PolicyRow, Role
 
 SPLINTER_VERSION = "2026.09.1"
 """Pinned supabase/splinter release tag (SPEC §5 M4 「固定版本」). Upgrading = new ADR plus
@@ -59,6 +59,18 @@ SECURITY_DEFINER_LINTS: dict[str, str | None] = {
 """splinter lints meaning "a SECURITY DEFINER function is executable by this API role" →
 the Finding.role of the SECURITY_DEFINER_EXECUTABLE warning (None = any signed-in user;
 RLSentry's roles are the test accounts, not the DB role `authenticated`)."""
+
+DEFINER_LINT_ROLES: dict[str, frozenset[Role]] = {
+    "anon_security_definer_function_executable": frozenset({Role.ANON}),
+    "authenticated_security_definer_function_executable": frozenset({Role.USER_A, Role.USER_B}),
+}
+"""ADR-039: which RLSentry roles each SECURITY DEFINER lint speaks for (per-role suppression and
+relabelling in correlate)."""
+
+DEFINER_RELABEL_RULES: frozenset[str] = frozenset({"ANON_READ_OWNER_SCOPED", "CROSS_TENANT_READ"})
+"""M3 read rules that correlate turns into SECURITY_DEFINER_RPC_DATA when splinter proves the
+object is an executable SECURITY DEFINER function (ADR-039)."""
+
 
 STATEMENT_TIMEOUT_MS = 30_000
 """`SET LOCAL statement_timeout` for every M4 transaction (a lint must not hang a scan)."""
@@ -174,21 +186,33 @@ def correlate(findings: list[Finding], lints: list[Lint],
     Output = the input findings, in order, each a copy (model_copy; inputs are not mutated):
       - proven finding whose target is the object of ≥1 relevant lint →
         correlation="confirmed", lint=",".join(sorted distinct lint names on that object);
+        additionally (ADR-039, MS4 approval note 5 (b)) when its rule is in
+        DEFINER_RELABEL_RULES, its op is SELECT and the object has a relevant lint L with
+        name in SECURITY_DEFINER_LINTS that *covers* the finding's role (see below), the copy
+        gets rule="SECURITY_DEFINER_RPC_DATA", severity=RULES[that].severity and
+        id=finding_id(target, role, op, "SECURITY_DEFINER_RPC_DATA"): only splinter can prove
+        a function is SECURITY DEFINER, so only M4 may use that rule;
       - other proven finding → correlation="probe_only", lint=None;
       - every other finding unchanged;
     followed by the new findings, sorted by (target, rule, role value or ""):
-      - for each object with relevant lints and NO proven finding on it:
-        * each relevant lint whose name is in SECURITY_DEFINER_LINTS → one
-          SECURITY_DEFINER_EXECUTABLE finding: target=object, role=Role(value) or None,
-          op=Op.SELECT (calling an RPC is SELECT, ADR-007), lint=that lint name;
-        * if any other relevant lint remains → ONE LINT_ONLY finding for the object:
-          role=None, op=None, lint=",".join(sorted distinct names of those other lints);
+      - per object with relevant lints:
+        * each relevant lint L whose name is in SECURITY_DEFINER_LINTS → one
+          SECURITY_DEFINER_EXECUTABLE finding (target=object, role=Role(value) or None,
+          op=Op.SELECT (calling an RPC is SELECT, ADR-007), lint=L's name) UNLESS a proven
+          finding on that object has a role L covers (ADR-039, MS4 approval note 5 (a): proof
+          for one role never silences the warning for another role);
+        * only when NO proven finding is on the object: if any relevant lint not in
+          SECURITY_DEFINER_LINTS remains → ONE LINT_ONLY finding for the object: role=None,
+          op=None, lint=",".join(sorted distinct names of those other lints);
         both with correlation="lint_only", evidence and severity from RULES[rule], probes=[],
         id=finding_id(target, role, op, rule). A new finding whose id equals an existing
         finding's id is not added (no duplicates).
+      Coverage: DEFINER_LINT_ROLES[L.name] is the set of RLSentry roles that lint speaks for
+      (anon lint → {anon}; authenticated lint → {user_a, user_b}).
     So a SECURITY DEFINER object that the probe could not get protected rows from yields only a
     Configuration warning; one it did get rows from keeps its confirmed finding (marked
-    "confirmed") and gets no warning (SPEC §5 M4 解讀; MS4 focus).
+    "confirmed", rule SECURITY_DEFINER_RPC_DATA) and gets no warning for the roles that were
+    proven (SPEC §5 M4 解讀; MS4 focus).
     """
     raise NotImplementedError
 
