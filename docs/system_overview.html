@@ -41,7 +41,7 @@
 <body>
 <header>
   <h1>RLSentry 系統總覽</h1>
-  <p>給審查者的設計地圖（ADR-021）。只講「為什麼」與「怎麼互動」；細節請走第 10 節的閱讀路線。最後更新：MS1 收尾（main @ 7d99422ef）。</p>
+  <p>給審查者的設計地圖（ADR-021）。只講「為什麼」與「怎麼互動」；細節請走第 10 節的閱讀路線。最後更新：MS7 收尾（main @ 7b857e2f1）。</p>
 </header>
 <nav>
   <a href="#s1">1 定位</a><a href="#s2">2 架構</a><a href="#s3">3 設計理念</a><a href="#s4">4 請求的旅程</a>
@@ -289,13 +289,17 @@
     <tr><td>MS4</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>whitebox（splinter、pg_policies、correlate）、bench、OpenAPI 型別植入</td><td>第一次完整計分：recall 29/32、precision 29/29、FPR 0/72；probe-only 2 類</td></tr>
     <tr><td>MS5</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>recon/*（fetch、links、sourcemap、extract、classify、run）、labctl.serve_frontend、bench 接上 M1</td><td>從網址出發找到 Supabase URL 與 key；service_role → Critical、anon 不報；recall 30/32</td></tr>
     <tr><td>MS6</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>pipeline.run_scan、safety/endpoint（S4）、report/*（JSON、HTML、SARIF、修補 SQL、exit code）、CLI、GitHub Action、L03 提權與 dev／ci 讀取植入</td><td>一個指令跑完全部；recall 32/32、precision 32/32、FPR 0/72；50 張表 50.8 s（達標）</td></tr>
-    <tr><td>MS7</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>整合與交付</td><td>USAGE、BENCHMARK_REPORT、demo</td></tr>
+    <tr><td>MS7</td><td><i class="dot" style="background:var(--todo)"></i>等待審查</td><td>整合與交付：USAGE.md（dev／ci／audit／demo／init／Python API 共 6 個 doctest）、lab 命令列入口、MS6 核准意見第 1 點（改標保留較高嚴重度）、ADR-047 三項修正</td><td>recall 32/32、precision 32/32、FPR 0/72、coverage 109/109；50 張表 50.8 s；6 個 doctest 在 lab 實跑</td></tr>
   </table>
 </section>
 
 <!-- 8 ------------------------------------------------------------------>
 <section id="s8">
   <h2>8. 本 milestone 的過程（overview）</h2>
+  <h3>MS7：整合與交付（ADR-049–052）</h3>
+  <p><b>使用者路徑</b>：<code>USAGE.md</code> 的每個 <code>&lt;!-- doctest --&gt;</code> 區塊都由 <code>make acceptance</code> 在本機 lab 執行：dev（L04 跨租戶讀取，probe_only 證明 splinter 沒報）、ci（L05 跨租戶寫入 → exit 1、SARIF）、audit（L08 service_role key，示範 S4 拒絕後以 <code>--supabase-url</code> 確認）、展示情境（修補前 Confirmed → 修補 SQL → 重掃無漏洞）、<code>rlsentry init</code> 與 Python API。lab 的 shell 入口為 <code>python -m lab._shared up|apply|env|sql|serve</code>（ADR-052）。</p>
+  <p><b>嚴重度</b>（MS6 核准意見第 1 點，ADR-049）：M4 改標 SECURITY_DEFINER_RPC_DATA 時取 max(原嚴重度, Medium)，提供 DB 連線不會讓 ci 結果改變。以合約常數分段上線，每次合併的回歸測試都是綠的。偏離 SPEC §5 M5 表的字面。</p>
+  <p><b>已知限制的處理</b>（ADR-051）：修正 DROP POLICY 依 roles、policy 名稱 63 bytes、提權還原為原值；維持 db_schemas[0]、函式簽章等五項。benchmark 以最終程式碼重跑，計分與 MS6 完全相同。</p>
   <h3>MS6：M5 Report、pipeline、CLI、Action、profiles（ADR-038–047）</h3>
   <p><b>一次掃描怎麼跑</b>（<code>pipeline.run_scan</code>，CLI、Python API、GitHub Action 共用）：先授權（不送任何請求）→ 建立唯一的 SafeClient → M1 掃前端 → <b>S4：Supabase URL 必須由設定檔或 <code>--supabase-url</code> 指名</b>，bundle 中的 URL 只出現在拒絕訊息 → M2 → 登入、dev／ci 讀取植入、M3、dev／ci L03 提權（提權前重測基準、一定還原）、清理（例外時也清理）→ M4（有 DB 連線時）→ M1 的 key finding 附在 correlate 之後 → M5 依「證據等級 → 嚴重度」排序並補上標題、遮罩後的 curl、修補 SQL、參考連結。<b>audit 三道防線</b>：不呼叫植入與提權、寫入 cell 一律 not_tested、SafeClient 閘門拒絕非 GET。<b>CI 只在 Confirmed 且 ≥ high 時失敗</b>（exit 1）；清理失敗 4；崩潰 5。</p>
   <p><b>判定的改變</b>：M3 不再自稱 SECURITY_DEFINER_RPC_DATA，由 M4 依 splinter lint 改標，警告依（物件, 角色）抑制（ADR-039）；明確的高權限 JWT（supabase_admin、postgres…）判為 Critical（ADR-038）；同一身分的已知主鍵合併為一個只取主鍵的 GET（ADR-040）。<b>benchmark</b>：recall 32/32、precision 32/32、FPR 0/72、50 張表 50.8 s。<b>auditor</b>（兩部分）找到 4 類 P1（例外時不清理、還原可能失敗、CLI 崩潰的 exit code 與 traceback、一個測試零請求也會過）→ T-232–T-235 修正；「limit 削弱過濾檢查」不成立（ADR-047）。</p>
@@ -380,8 +384,8 @@
     <tr><td>某個函式在做什麼、哪張 ticket 加的</td><td><code>docs/progress.html</code>（程式自動產生）</td></tr>
     <tr><td>每個 milestone 發生了什麼、哪裡失敗</td><td><code>PRODUCTION_LOG.md</code></td></tr>
     <tr><td>SPEC 需求對到哪個檔案、哪個測試</td><td><code>docs/verification/traceability.md</code></td></tr>
-    <tr><td>這次要親手驗證什麼</td><td><code>docs/verification/MS6-v1.md</code></td></tr>
-    <tr><td>高風險 ticket 的 diff</td><td><code>docs/reviews/MS6-high-risk.md</code></td></tr>
+    <tr><td>這次要親手驗證什麼</td><td><code>docs/verification/MS7-v1.md</code></td></tr>
+    <tr><td>高風險 ticket 的 diff</td><td><code>docs/reviews/MS7-high-risk.md</code></td></tr>
     <tr><td>每個 milestone 固定的審查步驟（同步、Actions、sha 比對、簽章）與異常狀況對照</td><td><code>docs/verification_steps.html</code></td></tr>
     <tr><td>模組之間交換什麼資料</td><td><code>rlsentry/contracts/</code>（每個檔案開頭的 docstring）</td></tr>
   </table>
