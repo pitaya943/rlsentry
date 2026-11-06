@@ -194,6 +194,12 @@ make verify-milestone MS=MSx</pre></li>
 </div>
 
 <div class="step sign">
+<h3>步驟 6.5　<code>/final-question</code>：整理待決事項與核准意見 <span class="tag t-you">你</span></h3>
+<ul>
+  <li>在雲端 session 輸入 <code>/final-question</code>。agent 列出所有待你決定的事（來源、選項、建議）；沒有就回「沒有待決事項。」</li>
+  <li>逐題回答後，agent 產生一段標準格式的核准意見（不含空行），步驟 7 被問到「Notes」時直接貼上，再按一次 Enter（空行）結束。</li>
+</ul>
+
 <h3>步驟 7　簽章 <span class="tag t-you">只有你</span></h3>
 <pre>cd rlsentry
 python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519</pre>
@@ -214,6 +220,7 @@ python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519</pre>
 <div class="step">
 <h3>步驟 8　回到雲端 session <span class="tag t-you">你</span></h3>
 <ul>
+  <li>簽完先輸入 <code>/approved MSx</code>：agent 檢查 approvals 分支（<code>decision: approve</code>、<code>.sig</code> 存在、清單 sha256 一致、harness 狀態），全部通過才重跑 <code>progress.py</code>、把 <code>system_overview.html</code> 的該列改為已核准並 push（ADR-048）；任一項不符只回報、不修改。</li>
   <li>核准：傳送「繼續」。下一個 session 會在第 0 步讀取你的核准意見，意見就是給 agent 的指示。</li>
   <li>要求修改（changes_requested）：同樣傳送「繼續」。agent 會把每一條意見變成 <code>origin: human-review</code> 的 ticket，完成後交出 <code>MSx-v(N+1).md</code>，第一節是「與 vN 的差異」，然後重新走一次本流程。</li>
 </ul>
@@ -224,6 +231,7 @@ python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519</pre>
   <li>每一條意見寫成一個可執行的指示（「把 X 改成 Y」「下一個 milestone 開始前先做 Z」），agent 會逐條轉成 ticket 或 ADR。</li>
   <li>驗證清單中標示<b>「做出決定」</b>的項目，請明確寫出你的決定（例如 MS2 的 ADR-024：接受在 MS2 修改 MS1 的 labctl，或要求改走 reopen）。</li>
   <li>流程規則（例如 ADR-021 的 overview）請在意見中重述：CLAUDE.md 是凍結檔，核准意見是下一個 session 一定會讀到的地方。</li>
+  <li>自 MS6 起可用 <code>/final-question</code> 產生標準格式（步驟 6.5；ADR-048）。</li>
 </ul>
 
 <h2>4. 異常狀況對照表</h2>

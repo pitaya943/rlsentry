@@ -705,3 +705,15 @@ D2–D4 由 architect 決定並記錄於此。
 - 不接受：**P1「limit=len(pks) 削弱過濾檢查」**。PostgREST 的 limit 只截斷 RLS 已允許的列，所以回傳的每一列都確實對該角色可見；若過濾被忽略，回傳的 N 列只要有任何一列不在查詢集合就判為不可信；若 N 列全在查詢集合，則查詢的 N 個主鍵恰好全部可見，結果正確。因此不會產生錯誤的 allowed 或 denied。`verdict.py` 的 `total <= queried` 檢查在合併讀取後恆真，保留作為防線。
 - 交人類決定（列入 MS6 清單第 4 段）：M4 把 anon 的 RPC 越權讀取改標 SECURITY_DEFINER_RPC_DATA 時，嚴重度依 SPEC §5 M5 表格由 High（含敏感欄位時 Critical）降為 Medium。提供 DB 連線反而使嚴重度降低，可能讓 `fail_on: high` 的 CI 通過。
 - 列為已知限制（P2）：修補 SQL 一律使用 `db_schemas[0]`；函式 DDL 不含參數簽章（多載函式會失敗）；DROP POLICY 不看 policy 的 roles；policy 名稱超過 63 bytes 會被截斷；還原把 role 設為 null 而非原值；JWT 的「表擁有者 role」（如 supabase_storage_admin）不在 Critical 集合（ADR-038 以 superuser／BYPASSRLS 定義）；GitHub Action 對 `profile: audit` 的設定檔永遠不會失敗（較嚴者勝）；M3 的計時在 dev 含植入、提權與清理。
+
+## ADR-048：收尾 SOP：`/final-question` 與 `/approved`（核准後立即更新進度文件）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：ADR-015、ADR-021、ADR-028、ADR-031
+- 背景：人類發現 `docs/progress.html` 長時間沒有反映最新狀態。原因：ADR-015／031 只規定在「milestone 收尾、高風險驗收後、暫停前」重跑 `progress.py`，沒有「人類核准之後」這個時間點；核准後的下一個 session 從 §0 開始，§0 沒有這一步。另外，MS6 中 architect 在 T-211、T-215 兩張高風險 ticket 驗收後漏跑。核准意見每次由人類手寫，格式也不一致。
+- 考慮過的選項：
+  1. 修改 §0，讓每個 session 開始時都重跑（缺點：prompt 是凍結的；而且核准到下一個 session 開始之間仍會落後）
+  2. 由人類觸發的兩個 skill（採用，人類決定指令由 architect 命名）
+- 決定：
+  1. `/final-question`：列出待人類決定的事（來源、選項、建議）或回「沒有待決事項。」；人類回答後，產生可直接貼到 `host/approve.py` 的「Notes」提示的標準格式核准意見。
+  2. `/approved <MS>`：檢查 approvals 分支（`decision: approve`、`.sig` 存在、清單 sha256 一致、harness 狀態），全部通過才重跑 `progress.py`、更新 `system_overview.html` 的該列，只提交這三個檔並 push；任一項不符只回報、不修改；不開始下一個 milestone。
+  3. skill 原文放在 `docs/sop/`（architect 維護），安裝副本在 `.claude/skills/`（凍結路徑，由人類以 `host/bootstrap.sh --refreeze` 安裝；安裝 commit `013adbc` 只含這兩個檔，與 `docs/sop/` 逐位元組相同）。`docs/verification_steps.html` 新增步驟 6.5，步驟 8 與第 3 節同步更新（ADR-028）。
+- 後果與風險：`docs/sop/` 與 `.claude/skills/` 可能漂移；修改 SOP 時 architect 只能改 `docs/sop/`，由人類重新複製並 refreeze。skill 在 session 啟動時載入，安裝後要開新 session 才會生效。
