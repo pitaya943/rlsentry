@@ -2,6 +2,8 @@
 
 ⚠ writes to the test user's OWN Auth record (dev/ci only; refused in audit by the SafeClient gate).
 """
+import httpx
+
 from rlsentry.contracts.safety import SafeClientContract
 
 
@@ -23,11 +25,16 @@ async def escalate_user_metadata(client: SafeClientContract, supabase_url: str, 
 
 
 async def restore_user_metadata(client: SafeClientContract, supabase_url: str, anon_key: str,
-                                 token: str) -> None:
+                                 token: str) -> bool:
     """Clear the `role` set by `escalate_user_metadata`, leaving the test account as found.
 
-    Best effort: a non-200 response is ignored, since the caller already recorded the escalation.
+    Why a bool: a failed restore must be reportable by the caller (ADR-047), so a transport error
+    returns False instead of raising, and any non-200 answer is also False.
     """
     url = _user_url(supabase_url)
     headers = {"apikey": anon_key, "Authorization": f"Bearer {token}"}
-    await client.request("PUT", url, headers=headers, json={"data": {"role": None}})
+    try:
+        resp = await client.request("PUT", url, headers=headers, json={"data": {"role": None}})
+    except httpx.HTTPError:
+        return False
+    return resp.status_code == 200
