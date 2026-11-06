@@ -677,3 +677,9 @@ D2–D4 由 architect 決定並記錄於此。
   6. **CLI**：`rlsentry scan`、`rlsentry init`；密碼與 key 只從設定檔指名的環境變數讀取，不接受命令列參數。
   7. **GitHub Action**：composite action，輸入只經 `env:` 進入 shell（避免 script injection），不代入 `--i-own-this-target`（授權必須提交在設定檔中）。
 - 後果與風險：SARIF 的 location 不指向程式碼行，GitHub code scanning 會把所有結果顯示在設定檔上；這是資料庫層問題的誠實呈現。
+
+## ADR-045：MS4 的 L01 lab 測試只檢查 SECURITY 類 lint（MS5 核准意見第 7 點，選項 C）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：ADR-032 #4、MS5-v1 第 5 段「環境發現」
+- 背景：`tests/lab/test_whitebox_lab.py::test_l01_rls_disabled_is_reported` 斷言「所有有物件名的 lint 都在 public schema」。容器被強制終止後，Postgres 的 crash recovery 會重設統計，`_realtime.extensions` 的索引 idx_scan 變成 0，PERFORMANCE 類的 `unused_index` 就出現在非 public schema，測試因此失敗；乾淨啟動的 lab 不受影響。
+- 決定：不 reopen MS4。T-201 把斷言改成只檢查含 `SECURITY` 類別的 lint。M4 的交叉比對本來就只使用 SECURITY 類（ADR-032 #4），所以這個斷言檢查的仍是產品實際依賴的性質。
+- 後果與風險：PERFORMANCE 類 lint 在其他 schema 出現不再被這個測試注意到；它們本來就不參與判定。
