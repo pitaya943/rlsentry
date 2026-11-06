@@ -1,0 +1,12 @@
+# audit profile：本機 lab 情境 L08（service_role key 進入前端 bundle）。USAGE.md 的 audit doctest 使用此檔。
+# 刻意不寫 authorized 與 supabase_url：示範以 --i-own-this-target 授權、以 --supabase-url 確認 API 位址（S4）。
+target: http://127.0.0.1:8740/
+profile: audit                          # M1–M3、M5（有 DB 連線時加 M4）；絕不寫入
+rate_limit_rps: 5                       # 預設 5，對正式環境請維持低速（NFR-04）
+test_users:
+  - {name: user_a, email: a@test.dev, password_env: RLS_A_PW}
+  - {name: user_b, email: b@test.dev, password_env: RLS_B_PW}
+tables:
+  orders:
+    owner_column: owner_id
+    select: {anon: deny, user: own_rows_only}

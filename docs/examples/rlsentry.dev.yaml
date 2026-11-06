@@ -1,0 +1,17 @@
+# dev profile：本機 lab 情境 L04（跨租戶讀取）。USAGE.md 的 dev 與展示情境 doctest 使用此檔。
+target: http://127.0.0.1:8740/          # 前端網址（M1 從這裡抓 bundle）
+authorized: true                        # 我擁有此目標並授權測試（NFR-02）
+profile: dev                            # M1–M5；可在本機 lab 植入 canary 與寫入探測
+supabase_url: http://127.0.0.1:54321    # S4：API 只送到這裡（ADR-043）
+anon_key_env: RLSENTRY_ANON_KEY         # anon key 從這個環境變數讀取
+db_url_env: RLSENTRY_DB_URL             # 有值才執行 M4（splinter 交叉比對，唯讀）
+test_users:
+  - {name: user_a, email: a@test.dev, password_env: RLS_A_PW}
+  - {name: user_b, email: b@test.dev, password_env: RLS_B_PW}
+tables:
+  notes:
+    owner_column: owner_id
+    select: {anon: deny, user: own_rows_only}
+    insert: {anon: deny, user: own_rows_only}
+    update: {anon: deny, user: own_rows_only}
+    delete: {anon: deny, user: own_rows_only}
