@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 135/138 · 進行中 1 · blocked 1
+自動產生，請勿手改 · 完成 136/138 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -158,7 +158,7 @@
 - [ ] T-190 完整 benchmark（MS5）、BENCHMARK_REPORT 更新、bench JSON（architect，in_progress，1 次） ← 依賴 T-189✓
 - [x] T-191 可見測試 docstring 的 ticket 編號更正（只改註解）（architect，done，1 次）
 - [x] T-192 稽核修正（合約與測試）：報告 URL 一律經 report_url、userinfo 不算同源、KeyFinding 一致性；ADR-036 補記；PLAN 記入 S4（architect，done，1 次）
-- [ ] T-193 稽核修正（實作）：report_url、userinfo 不算同源、fetch／run 的報告 URL 一律經 report_url（recon-dev，todo，0 次） ← 依賴 T-192✓
+- [x] T-193 稽核修正（實作）：report_url、userinfo 不算同源、fetch／run 的報告 URL 一律經 report_url（recon-dev，done，1 次）
 
 ## [ ] MS6 M5 Report + 介面 + profiles（鎖定）
 

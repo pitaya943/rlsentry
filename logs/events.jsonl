@@ -1338,3 +1338,9 @@
 {"ts": "2026-11-06T01:01:04", "kind": "subagent_stop", "id": "f1566665", "agent": "auditor", "ticket": null, "review": null}
 {"ts": "2026-11-06T01:04:14", "kind": "ticket_start", "ticket": "T-192", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-06T01:11:19", "kind": "ticket_accepted", "ticket": "T-192", "commit": "75ea911de2e75f0d0d2b291c944645a2e5f99137", "files": ["docs/DECISIONS.md", "docs/PLAN.md", "rlsentry/contracts/models.py", "rlsentry/contracts/recon.py", "tests/contracts/test_models.py", "tests/recon/test_report_urls.py"]}
+{"ts": "2026-11-06T01:12:21", "kind": "ticket_start", "ticket": "T-193", "agent": "recon-dev", "attempt": 1}
+{"ts": "2026-11-06T01:12:42", "kind": "dispatch", "id": "6ecf7d53", "agent": "recon-dev", "ticket": "T-193", "review": null, "body": "logs/messages/6ecf7d53-dispatch.json"}
+{"ts": "2026-11-06T01:12:50", "kind": "report", "id": "492ea02a", "agent": "recon-dev", "ticket": "T-193", "review": null, "body": "logs/messages/492ea02a-report.json"}
+{"ts": "2026-11-06T01:12:50", "kind": "subagent_start", "id": "c4edbf66", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T01:13:44", "kind": "subagent_stop", "id": "7673df14", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T01:21:02", "kind": "ticket_accepted", "ticket": "T-193", "commit": "ec0d1d6b316703211ba4745463605a6141bcdee6", "files": ["rlsentry/recon/fetch.py", "rlsentry/recon/links.py", "rlsentry/recon/run.py"]}
