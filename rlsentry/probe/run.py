@@ -5,6 +5,7 @@ request still goes through the caller's SafeClient. MS2 sends only GET and HEAD.
 """
 from __future__ import annotations
 
+from rlsentry.contracts.interfaces import WriteRefused
 from rlsentry.contracts.models import AccessMatrix, Finding, Op, Outcome, ProbeResult, Profile, Role, Target
 from rlsentry.contracts.policy import ExpectedPolicy
 from rlsentry.contracts.probe import (
@@ -15,6 +16,7 @@ from rlsentry.contracts.probe import (
     WRITE_NO_OWNER_REASON,
     WRITE_NOT_FORBIDDEN_REASON,
     WRITE_OPS,
+    WRITE_REFUSED_REASON,
     KnownRows,
     ReadObservation,
     SeededRow,
@@ -27,7 +29,7 @@ from rlsentry.policy.resolve import resolve_expected
 from rlsentry.probe.cleanup import cleanup_seeded
 from rlsentry.probe.cross_tenant import collect_known_rows
 from rlsentry.probe.diff import cleanup_findings, read_findings, target_findings, write_findings
-from rlsentry.probe.read import count_visible
+from rlsentry.probe.read import observation_counts, visible_pks
 from rlsentry.probe.verdict import read_cell, split_known, write_cell
 from rlsentry.probe.write import after_filter, plan_writes, read_back, seed_work_row, send_write
 
@@ -54,9 +56,9 @@ def pick_text_column(target: Target, owner_column: str | None,
     return None
 
 
-async def _write_target(client: SafeClientContract, supabase_url: str, anon_key: str,
+async def _write_target_inner(client: SafeClientContract, supabase_url: str, anon_key: str,
                         target: Target, sessions: Sessions, policy: ExpectedPolicy,
-                        owner: str | None, public: str | None
+                        owner: str | None, public: str | None, canaries: list[SeededRow]
                         ) -> tuple[list[ProbeResult], list[Finding]]:
     """Why: dev/ci write probing of one table; every canary created is cleaned up at the end."""
     name = target.name
@@ -70,7 +72,6 @@ async def _write_target(client: SafeClientContract, supabase_url: str, anon_key:
     expected = {(op, r): resolve_expected(policy, name, op, r, cols)
                 for op in WRITE_OPS for r in PROBE_ROLES}
     plans = plan_writes(expected, sessions.user_ids, sessions.tokens, text_column)
-    canaries: list[SeededRow] = []
     by_cell: dict[tuple[Role, Op], list[ProbeResult]] = {}
     for plan in plans:
         work: SeededRow | None = None
@@ -97,8 +98,31 @@ async def _write_target(client: SafeClientContract, supabase_url: str, anon_key:
                 reason = (WRITE_NOT_FORBIDDEN_REASON if not expected[(op, role)].is_review
                           else WRITE_NO_OWNER_REASON)
                 cells.append(_not_tested(name, role, op, reason))
+    return cells, findings
+
+
+async def _write_target(client: SafeClientContract, supabase_url: str, anon_key: str,
+                        target: Target, sessions: Sessions, policy: ExpectedPolicy,
+                        owner: str | None, public: str | None
+                        ) -> tuple[list[ProbeResult], list[Finding]]:
+    """Why: a WriteRefused (ADR-041) makes every write cell of the table INCONCLUSIVE; canaries
+    created before the refusal are still cleaned up, and the scan goes on."""
+    canaries: list[SeededRow] = []
+    findings: list[Finding] = []
+    try:
+        cells, findings = await _write_target_inner(client, supabase_url, anon_key, target,
+                                                    sessions, policy, owner, public, canaries)
+    except WriteRefused as exc:
+        reason = f"{WRITE_REFUSED_REASON}: {exc}"
+        cells = [ProbeResult(target=target.name, role=r, op=op, outcome=Outcome.INCONCLUSIVE,
+                             known_rows_checked=0, reason=reason, evidence_curl="")
+                 for r in PROBE_ROLES for op in WRITE_OPS]
+        findings = []
     if canaries:
-        left = await cleanup_seeded(client, supabase_url, anon_key, target, canaries, sessions)
+        try:
+            left = await cleanup_seeded(client, supabase_url, anon_key, target, canaries, sessions)
+        except WriteRefused:
+            left = list(canaries)
         findings.extend(cleanup_findings(target, left))
     return cells, findings
 
@@ -133,10 +157,10 @@ async def _observe(client: SafeClientContract, supabase_url: str, anon_key: str,
         return obs
     forbidden, permitted = split_known(expected, known.rows, sessions.user_ids)
     token = sessions.tokens[role]
-    if forbidden:
-        obs.forbidden = await count_visible(client, supabase_url, anon_key, target, token, forbidden)
-    if permitted:
-        obs.permitted = await count_visible(client, supabase_url, anon_key, target, token, permitted)
+    if forbidden or permitted:
+        res = await visible_pks(client, supabase_url, anon_key, target, token,
+                                list(dict.fromkeys([*forbidden, *permitted])))
+        obs.forbidden, obs.permitted = observation_counts(res, forbidden, permitted)
     if not forbidden:
         note = f"no known row outside the expected scope of {role.value}"
         obs.note = "; ".join([note, *known.notes])
