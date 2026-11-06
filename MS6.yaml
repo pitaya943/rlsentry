@@ -1,0 +1,10 @@
+milestone: MS6
+checklist: docs/verification/MS6-v1.md
+checklist_sha256: 8509ba017cf62a08e2699b1b71790d222b81adb1c82888977677b05baa850eaa
+decision: approve
+reviewer: Kuei
+date: 2026-11-06 18:34
+notes: |
+  MS6 核准。以下意見請在下一個 session 開始時處理，並套用到之後每一個 milestone。
+    1. 嚴重度選 B（ADR-047「交人類決定」項）：M4 把 proven 讀取改標為 SECURITY_DEFINER_RPC_DATA 時，嚴重度改為 max(原本的嚴重度, RULES 的 Medium)，提供 DB 連線不得讓嚴重度下降。新寫 ADR 記錄偏離 SPEC §5 M5 表；同步修改 L07 ground truth 的 severity 與相關測試；以測試證明 anon 經 SECURITY DEFINER RPC 讀到含敏感欄位的資料時仍為 Critical、一般情況為 High、使用者角色仍為 Medium，且有無 DB 連線時 ci 的 fail_on 結果一致。完成後重跑受影響情境的 benchmark 並更新 BENCHMARK_REPORT。
+    2. 接受收尾 SOP（ADR-048）：每個 milestone 交付後以 /final-question 整理待決事項與核准意見，簽章後以 /approved MSx 確認核准並立即更新 progress.html、branch-log.md、system_overview.html。修改 SOP 時只改 docs/sop/，並在清單中提醒我重新複製到 .claude/skills/ 並 refreeze。
