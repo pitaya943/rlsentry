@@ -1467,3 +1467,16 @@
 {"ts": "2026-11-06T07:57:23", "kind": "ticket_start", "ticket": "T-233", "agent": "probe-dev", "attempt": 1}
 {"ts": "2026-11-06T07:58:03", "kind": "ticket_start", "ticket": "T-234", "agent": "whitebox-dev", "attempt": 1}
 {"ts": "2026-11-06T07:58:43", "kind": "ticket_start", "ticket": "T-235", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T07:59:09", "kind": "dispatch", "id": "6490f08b", "agent": "probe-dev", "ticket": "T-233", "review": null, "body": "logs/messages/6490f08b-dispatch.json"}
+{"ts": "2026-11-06T07:59:10", "kind": "dispatch", "id": "ada20ec5", "agent": "whitebox-dev", "ticket": "T-234", "review": null, "body": "logs/messages/ada20ec5-dispatch.json"}
+{"ts": "2026-11-06T07:59:11", "kind": "dispatch", "id": "501a0479", "agent": "whitebox-dev", "ticket": "T-235", "review": null, "body": "logs/messages/501a0479-dispatch.json"}
+{"ts": "2026-11-06T07:59:22", "kind": "report", "id": "78367b7c", "agent": "probe-dev", "ticket": "T-233", "review": null, "body": "logs/messages/78367b7c-report.json"}
+{"ts": "2026-11-06T07:59:22", "kind": "subagent_start", "id": "21ee2b4e", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:59:24", "kind": "subagent_start", "id": "2ade9a90", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:59:24", "kind": "report", "id": "103c6c6f", "agent": "whitebox-dev", "ticket": "T-234", "review": null, "body": "logs/messages/103c6c6f-report.json"}
+{"ts": "2026-11-06T07:59:25", "kind": "report", "id": "5ef14582", "agent": "whitebox-dev", "ticket": "T-235", "review": null, "body": "logs/messages/5ef14582-report.json"}
+{"ts": "2026-11-06T07:59:25", "kind": "subagent_start", "id": "9b895dc2", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T08:00:04", "kind": "subagent_stop", "id": "1929ec7c", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T08:00:23", "kind": "subagent_stop", "id": "788f46a7", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T08:01:20", "kind": "subagent_stop", "id": "ea4c472b", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T08:12:05", "kind": "ticket_accepted", "ticket": "T-235", "commit": "253bd06bdacf3047d61f0fa2013754db5a2f3959", "files": ["rlsentry/report/html.py", "rlsentry/report/json.py"]}

@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 155/160 · 進行中 3 · blocked 1
+自動產生，請勿手改 · 完成 156/160 · 進行中 2 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -179,10 +179,10 @@
 - [x] T-221 GitHub Action（action/action.yml）（whitebox-dev，done，1 次）
 - [x] T-222 bench：改經 run_scan 執行；splinter_status 依設定的曝露 schema（P2 c）（whitebox-dev，done，1 次）
 - [x] T-230 Profile 端到端（e2e_profiles）、展示情境 L04 修補後重掃、L03 提權 lab、Python API 匯出（architect，done，2 次）
-- [ ] T-231 完整 benchmark 重跑、BENCHMARK_REPORT 與 docs/benchmark/MS6-bench.json（architect，todo，0 次） ← 依賴 T-230✓ T-233… T-234… T-235…
+- [ ] T-231 完整 benchmark 重跑、BENCHMARK_REPORT 與 docs/benchmark/MS6-bench.json（architect，todo，0 次） ← 依賴 T-230✓ T-233… T-234… T-235✓
 - [x] T-232 稽核修正（合約與測試）：例外時清理與還原、CLI 崩潰 exit code、報告 URL、correlate 排除 key；ADR-047（architect，done，1 次）
 - [ ] T-233 probe：植入／清理／提權在網路錯誤時不遺失紀錄、一定嘗試還原、還原失敗回報（ADR-047）（probe-dev，in_progress，1 次） ← 依賴 T-232✓
 - [ ] T-234 pipeline／cli／correlate：例外時仍清理、CLI 不印 locals 與 EXIT_ERROR、correlate 排除 KEY_RULES（ADR-047）（whitebox-dev，in_progress，1 次） ← 依賴 T-232✓
-- [ ] T-235 report：JSON／HTML 中 recon.supabase_url 經 report_url（ADR-047）（whitebox-dev，in_progress，1 次） ← 依賴 T-232✓
+- [x] T-235 report：JSON／HTML 中 recon.supabase_url 經 report_url（ADR-047）（whitebox-dev，done，1 次）
 
 ## [ ] MS7 整合與交付（鎖定）
