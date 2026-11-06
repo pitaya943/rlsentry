@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 153/156 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 153/156 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -178,7 +178,7 @@
 - [x] T-220 cli.py：Typer CLI（scan、init）（whitebox-dev，done，1 次）
 - [x] T-221 GitHub Action（action/action.yml）（whitebox-dev，done，1 次）
 - [x] T-222 bench：改經 run_scan 執行；splinter_status 依設定的曝露 schema（P2 c）（whitebox-dev，done，1 次）
-- [ ] T-230 Profile 端到端（e2e_profiles）、展示情境 L04 修補後重掃、L03 提權 lab、Python API 匯出（architect，todo，0 次） ← 依賴 T-220✓ T-221✓ T-222✓
+- [ ] T-230 Profile 端到端（e2e_profiles）、展示情境 L04 修補後重掃、L03 提權 lab、Python API 匯出（architect，in_progress，1 次） ← 依賴 T-220✓ T-221✓ T-222✓
 - [ ] T-231 完整 benchmark 重跑、BENCHMARK_REPORT 與 docs/benchmark/MS6-bench.json（architect，todo，0 次） ← 依賴 T-230…
 
 ## [ ] MS7 整合與交付（鎖定）
