@@ -161,7 +161,7 @@
 - [x] T-193 稽核修正（實作）：report_url、userinfo 不算同源、fetch／run 的報告 URL 一律經 report_url（recon-dev，done，1 次）
 - 驗證清單：docs/verification/MS5-v1.md（v1）
 
-## [ ] MS6 M5 Report + 介面 + profiles（進行中）
+## [ ] MS6 M5 Report + 介面 + profiles（等待你審查）
 - [x] T-200 合約：MS6 pipeline、報告、S4 端點確認、高權限 JWT、P2 (a)(b)(c)、主鍵合併；ADR-038–044（architect，done，1 次）
 - [x] T-201 可見測試：MS6 單元測試、既有測試的相容調整、MS5 核准意見第 7 點（SECURITY 類 lint 斷言）（architect，done，1 次）
 - [x] T-202 Lab 測試：read_policies 以 DB log 驗證唯讀（MS4 稽核 P2 (d)）；L03 提權前重測基準（參考 benchmark 發現）；report 套件標記（architect，done，1 次）
@@ -184,5 +184,6 @@
 - [x] T-233 probe：植入／清理／提權在網路錯誤時不遺失紀錄、一定嘗試還原、還原失敗回報（ADR-047）（probe-dev，done，1 次）
 - [x] T-234 pipeline／cli／correlate：例外時仍清理、CLI 不印 locals 與 EXIT_ERROR、correlate 排除 KEY_RULES（ADR-047）（whitebox-dev，done，1 次）
 - [x] T-235 report：JSON／HTML 中 recon.supabase_url 經 report_url（ADR-047）（whitebox-dev，done，1 次）
+- 驗證清單：docs/verification/MS6-v1.md（v1）
 
 ## [ ] MS7 整合與交付（鎖定）

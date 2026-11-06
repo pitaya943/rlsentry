@@ -1487,3 +1487,4 @@
 {"ts": "2026-11-06T08:58:03", "kind": "ticket_accepted", "ticket": "T-231", "commit": "b3c8c2bb2a8b6ba327903075e15b0b9363969f06", "files": ["BENCHMARK_REPORT.md", "docs/benchmark/MS6-bench.json"]}
 {"ts": "2026-11-06T09:15:58", "kind": "stop_blocked", "attempt": 5, "state": "active", "milestone": "MS6"}
 {"ts": "2026-11-06T09:21:06", "kind": "acceptance_run", "scope": "MS6", "failed": []}
+{"ts": "2026-11-06T09:26:59", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS6"}
