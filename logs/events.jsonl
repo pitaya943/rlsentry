@@ -1363,3 +1363,29 @@
 {"ts": "2026-11-06T04:29:25", "kind": "ticket_start", "ticket": "T-215", "agent": "recon-dev", "attempt": 1}
 {"ts": "2026-11-06T04:30:02", "kind": "ticket_start", "ticket": "T-216", "agent": "whitebox-dev", "attempt": 1}
 {"ts": "2026-11-06T04:30:39", "kind": "ticket_start", "ticket": "T-217", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T04:31:21", "kind": "dispatch", "id": "ff77eeef", "agent": "whitebox-dev", "ticket": "T-211", "review": null, "body": "logs/messages/ff77eeef-dispatch.json"}
+{"ts": "2026-11-06T04:31:23", "kind": "dispatch", "id": "f59558cd", "agent": "probe-dev", "ticket": "T-212", "review": null, "body": "logs/messages/f59558cd-dispatch.json"}
+{"ts": "2026-11-06T04:31:24", "kind": "dispatch", "id": "4c656f67", "agent": "probe-dev", "ticket": "T-213", "review": null, "body": "logs/messages/4c656f67-dispatch.json"}
+{"ts": "2026-11-06T04:31:25", "kind": "dispatch", "id": "10f6c78d", "agent": "recon-dev", "ticket": "T-215", "review": null, "body": "logs/messages/10f6c78d-dispatch.json"}
+{"ts": "2026-11-06T04:31:26", "kind": "dispatch", "id": "dc988a16", "agent": "whitebox-dev", "ticket": "T-216", "review": null, "body": "logs/messages/dc988a16-dispatch.json"}
+{"ts": "2026-11-06T04:31:28", "kind": "dispatch", "id": "2ab461cc", "agent": "whitebox-dev", "ticket": "T-217", "review": null, "body": "logs/messages/2ab461cc-dispatch.json"}
+{"ts": "2026-11-06T04:31:38", "kind": "report", "id": "47e318ea", "agent": "whitebox-dev", "ticket": "T-211", "review": null, "body": "logs/messages/47e318ea-report.json"}
+{"ts": "2026-11-06T04:31:38", "kind": "subagent_start", "id": "bf121fcf", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:31:39", "kind": "report", "id": "c905f62a", "agent": "probe-dev", "ticket": "T-212", "review": null, "body": "logs/messages/c905f62a-report.json"}
+{"ts": "2026-11-06T04:31:39", "kind": "subagent_start", "id": "f918715d", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:31:41", "kind": "report", "id": "26409e9f", "agent": "probe-dev", "ticket": "T-213", "review": null, "body": "logs/messages/26409e9f-report.json"}
+{"ts": "2026-11-06T04:31:41", "kind": "subagent_start", "id": "a32e0474", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:31:44", "kind": "report", "id": "84a4e574", "agent": "recon-dev", "ticket": "T-215", "review": null, "body": "logs/messages/84a4e574-report.json"}
+{"ts": "2026-11-06T04:31:44", "kind": "subagent_start", "id": "1125751e", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:31:46", "kind": "subagent_start", "id": "8314f161", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:31:46", "kind": "report", "id": "1523f05c", "agent": "whitebox-dev", "ticket": "T-216", "review": null, "body": "logs/messages/1523f05c-report.json"}
+{"ts": "2026-11-06T04:31:48", "kind": "report", "id": "4cec8edd", "agent": "whitebox-dev", "ticket": "T-217", "review": null, "body": "logs/messages/4cec8edd-report.json"}
+{"ts": "2026-11-06T04:31:48", "kind": "subagent_start", "id": "c43dc928", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:31:58", "kind": "subagent_stop", "id": "0106cebb", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:32:08", "kind": "subagent_stop", "id": "47e26cda", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:32:26", "kind": "subagent_stop", "id": "0b1224cb", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:32:35", "kind": "subagent_stop", "id": "96122dc1", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:32:52", "kind": "subagent_stop", "id": "c07ce7fc", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:33:04", "kind": "subagent_stop", "id": "104b1cf4", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T04:36:38", "kind": "ticket_fail", "ticket": "T-212", "reason": "checks failed:\nE       AssertionError: L07: L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding; L07-V2: no confirmed SECURITY_DEFINER_RPC_DATA finding; L07-V3: no confirmed SECURITY_DEFINER_RPC_DATA finding; unexpected confirmed findings (FP): ['get_all_accounts/anon/ANON_READ_OWNER_SCOPED', 'get_all_accounts/user_a/CROSS_TENANT_READ', 'get_all_accounts/user_b/CROSS_TENANT_READ']\nE       assert not ['L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding', 'L07-V2: no confirmed SECURITY_DEFINER_RPC_DATA finding', '...on/ANON_READ_OWNER_SCOPED', 'get_all_accounts/user_a/CROSS_TENANT_READ', 'get_all_accounts/user_b/CROSS_TENANT_READ']\"]\nE           AssertionError: L07: L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (2/2 known rows outside the expected scope are visible); L07-V2: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (1/1 known rows outside the expected scope are visible); L07-V3: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (1/1 known rows outside the expected scope are visible); unexpected confirmed findings (FP): ['get_all_accounts/anon/select/ANON_READ_OWNER_SCOPED', 'get_all_accounts/user_a/select/CROSS_TENANT_READ', 'get_all_accounts/user_b/select/CROSS_TENANT_READ']\nE           assert not ['L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (2/2 known rows outside the expected scop...WNER_SCOPED', 'get_all_accounts/user_a/select/CROSS_TENANT_READ', 'get_all_accounts/user_b/select/C\n… (truncated; full output in logs/)", "attempts": 1}
+{"ts": "2026-11-06T04:41:38", "kind": "ticket_accepted", "ticket": "T-211", "commit": "0e93abc782511019f4886020584764c3d47be0e1", "files": ["rlsentry/whitebox/correlate.py"]}
