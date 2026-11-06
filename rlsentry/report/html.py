@@ -125,6 +125,9 @@ def render_html(report: ScanReport) -> str:
         items = [f for f in report.findings if f.evidence == ev]
         counts = [sum(1 for f in items if f.severity == s) for s in _SEVERITIES]
         sections.append({"title": title, "findings": items, "counts": counts})
+    if report.recon is not None and report.recon.supabase_url:
+        report = report.model_copy(update={"recon": report.recon.model_copy(
+            update={"supabase_url": report_url(report.recon.supabase_url)})})
     text = _COMPILED.render(
         r=report, a=report.authorization, target=report_url(report.target),
         sections=sections, severities=[s.value for s in _SEVERITIES],
