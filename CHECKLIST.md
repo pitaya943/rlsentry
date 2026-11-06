@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 132/135 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 133/136 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -154,8 +154,9 @@
 - [x] T-186 recon/fetch.py：同源 GET 抓取（HTML→chunk→source map→webpack chunk）、範圍上限、跳過原因（recon-dev，done，1 次）
 - [x] T-187 recon/run.py：recon() 串接（key、supabase_url、anon_key、範圍、findings、sources）（recon-dev，done，1 次）
 - [x] T-188 labctl.serve_frontend：以 127.0.0.1 靜態伺服器提供情境前端（供 M1 recon）（lab-dev，done，3 次）
-- [ ] T-189 bench/run.py：run_scenario 加入 M1 recon（serve_frontend、recon sources 給 M2、key finding 不經 correlate）（whitebox-dev，todo，0 次） ← 依賴 T-187✓ T-188✓
+- [ ] T-189 bench/run.py：run_scenario 加入 M1 recon（serve_frontend、recon sources 給 M2、key finding 不經 correlate）（whitebox-dev，in_progress，1 次） ← 依賴 T-187✓ T-188✓
 - [ ] T-190 完整 benchmark（MS5）、BENCHMARK_REPORT 更新、bench JSON（architect，todo，0 次） ← 依賴 T-189…
+- [x] T-191 可見測試 docstring 的 ticket 編號更正（只改註解）（architect，done，1 次）
 
 ## [ ] MS6 M5 Report + 介面 + profiles（鎖定）
 

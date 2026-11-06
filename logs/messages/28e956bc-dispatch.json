@@ -1,0 +1,7 @@
+{
+  "description": "T-189 bench recon wiring",
+  "prompt": "Ticket: T-189\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-189.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}
