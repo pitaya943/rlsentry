@@ -1,0 +1,15 @@
+milestone: MS5
+checklist: docs/verification/MS5-v1.md
+checklist_sha256: 77137353a387e82ca9ea3a9904f6ddba6b24416e609858f51d36779d43625ed7
+decision: approve
+reviewer: Kuei
+date: 2026-11-06 11:41
+notes: |
+  MS5 核准。以下意見請在下一個 session 開始時處理，並套用到之後每一個 milestone。
+    1. 接受 D2：不支援無頭瀏覽器（ADR-037）。日後若要加入，必須讓瀏覽器的每個請求都經過 SafeClient，並另寫 ADR。
+    2. 接受只依 sourceMappingURL 註解或 SourceMap header 抓 map、不盲猜 <url>.map（ADR-036 #2）；這是對 SPEC §5 M1「存在 .map 時一併解析」的澄清。
+    3. 接受只抓同源、不帶任何 header，報告中的 URL 一律省略 query string（ADR-036 與補記）。
+    4. JWT role 分類選 B：supabase_admin、postgres 等明確的高權限 role 也必須判為 Critical。MS6 新增或調整規則（rule catalog）並寫 ADR，以測試證明這些 role 是 Critical、authenticated 仍是 unverified、anon 仍不產生 finding。
+    5. 接受 recall 30/32（2 個 FN 皆為 L03，延到 MS6）與 runtime 未達標（50 張表 70.7 s）；依 PLAN 於 MS6／MS7 改善並重新量測 5／20／50 張表，不得調高預設 rps。
+    6. 稽核 S4（supabase_url／anon_key 來自目標 bundle）必須在 MS6 pipeline 完成：送任何請求到該 URL 之前，必須符合設定檔明列的 URL，或經使用者以 CLI 旗標確認並記入 AuthorizationRecord；以測試證明 bundle 指向未確認的主機時一個請求都不送。其餘 P2 接受列為已知限制。
+    7. MS4 測試 test_l01_rls_disabled_is_reported 對非正常關機敏感的問題選 C：不 reopen MS4；在 MS6 開一張 ticket，把斷言放寬為只檢查 SECURITY 類 lint，並寫 ADR 說明原因（crash recovery 會重設統計，使 PERFORMANCE 類的 unused_index 出現在非 public schema）。
