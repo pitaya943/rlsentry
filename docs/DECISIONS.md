@@ -595,3 +595,12 @@ D2–D4 由 architect 決定並記錄於此。
   2. **量測**：三個真實框架 fixture 中，所有延遲 chunk（Next.js 的頁面與 dynamic import、Vite 的 lazy route、CRA 的 webpack chunk）都能由靜態結構找到（`tests/recon/test_recon_fixtures.py`）。
   3. **成本**：瀏覽器二進位檔數百 MB，CI（GitHub Action）冷啟動時間大增。
 - 後果與風險：只在執行期組出的 chunk URL、由 API 下發的 key、登入後才載入的頁面不會被掃到。報告列出 `chunks_scanned`／`chunks_skipped`，使用者可據此判斷覆蓋範圍；SPEC §5 M1 已聲明結果不保證完整。
+
+### ADR-036 補記：報告中的 URL 一律經 report_url；userinfo 不算同源；KeyFinding 一致性（2026-11-06，MS5 稽核 S1–S3、S6）
+- 問題（P1，S1）：合約只要求 `chunks_skipped` 遮罩；`chunks_scanned`、`KeyFinding.source_file`（含 source map 內由目標提供的 source 名稱）原樣寫進報告。同源、回 200 的 `<script src="/a.js?k=<sb_secret…>">` 會把完整 key 放進 JSON。S2：`mask_text` 只遮 JWT 與 sb_ 格式，`?apikey=AIza…` 這種其他格式的 token 不會被遮。S3：`http://u:p@<目標>/x.js` 通過同源檢查，httpx 會把 userinfo 變成 `Authorization: Basic`，違反「不送任何憑證」。S6：`KeyFinding` 不檢查 kind 與 label 是否一致、`masked` 是否真的遮罩。
+- 決定：
+  1. 新增 `links.report_url`：報告中的每個 URL（含 `<url>#<source 名稱>`）都經過它——query string 換成 `?…`（不論格式都不寫出）、移除 userinfo、其餘再 `mask_text`。`chunks_scanned`、`chunks_skipped`、`KeyFinding.source_file` 都用它。
+  2. `same_origin`：帶 userinfo 的 URL 一律不是同源（列為 cross-origin，不請求）。
+  3. `KeyFinding` 加 validator：`jwt:anon`／`sb_publishable` 必須是 publishable，`jwt:service_role`／`sb_secret` 必須是 secret，其他標籤必須是 unverified；`masked` 必須含 `****`。
+- 後果：報告少了 query string（掃描範圍仍可辨識到檔案路徑）；這是刻意的取捨，因為 query string 是 token 最常出現的位置。
+- 未處理（P2，列入已知限制或 MS6）：S4 `supabase_url` 來自目標的 bundle，惡意 bundle 可讓 M2／M3 把 anon key 與探測送往別處——MS6 pipeline 必須把它顯示給使用者確認或要求設定檔提供（已記入 PLAN 的 MS6 表）；S5 大檔先完整下載才檢查大小；generic key 偵測依 key 語境，名稱被壓縮時會漏掉。

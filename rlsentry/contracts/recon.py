@@ -200,7 +200,24 @@ def same_origin(url: str, origin_url: str) -> bool:
 
     True iff both are http(s) URLs with equal scheme, equal lower-cased host and equal
     effective port (missing port = 80 for http, 443 for https). Anything else (other schemes,
-    unparsable URLs) → False."""
+    unparsable URLs) → False. A `url` carrying userinfo (user or password, e.g.
+    http://u:p@host/x.js) → False: httpx would turn it into an Authorization header, and recon
+    never sends credentials (MS5 audit S3; ADR-036 補記)."""
+    raise NotImplementedError
+
+
+def report_url(url: str) -> str:
+    """Contract only; implemented by rlsentry.recon.links.report_url. Pure (NFR-03; MS5 audit
+    S1, S2; ADR-036 補記).
+
+    The only form in which a URL (or a "<url>#<label>" file name) may be written to the report.
+    Split at the FIRST "#" into base and fragment (fragment may itself contain "#"). In base,
+    a query string is replaced by "?…" (the literal three characters "?…"; an empty query "?"
+    is dropped); userinfo ("user:pass@") is removed from the authority. Result =
+    mask_text(base' + ("#" + fragment if there was a "#")). So a token in a query string is
+    never reported (whatever its format), and a JWT or sb_ key in a path or in a source-map
+    source name is masked. Idempotent. Never raises (an unparsable URL is just mask_text'ed
+    with everything from the first "?" up to the "#" replaced by "?…")."""
     raise NotImplementedError
 
 
@@ -322,7 +339,7 @@ async def fetch_bundle(client: SafeClientContract, target_url: str, *,
        The target counts as one fetch; inline maps and map sources do not count.
     3. When the queue is empty: urls = webpack_chunk_urls over all "js" files so far; the ones
        never handled go to the queue (as JS URLs) and step 2 resumes; stop when none is new.
-    skipped entries go through mask_text (a URL could carry a token). Requests are sent one at a
+    each skipped entry is f"{report_url(url)} ({reason})" (a URL could carry a token). Requests are sent one at a
     time; the SafeClient's limiter sets the pace (NFR-04). Never raises for HTTP-level
     problems."""
     raise NotImplementedError
@@ -433,15 +450,16 @@ async def recon(client: SafeClientContract, target_url: str, *, max_files: int =
 
     fetched = fetch_bundle(client, target_url, max_files=..., max_bytes=...). Then:
     - keys: for each file in fetched.files order, for each c in key_candidates(file.text):
-      key_finding(c, file.url), skipping a (raw value, file url) pair already seen;
+      key_finding(c, report_url(file.url)), skipping a (raw value, file url) pair already seen;
     - supabase_url: the first URL among, in this priority order: client_pairs URLs of html/js
       files (file order, then text order); client_pairs URLs of map_source files; supabase_hosts
       of html/js files; supabase_hosts of map_source files. None when there is none;
     - anon_key: the key of the first client pair (same priority order) whose URL equals
       supabase_url and whose key classifies as "publishable"; else the raw value of the first
       candidate (file order) that classifies as "publishable"; else None;
-    - result = ReconResult(supabase_url=supabase_url, keys=keys, chunks_scanned=[url of every
-      file whose kind is html, js or map, in order], chunks_skipped=fetched.skipped);
+    - result = ReconResult(supabase_url=supabase_url, keys=keys, chunks_scanned=[report_url(url)
+      of every file whose kind is html, js or map, in order], chunks_skipped=fetched.skipped);
+      every URL in the report goes through report_url (MS5 audit S1);
     - findings = findings_from_keys(keys);
     - sources = [file.text for every file whose kind is html, js or map_source], in order.
     The report shows the scan scope (chunks_scanned / chunks_skipped): bundles can be split or

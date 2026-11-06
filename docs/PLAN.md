@@ -73,6 +73,7 @@ MS0 產出。每個 milestone 開始時 architect 會依此計畫寫出正式 ti
 | ⚠(4) MS4 核准意見第 5 點、稽核 P2 (b)：SECURITY_DEFINER_RPC_DATA 只用於確實是 SECURITY DEFINER 的函式；其他 RPC 越權讀取改用正確的規則名稱（新規則需 ADR 與 rule catalog）。**須以測試證明**：SECURITY INVOKER 的 RPC 越權讀取不再標為 SECURITY_DEFINER_RPC_DATA | probe-dev | `rules/severity.py`、`probe/**` |
 | ⚠(2) MS4 核准意見第 5 點、稽核 P2 (c)：`splinter_status` 不得寫死 `public`；pipeline 把設定檔的曝露 schema 傳給 M4（`db_schemas`），並與「以 read_policies 填入 ScanReport.policies」一起完成。**須以測試證明**：非 public schema 的 lint 被正確計入，且 ScanReport.policies 有內容 | whitebox-dev | `bench/score.py`、`pipeline.py` |
 | ⚠(2) MS4 核准意見第 5 點、稽核 P2 (d)：`read_policies` 補上以 DB log 驗證唯讀的 lab 測試。**須以測試證明**：執行期間 DB log 沒有任何寫入 | architect | `tests/lab/**` |
+| ⚠(1) MS5 稽核 S4：`ReconOutput.supabase_url` 與 `anon_key` 來自目標的 bundle（不可信輸入）。pipeline 送任何請求到該 URL 之前，必須符合「設定檔明列的 Supabase URL」或經使用者以 CLI 旗標確認，並記入 AuthorizationRecord；**須以測試證明**：bundle 指向未確認的主機時，pipeline 一個請求都不送 | whitebox-dev | `pipeline.py` |
 | MS4 核准意見第 3 點：展示情境 L04 的報告附**重現指令**（curl，key 遮罩）與**修補 SQL**（owner-scoped policy），以 lab 驗證修補後重掃為無漏洞 | whitebox-dev | `report/**` |
 | MS4 核准意見第 2 點：runtime 改善——同一身分的多筆主鍵查詢合併為**單一請求**（`id=in.(…)`）以減少請求數；**不得調高預設 rps**（NFR-04、ADR-033）。完成後重新量測 audit、rps 5 下 **5／20／50 張表**；仍未達 50 張 < 60 s 就在 BENCHMARK_REPORT 如實揭露 | probe-dev | `probe/read.py`、`probe/cross_tenant.py` |
 

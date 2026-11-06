@@ -86,8 +86,21 @@ class KeyFinding(_Strict):
     # also the Finding.target of a key finding, so the benchmark matches by label (ADR-011 #9).
     label: str = Field(pattern=r"^(jwt:[a-z_]+|sb_secret|sb_publishable|unverified)$")
     masked: str                       # first 6 + last 4 characters kept, see safety/mask
-    source_file: str
+    source_file: str                  # recon.report_url form: no query string, keys masked
     jwt_claims: dict[str, str | int | None] | None = None   # role, ref, exp only
+
+    @model_validator(mode="after")
+    def _consistent(self) -> KeyFinding:
+        # MS5 audit S6: the report must never say "publishable" for a service_role key (or the
+        # reverse), and `masked` must really be masked (contains MASK_FILL "****").
+        fixed = {"jwt:anon": "publishable", "sb_publishable": "publishable",
+                 "jwt:service_role": "secret", "sb_secret": "secret"}
+        expected = fixed.get(self.label, "unverified")
+        if self.kind != expected:
+            raise ValueError(f"label {self.label} requires kind {expected}")
+        if "****" not in self.masked:
+            raise ValueError("masked must contain the mask fill")
+        return self
 
 
 class Target(_Strict):
