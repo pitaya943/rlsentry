@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 141/155 · 進行中 4 · blocked 1
+自動產生，請勿手改 · 完成 141/155 · 進行中 5 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -166,7 +166,7 @@
 - [x] T-201 可見測試：MS6 單元測試、既有測試的相容調整、MS5 核准意見第 7 點（SECURITY 類 lint 斷言）（architect，done，1 次）
 - [ ] T-202 Lab 測試：read_policies 以 DB log 驗證唯讀（MS4 稽核 P2 (d)）；L03 提權前重測基準（參考 benchmark 發現）；report 套件標記（architect，in_progress，1 次） ← 依賴 T-201✓
 - [x] T-211 whitebox/correlate.py：依 (物件, 角色) 抑制警告；SECURITY DEFINER 函式才標 SECURITY_DEFINER_RPC_DATA（P2 a、b）（whitebox-dev，done，1 次）
-- [ ] T-212 rules/severity.py：RPC 越權讀取改依角色給規則（P2 b）（probe-dev，todo，1 次） ← 依賴 T-201✓
+- [ ] T-212 rules/severity.py：RPC 越權讀取改依角色給規則（P2 b）（probe-dev，in_progress，2 次） ← 依賴 T-201✓
 - [ ] T-213 probe：同一身分的已知主鍵合併為單一請求；遠端 WriteRefused → inconclusive 寫入 cell（probe-dev，in_progress，1 次） ← 依賴 T-201✓
 - [ ] T-214 probe：dev／ci 讀取植入與 L03 user_metadata 提權（seed_pass.py、escalation.py）（probe-dev，todo，0 次） ← 依賴 T-213… T-202…
 - [x] T-215 safety/endpoint.py：Supabase URL 必須來自設定檔或 CLI 確認（MS5 稽核 S4）（recon-dev，done，1 次）
