@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "aa08b9bd506d81b92",
+  "description": "MS5 audit review",
+  "resolvedModel": "claude-opus-5-5",
+  "prompt": "Review: MS5\nBase: 93e03445d\nRead code only; do not run the lab or Docker (acceptance covers it). Focus: service_role always Critical; anon/publishable never a finding; every output masked (NFR-03); recon fetches only same-origin GETs without credentials; bench wiring (key findings bypass correlate). Return the traceability table and P0/P1/P2 findings with file:line, plus 2-3 hand-check items for the human.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/a4a95e9a-1b66-5bd0-bc52-f3cba4cd691e/tasks/aa08b9bd506d81b92.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

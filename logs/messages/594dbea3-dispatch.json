@@ -1,0 +1,6 @@
+{
+  "description": "MS5 audit review",
+  "prompt": "Review: MS5\nBase: 93e03445d\nRead code only; do not run the lab or Docker (acceptance covers it). Focus: service_role always Critical; anon/publishable never a finding; every output masked (NFR-03); recon fetches only same-origin GETs without credentials; bench wiring (key findings bypass correlate). Return the traceability table and P0/P1/P2 findings with file:line, plus 2-3 hand-check items for the human.",
+  "subagent_type": "auditor",
+  "run_in_background": true
+}
