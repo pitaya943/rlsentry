@@ -179,3 +179,31 @@
 | ADR-036 #7：M1 不經 correlate | pipeline.py（順序）、correlate.py（排除 KEY_RULES） | test_run_scan.py::test_m4_correlates_m3_only_and_fills_policies、test_run_scan_errors.py::test_key_findings_are_never_correlated | 已涵蓋（雙重把關） |
 
 稽核發現的處理：ADR-047。auditor 第一次派工因 30 回合上限未交報告，改為兩個範圍較小的部分重派。
+
+## MS7 整合與交付（auditor 兩部分，base b3c8c2bb2；只讀程式碼與文件，未執行任何測試或 lab 指令）
+
+| 需求 | 優先度 | 證據 | 狀態 |
+| --- | --- | --- | --- |
+| USAGE doctest：dev（L04） | P0 | `USAGE.md` 3.1（rc 0、M1–M5、兩個 CROSS_TENANT_READ Medium 且 probe_only）；`docs/examples/rlsentry.dev.yaml` | OK |
+| USAGE doctest：ci（L05） | P0 | `USAGE.md` 3.2（exit 1、SARIF 非空、兩個 CROSS_TENANT_WRITE High） | OK |
+| USAGE doctest：audit（L08＋S4） | P0 | `USAGE.md` 3.3（first=3、second=0、只有 SECRET_KEY_IN_BUNDLE Critical、supabase_url_method=cli_flag） | OK |
+| doctest 由 `make acceptance` 執行 | P0 | `harness/acceptance.py` check_usage_doctest | OK |
+| `rlsentry init` doctest | P1 | `USAGE.md` 第 2 節 | OK |
+| Python API doctest | P2 | `USAGE.md` 第 7 節（T-247 起有斷言） | OK |
+| 展示情境 L04 | P0 | `USAGE.md` 第 4 節（T-247 起斷言修補前兩個 Confirmed 且 probe_only、修補後無 Confirmed）；`tests/e2e/test_demo_l04.py` | OK |
+| Recall／Precision／FPR 附原始數量 | P0 | `BENCHMARK_REPORT.md` 第 1 節；`docs/benchmark/MS7-bench.json`（tp 32、fn 0、fp 0、tn 72、fp_safe 0） | OK |
+| Coverage／inconclusive 附原始數量 | P1 | `BENCHMARK_REPORT.md` 第 1 節（109／109、7／109；T-247 補） | OK |
+| Runtime 5／20／50 | P0 | `BENCHMARK_REPORT.md`（5.6／20.7／50.8 s，rps 5） | OK |
+| Probe-only ≥ 2 類 | P0 | `BENCHMARK_REPORT.md` 第 4 節（L02、L04；L12 同類） | OK |
+| 統計上的誠實 | P1 | `BENCHMARK_REPORT.md` 開頭；`USAGE.md` 第 8 節 | OK |
+| D2／D3／D4 ADR | P0 | ADR-037、ADR-050、ADR-013＋補記 | OK |
+| MS6 核准意見第 1 點：改標保留較高嚴重度 | P0 | `tests/whitebox/test_correlate_severity.py`、`test_correlate_roles.py`、L07 expected（V1 high）、`tests/ground_truth/test_gt_consistency.py`、holdout | OK |
+| MS6 核准意見第 1 點：有無 DB 連線 fail_on 一致 | P0 | `test_correlate_severity.py`（三種門檻）；`tests/e2e/test_ci_definer_severity.py`（lab L07）；`tests/e2e/test_profiles.py`（L07 → EXIT_FINDINGS） | OK |
+| MS4 核准意見第 1 點：最終程式碼重跑 benchmark | P0 | T-246（T-245 之後）；MS6 與 MS7 JSON 只有 `runtime_s` 不同 | OK |
+| ADR-051 三項修正 | P1 | `tests/report/test_fix_sql_roles.py`、`tests/probe/test_escalation_restore.py`、holdout | OK |
+| lab 命令列入口（ADR-052） | P1 | `tests/lab/test_labctl_cli.py` | OK |
+
+稽核發現與處理：
+- Part A（產品程式，safety 判定 PASS）：P0、P1 無。P2：DROP 範圍可能移除其他角色的合法存取、嚴重度保證依賴合約常數、M4 部分失敗時保留改標、lab CLI 的 port／signal／glob／env → 全部列為已知限制（ADR-051 補記）。
+- Part B（文件）：P1-1 demo doctest 沒有斷言修補前的 Confirmed、P1-2「splinter 沒報」沒有斷言、P2-5 Python API 沒有斷言、P2-6 coverage 缺原始數量、P2-9 ADR-013 過時描述 → T-247 修正。P1-3（沒有 doctest 執行紀錄）→ `make acceptance` 的 `logs/acceptance-final.json`；P1-4（清單與追溯表）→ 本段與 MS7-v1。P2-7（ADR-049 偏離 SPEC 且不 reopen）→ 清單第 4 段。P2-8（Critical 改標只有單元測試）→ 已知限制。
+- 交人類親手檢查：`rlsentry/contracts/whitebox.py` 的 `RELABEL_KEEPS_HIGHER_SEVERITY = True`；`rlsentry/probe/escalation.py` 讀取原值在 try 之前；`lab/_shared/__main__.py` 只綁 127.0.0.1。

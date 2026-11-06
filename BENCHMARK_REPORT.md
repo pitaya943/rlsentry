@@ -14,8 +14,8 @@
 | Recall | TP 32／(TP 32＋FN 0) | 1.000 | ≥ 0.95 | 達成（MS5 為 30/32：L03 ×2 在 MS6 轉為 TP） |
 | Precision | TP 32／(TP 32＋FP 0) | 1.000 | ≥ 0.95 | 達成 |
 | FPR | fp_safe 0／(0＋TN 72) | 0.000 | ≤ 0.05 | 達成 |
-| Coverage | 應測格子全部測到 | 1.000 | — | inconclusive 比例 0.064（MS5 為 0.073） |
-| safe_decided_ratio | 應為 denied 的 safe 案例全部判定為 denied | 1.000 | — | 沒有以「全部 inconclusive」換取低 FPR |
+| Coverage | 測到 109／應測 109 格（dev、15 個計分情境） | 1.000 | — | inconclusive 7／109 = 0.064（MS5 為 0.073） |
+| safe_decided_ratio | 判定為 denied 69／應為 denied 的 safe 案例 69 | 1.000 | — | 沒有以「全部 inconclusive」換取低 FPR |
 | Runtime（audit、rps 5） | 5 張 5.6 s；20 張 20.7 s；50 張 **50.8 s** | — | 50 張 < 60 s | **達成**（與 MS6 相同；MS5 為 7.5／28.5／70.7 s；同一身分的已知主鍵合併為單一請求，ADR-040；rps 未調整） |
 | Probe-only 類別 | L02、L04（另有 L12 同類案例；共 6 個案例） | **2 類** | ≥ 2 類 | 達成 |
 
