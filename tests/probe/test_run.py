@@ -46,10 +46,13 @@ class FakeRest:
         p = r.url.params
         if "owner_id" in p:
             rows = [x for x in rows if p["owner_id"] == f"eq.{x[1]}"]
+        want = ({v.strip('"') for v in p["id"].removeprefix("in.(").removesuffix(")").split(",")}
+                if "id" in p else None)
+        if want is not None:
+            rows = [x for x in rows if x[0] in want]
         if r.method == "GET":
             return httpx.Response(200, json=[{"id": x[0]} for x in rows])
-        want = {v.strip('"') for v in p["id"].removeprefix("in.(").removesuffix(")").split(",")}
-        n = len([x for x in rows if x[0] in want])
+        n = len(rows)
         return httpx.Response(200, headers={"Content-Range": f"*/{n}" if n == 0 else f"0-{n - 1}/{n}"})
 
 
@@ -79,7 +82,7 @@ def sel(cells: dict[tuple[str, Role, Op], tuple[Outcome, int, str]], t: str = "t
 def test_correct_rls_is_denied_everywhere() -> None:
     cells, findings, rec = scan(FakeRest({"todos": Rel(TWO)}), [todos()])
     assert sel(cells) == [(Outcome.DENIED, 2), (Outcome.DENIED, 1), (Outcome.DENIED, 1)]
-    assert findings == [] and rec.methods() == {"GET", "HEAD"}
+    assert findings == [] and rec.methods() <= {"GET", "HEAD"}   # MS6 merges reads into one GET (ADR-040)
 
 
 def test_cross_tenant_leak_is_found() -> None:
@@ -125,8 +128,10 @@ def test_inferred_rpc_leak() -> None:
     rest = FakeRest({"get_all": Rel(TWO, rls=ALL, anon_rls=ALL)})
     cells, findings, _ = scan(rest, [todos("get_all", "rpc", "inferred")])
     assert sel(cells, "get_all") == [(Outcome.ALLOWED, 2), (Outcome.ALLOWED, 1), (Outcome.ALLOWED, 1)]
-    assert findings == [("get_all", r, "SECURITY_DEFINER_RPC_DATA") for r in (Role.ANON, Role.USER_A, Role.USER_B)] \
-        + [("get_all", None, "INFERRED_TARGET")]
+    # one confirmed read per role (rule: ADR-039, tests/probe/test_rule_rpc.py) + the inferred hint
+    assert [(t, r) for t, r, _ in findings] == [("get_all", r) for r in (Role.ANON, Role.USER_A, Role.USER_B)] \
+        + [("get_all", None)]
+    assert findings[-1][2] == "INFERRED_TARGET"
 
 
 def test_cell_order() -> None:

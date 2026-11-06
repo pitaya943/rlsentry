@@ -166,6 +166,10 @@ async def run_scan(config: ScanConfig, *, cli_confirmed: bool = False,
        discovery=found, matrix=matrix, findings=findings, policies=policies, modules=modules,
        notes=notes, timings={"M1","M2","M3","M4": seconds, only for modules that ran}).
        M5: return report.enrich(report, config) (adds title, repro, fix_sql, references, sorts).
+    Test seams (tests monkeypatch these names on the rlsentry.pipeline module, so import them
+    there by name and call them through the module globals): SafeClient, RateLimiter, recon,
+    discover, build_sessions, probe, seed_reads, cleanup_reads, escalation_pass, run_splinter,
+    read_policies, correlate, enrich, resolve_endpoint, authorize.
     WriteRefused is never expected to escape (probe and the dev/ci passes convert it); if it
     does, it propagates (fail closed). Sends no request in audit other than GET/HEAD and the
     login POST (NFR-01; the SafeClient gate enforces it again).
@@ -190,7 +194,11 @@ async def run_init(config: ScanConfig, *, cli_confirmed: bool = False,
 # --- cli.py (Typer; FR-13, FR-15, FR-16) --------------------------------------------------------
 #
 # `rlsentry scan [TARGET] [options]` and `rlsentry init [options]`; entry point
-# `rlsentry = "rlsentry.cli:main"` (pyproject). main() runs the Typer app and returns nothing.
+# `rlsentry = "rlsentry.cli:main"` (pyproject). The module exposes `app` (the typer.Typer with the
+# two commands) and main() (runs app). Test seams: cli imports run_scan, run_init (from
+# rlsentry.pipeline), load_config, render_json, render_html, render_sarif, exit_code by name and
+# calls them through its module globals, so tests can monkeypatch rlsentry.cli.<name>.
+# The config file is read as UTF-8 text and parsed with load_config.
 #
 # scan options:
 #   --config/-c PATH        default "rlsentry.yaml"; when the file does not exist and TARGET is
