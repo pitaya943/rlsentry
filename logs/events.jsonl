@@ -1443,3 +1443,23 @@
 {"ts": "2026-11-06T07:14:26", "kind": "ticket_fail", "ticket": "T-230", "reason": "forbidden patterns added: - **M4 失敗的處理範圍**：合約寫「任何例外 → note」，T-219 只攔 `psycopg.Error`、`OSError`、`ValueError`、`RuntimeError`（ruff 的 BLE001 禁止 `except Exception`，專案也禁止 `noqa`）。其他例外會中止掃描。這偏向 fail-closed：意料之外的錯誤不會被靜默吞掉；已知的連線、權限、雜湊錯誤仍只記 note。", "attempts": 1}
 {"ts": "2026-11-06T07:16:13", "kind": "ticket_start", "ticket": "T-230", "agent": "architect", "attempt": 2}
 {"ts": "2026-11-06T07:26:18", "kind": "ticket_accepted", "ticket": "T-230", "commit": "99638bc85c08a40d97de24bf0039ae8732174ce6", "files": ["docs/DECISIONS.md", "rlsentry/__init__.py", "tests/e2e/__init__.py", "tests/e2e/conftest.py", "tests/e2e/helpers.py", "tests/e2e/test_demo_l04.py", "tests/e2e/test_endpoint_lab.py", "tests/e2e/test_profiles.py", "tests/lab/test_l03_escalation_lab.py"]}
+{"ts": "2026-11-06T07:27:16", "kind": "dispatch", "id": "3d590821", "agent": "auditor", "ticket": null, "review": "MS6\\nBase:", "body": "logs/messages/3d590821-dispatch.json"}
+{"ts": "2026-11-06T07:27:16", "kind": "report", "id": "2f65696a", "agent": "auditor", "ticket": null, "review": "MS6\\nBase:", "body": "logs/messages/2f65696a-report.json"}
+{"ts": "2026-11-06T07:27:16", "kind": "subagent_start", "id": "e0e961ba", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:27:18", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-06T07:27:24", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-06T07:29:46", "kind": "stop_blocked", "attempt": 3, "state": "active", "milestone": "MS6"}
+{"ts": "2026-11-06T07:39:59", "kind": "dispatch", "id": "dd00defc", "agent": "auditor", "ticket": null, "review": "MS6\\nBase:", "body": "logs/messages/dd00defc-dispatch.json"}
+{"ts": "2026-11-06T07:40:05", "kind": "dispatch", "id": "5c3db893", "agent": "auditor", "ticket": null, "review": "MS6\\nBase:", "body": "logs/messages/5c3db893-dispatch.json"}
+{"ts": "2026-11-06T07:40:05", "kind": "report", "id": "1c91e672", "agent": "auditor", "ticket": null, "review": "MS6\\nBase:", "body": "logs/messages/1c91e672-report.json"}
+{"ts": "2026-11-06T07:40:05", "kind": "report", "id": "21e10484", "agent": "auditor", "ticket": null, "review": "MS6\\nBase:", "body": "logs/messages/21e10484-report.json"}
+{"ts": "2026-11-06T07:40:05", "kind": "subagent_start", "id": "2147d7a9", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:40:05", "kind": "subagent_start", "id": "fcf99d1d", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:40:07", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-06T07:40:56", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-06T07:41:07", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-06T07:41:17", "kind": "guard_block", "agent": "auditor", "tool": "Bash", "reason": "auditor is read-only"}
+{"ts": "2026-11-06T07:41:28", "kind": "stop_blocked", "attempt": 4, "state": "active", "milestone": "MS6"}
+{"ts": "2026-11-06T07:42:31", "kind": "subagent_stop", "id": "0cbd3728", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:42:37", "kind": "subagent_stop", "id": "b7ccbaa5", "agent": "auditor", "ticket": null, "review": null}
+{"ts": "2026-11-06T07:45:43", "kind": "ticket_start", "ticket": "T-232", "agent": "architect", "attempt": 1}

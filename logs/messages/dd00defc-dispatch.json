@@ -1,0 +1,6 @@
+{
+  "description": "MS6 audit part A safety",
+  "prompt": "Review: MS6\nBase: 5a41a7327\nPart A of 2 (safety). Read code only: do NOT run pytest, bench, labctl, docker, supabase or anything touching the lab. Budget: at most 20 tool calls reading, then deliver the report (a partial review is better than none). Use `git diff 5a41a7327 HEAD -- <file>` on just these files:\nrlsentry/pipeline.py, rlsentry/safety/endpoint.py, rlsentry/cli.py, rlsentry/report/{json,html,sarif,exit_code}.py, action/action.yml, rlsentry/probe/run.py (WriteRefused part), rlsentry/probe/escalation.py (writes/restore only).\nCheck: audit never writes (NFR-01); single SafeClient only after authorize (ADR-020 #6); S4 no request to an unconfirmed Supabase host (ADR-043); every key/URL in JSON/HTML/SARIF/CLI output masked (NFR-03, report_url); exit code fails only on Confirmed≥high in ci (FR-13); Action has no script injection and never passes --i-own-this-target; escalation always restores.\nOutput: P0/P1/P2 findings with file:line and one hand-check item each, plus traceability rows (requirement → code → test) for NFR-01, NFR-02, NFR-03, FR-13, FR-16, MS5 note 6.",
+  "subagent_type": "auditor",
+  "run_in_background": true
+}

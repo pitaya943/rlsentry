@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a082a8999748f5803",
+  "description": "MS6 audit review",
+  "resolvedModel": "claude-opus-5-5",
+  "prompt": "Review: MS6\nBase: 5a41a7327\nRead code only. Do NOT run pytest, the benchmark, labctl, docker, supabase or any command that touches the lab (MS5's auditor ran tests concurrently with the benchmark). git diff/log/grep and reading files are fine.\nFocus (SPEC §11 MS6): audit cannot write; report separates evidence levels; CI fails only on Confirmed; M1 key findings never pass correlate (ADR-036 #7); every key and URL in reports masked (NFR-03, report_url); S4 (ADR-043): no request to an unconfirmed Supabase host; single SafeClient built only after authorize (ADR-020 #6); privileged JWT roles (ADR-038); correlate per (object, role) and relabel (ADR-039); merged reads keep the untrustworthy-filter check (ADR-040); WriteRefused → inconclusive (ADR-041); seeding/escalation incl. fresh baseline (ADR-042 + addenda); fix SQL never lets target text escape quoting/comments (ADR-044); GitHub Action script-injection safety.\nOutput: the traceability table (requirement → code → tests) for MS6 and a safety review with P0/P1/P2 findings, each with file:line and a hand-check item the human could run.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/b227dfcb-caa8-5c73-a736-a08c80d6e4d5/tasks/a082a8999748f5803.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

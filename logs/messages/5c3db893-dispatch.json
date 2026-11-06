@@ -1,0 +1,6 @@
+{
+  "description": "MS6 audit part B correctness",
+  "prompt": "Review: MS6\nBase: 5a41a7327\nPart B of 2 (correctness). Read code only: do NOT run pytest, bench, labctl, docker, supabase or anything touching the lab. Budget: at most 20 tool calls reading, then deliver the report (partial is better than none). Files: rlsentry/whitebox/correlate.py, rlsentry/rules/severity.py, rlsentry/probe/read.py, rlsentry/probe/seed_pass.py, rlsentry/probe/escalation.py, rlsentry/report/fix_sql.py, rlsentry/report/enrich.py, rlsentry/bench/run.py, rlsentry/bench/score.py, rlsentry/recon/classify.py + contracts/recon.py SECRET_JWT_ROLES.\nCheck: ADR-038 privileged roles Critical, authenticated unverified, anon silent; ADR-039 correlate per (object, role) + relabel only with a covering definer lint; M1 key findings never pass correlate (ADR-036 #7); ADR-040 merged GET keeps the untrustworthy-filter check and downloads pks only; ADR-042 seeding cleanup complete, escalation fresh baseline; ADR-044 fix SQL quoting (no unquoted target text, comments fixed text only); splinter_status uses db_schemas (MS4 note 5c); runtime_s = M2+M3 only.\nOutput: P0/P1/P2 findings with file:line and one hand-check item each, plus traceability rows for FR-03, FR-06, FR-11, FR-12, MS4 note 5 (a)-(d), MS4 notes 2-3, MS5 note 4.",
+  "subagent_type": "auditor",
+  "run_in_background": true
+}
