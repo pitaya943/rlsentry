@@ -1544,3 +1544,8 @@
 {"ts": "2026-11-06T12:40:12", "kind": "stop_blocked", "attempt": 3, "state": "active", "milestone": "MS7"}
 {"ts": "2026-11-06T12:41:48", "kind": "ticket_start", "ticket": "T-247", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-06T12:55:44", "kind": "ticket_accepted", "ticket": "T-247", "commit": "7b857e2f10b4195262f3bf2d20c98e9551188c44", "files": ["BENCHMARK_REPORT.md", "USAGE.md", "docs/DECISIONS.md", "docs/verification/traceability.md"]}
+{"ts": "2026-11-06T13:26:53", "kind": "acceptance_run", "scope": "final", "failed": ["holdout", "traceability"]}
+{"ts": "2026-11-06T13:28:31", "kind": "holdout_added", "milestone": "MS2", "commit": "963c43fc1ea188deede14ef6efee10bcd6e9122c", "files": {"MS2/test_holdout_probe.py": "9ffdacaafd0bdf3e340c95787bf6d5e5fdc871518e41c0c11f7789b861ad0557"}}
+{"ts": "2026-11-06T13:28:33", "kind": "holdout_added", "milestone": "MS6", "commit": "42caa6bf34aff6e09d65f9759a6dc786c531d77f", "files": {"MS6/test_holdout_ms6.py": "db638a8bcd4fbeebc15ee5f1e14c7519806080bbcd0a9fa48f390e79038f55e9"}}
+{"ts": "2026-11-06T13:29:52", "kind": "ticket_start", "ticket": "T-248", "agent": "architect", "attempt": 1}
+{"ts": "2026-11-06T13:44:02", "kind": "ticket_accepted", "ticket": "T-248", "commit": "0ef14ba0a2cf3ff7f031050480d179c5a7e1d722", "files": ["docs/DECISIONS.md", "docs/verification/traceability.md"]}

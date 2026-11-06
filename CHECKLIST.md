@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 167/168 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 168/169 · 進行中 0 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -195,3 +195,4 @@
 - [x] T-245 切換 RELABEL_KEEPS_HIGHER_SEVERITY、L07 ground truth 與既有測試；ci 有無 DB 連線的 fail_on 一致（e2e）（architect，done，1 次）
 - [x] T-246 USAGE.md（dev／ci／audit／demo doctest）、範例設定檔、完整 benchmark 重跑與 BENCHMARK_REPORT（MS4 核准意見第 1 點）（architect，done，1 次）
 - [x] T-247 稽核修正（文件）：doctest 斷言 probe_only 與修補前 Confirmed、Python API 斷言、coverage 原始數量、ADR 補記與 traceability（architect，done，1 次）
+- [x] T-248 make acceptance 修正：過時的 MS2／MS6 holdout 更新（ADR-053）、traceability 中已解決的 MS0 P0 列（architect，done，1 次）
