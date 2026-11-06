@@ -1354,3 +1354,4 @@
 {"ts": "2026-11-06T03:41:08", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS5"}
 {"ts": "2026-11-06T03:59:20", "kind": "ticket_start", "ticket": "T-200", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-06T04:11:07", "kind": "ticket_accepted", "ticket": "T-200", "commit": "684d1af1187b24316c69bee38ada7a29a291b694", "files": ["docs/DECISIONS.md", "pyproject.toml", "rlsentry/contracts/bench.py", "rlsentry/contracts/interfaces.py", "rlsentry/contracts/models.py", "rlsentry/contracts/pipeline.py", "rlsentry/contracts/policy.py", "rlsentry/contracts/probe.py", "rlsentry/contracts/recon.py", "rlsentry/contracts/report.py", "rlsentry/contracts/rules.py", "rlsentry/contracts/whitebox.py", "tests/recon/test_classify_privileged.py"]}
+{"ts": "2026-11-06T04:12:12", "kind": "ticket_start", "ticket": "T-201", "agent": "architect", "attempt": 1}

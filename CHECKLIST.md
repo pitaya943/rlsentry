@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 138/155 · 進行中 0 · blocked 1
+自動產生，請勿手改 · 完成 138/155 · 進行中 1 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -163,7 +163,7 @@
 
 ## [ ] MS6 M5 Report + 介面 + profiles（進行中）
 - [x] T-200 合約：MS6 pipeline、報告、S4 端點確認、高權限 JWT、P2 (a)(b)(c)、主鍵合併；ADR-038–044（architect，done，1 次）
-- [ ] T-201 可見測試：MS6 單元測試、既有測試的相容調整、MS5 核准意見第 7 點（SECURITY 類 lint 斷言）（architect，todo，0 次） ← 依賴 T-200✓
+- [ ] T-201 可見測試：MS6 單元測試、既有測試的相容調整、MS5 核准意見第 7 點（SECURITY 類 lint 斷言）（architect，in_progress，1 次） ← 依賴 T-200✓
 - [ ] T-202 Lab 測試：read_policies 以 DB log 驗證唯讀（MS4 稽核 P2 (d)）（architect，todo，0 次） ← 依賴 T-201…
 - [ ] T-211 whitebox/correlate.py：依 (物件, 角色) 抑制警告；SECURITY DEFINER 函式才標 SECURITY_DEFINER_RPC_DATA（P2 a、b）（whitebox-dev，todo，0 次） ← 依賴 T-201…
 - [ ] T-212 rules/severity.py：RPC 越權讀取改依角色給規則（P2 b）（probe-dev，todo，0 次） ← 依賴 T-201…
