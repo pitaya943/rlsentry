@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+import httpx
+
 from rlsentry.contracts.interfaces import WriteRefused
 from rlsentry.contracts.models import (
     AccessMatrix,
@@ -80,42 +82,59 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
         if not candidates:
             continue
 
-        try:
-            status, changed = await escalate_user_metadata(client, supabase_url, anon_key, token)
-        except WriteRefused as exc:
-            notes.append(f"user_metadata escalation refused by the safety gate: {exc}")
-            break
-        if not changed:
-            notes.append(f"{role.value}: user_metadata not changed ({status})")
-            continue
-
         token2: str | None = None
+        needs_restore = True
         try:
+            try:
+                status, changed = await escalate_user_metadata(client, supabase_url, anon_key,
+                                                                token)
+            except WriteRefused as exc:
+                needs_restore = False
+                notes.append(f"user_metadata escalation refused by the safety gate: {exc}")
+                break
+            except httpx.HTTPError as exc:
+                # The server may have applied the change before the error: the finally restores.
+                notes.append(f"{role.value}: escalation request failed ({type(exc).__name__})")
+                continue
+            if not changed:
+                needs_restore = False
+                notes.append(f"{role.value}: user_metadata not changed ({status})")
+                continue
             try:
                 token2, _ = await login(client, supabase_url, anon_key, user.email, password)
             except LoginFailed as exc:
                 notes.append(f"{role.value}: re-login after escalation failed ({exc})")
                 continue
-            for target, hidden in candidates:
-                res = await visible_pks(client, supabase_url, anon_key, target, token2, hidden)
-                if res.visible is None or res.status not in (200, 206):
-                    continue
-                n = len(res.visible)
-                if n <= 0:
-                    continue
-                spec = RULES[RULE]
-                reason = (f"{ESCALATION_REASON}: {n}/{len(hidden)} known rows outside the "
-                         f"expected scope are visible")
-                probe = ProbeResult(target=target.name, role=role, op=Op.SELECT,
-                                    outcome=Outcome.ALLOWED, known_rows_checked=len(hidden),
-                                    reason=reason, evidence_curl=res.curl,
-                                    http_status=res.status)
-                findings.append(Finding(id=finding_id(target.name, role, Op.SELECT, RULE),
-                                        rule=RULE, evidence=spec.evidence,
-                                        severity=spec.severity, target=target.name, role=role,
-                                        op=Op.SELECT, probes=[probe]))
+            except httpx.HTTPError as exc:
+                notes.append(f"{role.value}: escalation check failed ({type(exc).__name__})")
+                continue
+            try:
+                for target, hidden in candidates:
+                    res = await visible_pks(client, supabase_url, anon_key, target, token2, hidden)
+                    if res.visible is None or res.status not in (200, 206):
+                        continue
+                    n = len(res.visible)
+                    if n <= 0:
+                        continue
+                    spec = RULES[RULE]
+                    reason = (f"{ESCALATION_REASON}: {n}/{len(hidden)} known rows outside the "
+                             f"expected scope are visible")
+                    probe = ProbeResult(target=target.name, role=role, op=Op.SELECT,
+                                        outcome=Outcome.ALLOWED, known_rows_checked=len(hidden),
+                                        reason=reason, evidence_curl=res.curl,
+                                        http_status=res.status)
+                    findings.append(Finding(id=finding_id(target.name, role, Op.SELECT, RULE),
+                                            rule=RULE, evidence=spec.evidence,
+                                            severity=spec.severity, target=target.name,
+                                            role=role, op=Op.SELECT, probes=[probe]))
+            except httpx.HTTPError as exc:
+                notes.append(f"{role.value}: escalation check failed ({type(exc).__name__})")
         finally:
-            await restore_user_metadata(client, supabase_url, anon_key,
-                                        token2 if token2 is not None else token)
+            if needs_restore:
+                restored = await restore_user_metadata(
+                    client, supabase_url, anon_key, token2 if token2 is not None else token)
+                if not restored:
+                    notes.append(f"{role.value}: user_metadata restore failed; the test account "
+                                 "may still carry role=admin and must be cleared by hand")
 
     return findings, notes
