@@ -1301,3 +1301,4 @@
 {"ts": "2026-11-05T23:42:46", "kind": "subagent_stop", "id": "cb486f63", "agent": "recon-dev", "ticket": null, "review": null}
 {"ts": "2026-11-05T23:47:34", "kind": "ticket_accepted", "ticket": "T-182", "commit": "0967193be505d57b1d7025d86cd505f63638a69a", "files": ["rlsentry/recon/classify.py"]}
 {"ts": "2026-11-05T23:53:49", "kind": "ticket_accepted", "ticket": "T-183", "commit": "78fc85c00d5aa337d1209dfbf0482e52b4c275e9", "files": ["rlsentry/recon/extract.py"]}
+{"ts": "2026-11-06T00:00:39", "kind": "ticket_accepted", "ticket": "T-184", "commit": "85691446a9f00275c5eb0432bc46c4271adcf2b5", "files": ["rlsentry/recon/links.py"]}
