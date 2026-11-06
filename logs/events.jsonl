@@ -1303,3 +1303,14 @@
 {"ts": "2026-11-05T23:53:49", "kind": "ticket_accepted", "ticket": "T-183", "commit": "78fc85c00d5aa337d1209dfbf0482e52b4c275e9", "files": ["rlsentry/recon/extract.py"]}
 {"ts": "2026-11-06T00:00:39", "kind": "ticket_accepted", "ticket": "T-184", "commit": "85691446a9f00275c5eb0432bc46c4271adcf2b5", "files": ["rlsentry/recon/links.py"]}
 {"ts": "2026-11-06T00:07:55", "kind": "ticket_accepted", "ticket": "T-185", "commit": "1ac80b203e973e958209855a5266dd7b0a716a08", "files": ["rlsentry/recon/sourcemap.py"]}
+{"ts": "2026-11-06T00:10:16", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "this git operation is reserved for the harness or the human (merges, history rewrites, tags, force pushes, the approvals branch). Use `python3 harness/tickets.py accept <ID> --branch <branch>` to merge work."}
+{"ts": "2026-11-06T00:10:43", "kind": "ticket_fail", "ticket": "T-188", "reason": "merge conflict:\nfatal: You have not concluded your merge (MERGE_HEAD exists).\nPlease, commit your changes before you merge.\n", "attempts": 1}
+{"ts": "2026-11-06T00:11:26", "kind": "ticket_start", "ticket": "T-188", "agent": "lab-dev", "attempt": 2}
+{"ts": "2026-11-06T00:11:55", "kind": "ticket_start", "ticket": "T-186", "agent": "recon-dev", "attempt": 1}
+{"ts": "2026-11-06T00:12:18", "kind": "dispatch", "id": "32d79d23", "agent": "recon-dev", "ticket": "T-186", "review": null, "body": "logs/messages/32d79d23-dispatch.json"}
+{"ts": "2026-11-06T00:12:33", "kind": "subagent_start", "id": "53cc5b98", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T00:12:33", "kind": "report", "id": "ecd0fc02", "agent": "recon-dev", "ticket": "T-186", "review": null, "body": "logs/messages/ecd0fc02-report.json"}
+{"ts": "2026-11-06T00:13:31", "kind": "subagent_stop", "id": "47314163", "agent": "recon-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T00:18:37", "kind": "ticket_fail", "ticket": "T-188", "reason": "checks failed:\nE       assert False\nE        +  where False = all(<generator object test_l01_rls_disabled_is_reported.<locals>.<genexpr> at 0x7f8956d329b0>)\nFAILED tests/lab/test_whitebox_lab.py::test_l01_rls_disabled_is_reported - as...", "attempts": 2}
+{"ts": "2026-11-06T00:20:34", "kind": "ticket_start", "ticket": "T-188", "agent": "lab-dev", "attempt": 3}
+{"ts": "2026-11-06T00:24:03", "kind": "ticket_accepted", "ticket": "T-188", "commit": "1b1aacef34c6bdd88d5fd8a944fb1a5b56b725df", "files": ["lab/_shared/labctl.py"]}
