@@ -236,3 +236,42 @@ class LabCtl(Protocol):
         note 5)."""
         ...
 
+
+
+# --- lab/_shared/__main__.py: shell entry for USAGE.md doctests and docs/demo.md (MS7, ADR-052) --
+
+LAB_ENV_ANON = "RLSENTRY_ANON_KEY"
+LAB_ENV_DB = "RLSENTRY_DB_URL"
+"""Env var names `python -m lab._shared env` exports; USAGE.md's example configs name them in
+anon_key_env / db_url_env. The test passwords use LAB_USERS[role]["password_env"]."""
+
+LAB_CLI = """
+python -m lab._shared up                 ensure_up(); print info.api_url; exit 0.
+python -m lab._shared apply <SCENARIO>   ensure_up(), then apply(SCENARIO); print
+                                         "applied <SCENARIO>"; unknown scenario (ValueError)
+                                         → one line on stderr, exit 2.
+python -m lab._shared env                ensure_up(); print ONE line:
+                                         export RLSENTRY_ANON_KEY=<q> RLSENTRY_DB_URL=<q>
+                                         RLS_A_PW=<q> RLS_B_PW=<q>
+                                         (order as shown: LAB_ENV_ANON, LAB_ENV_DB, then the
+                                         password_env of user_a, user_b from LAB_USERS; every
+                                         value shlex.quote'd; passwords from lab_password), so
+                                         `eval "$(python -m lab._shared env)"` sets them. Lab
+                                         values only (localhost keys); never a real project.
+python -m lab._shared sql                read SQL from stdin; execute(sql); print "ok"; an SQL
+                                         error (RuntimeError) → its message on stderr, exit 1.
+python -m lab._shared serve <SCENARIO> --port <N>
+                                         serve lab/<SCENARIO>_*/frontend/ (scenario_dir) on
+                                         127.0.0.1:<N> only (never 0.0.0.0) until SIGTERM or
+                                         SIGINT, then exit 0; print the URL
+                                         "http://127.0.0.1:<N>/" on stdout and flush BEFORE
+                                         serving; no request logging. Unknown scenario or no
+                                         frontend/index.html → stderr, exit 2.
+No arguments or an unknown command → usage on stderr, exit 2. argparse only (no new
+dependency). The module exposes `main(argv: list[str] | None = None) -> int` (output through
+print / sys.stderr, the exit code returned, not raised) and runs `sys.exit(main())` under
+`if __name__ == "__main__"`, so tests call it in-process: labctl.lock() is re-entrant within
+one process, while a child process would wait forever for the lock a pytest session holds.
+`serve` never takes the lab lock (it only reads files). Why: USAGE.md doctests (make acceptance) and the human run the three profiles
+from a shell; the lab helpers were only reachable from Python before (ADR-052).
+"""

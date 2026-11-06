@@ -14,8 +14,9 @@ from rlsentry.report.fix_sql import fix_sql, quote_ident
 from tests.report.helpers import finding
 
 
-def pol(name: str, cmd: str = "SELECT", permissive: bool = True, table: str = "notes") -> PolicyRow:
-    return PolicyRow(schema="public", table=table, name=name, command=cmd, roles=["authenticated"],
+def pol(name: str, cmd: str = "SELECT", permissive: bool = True, table: str = "notes",
+        roles: tuple[str, ...] = ("authenticated",)) -> PolicyRow:
+    return PolicyRow(schema="public", table=table, name=name, command=cmd, roles=list(roles),
                      permissive=permissive)
 
 
@@ -64,7 +65,7 @@ def test_scope_expressions(scope: RowScope, expr: str) -> None:
 
 def test_deny_scope_drops_but_creates_nothing() -> None:
     sql = fix_sql(finding("ANON_READ_OWNER_SCOPED", "notes", Role.ANON, Op.SELECT),
-                  ctx(scope=RowScope.DENY, policies=[pol("open")]))
+                  ctx(scope=RowScope.DENY, policies=[pol("open", roles=("anon",))]))
     assert sql is not None and 'DROP POLICY "open"' in sql and "CREATE POLICY" not in sql
 
 

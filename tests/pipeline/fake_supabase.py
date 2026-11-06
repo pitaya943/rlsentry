@@ -62,6 +62,8 @@ class FakeSupabase:
     put_metadata_status: int = 200
     restore_status: int | None = None     # status for PUTs clearing the role (None: as above)
     fail_when: Callable[[httpx.Request], bool] | None = None   # raise ReadTimeout for these
+    get_user_status: int = 200            # GET /auth/v1/user status (MS7, ADR-051 #3)
+    get_user_body: object = None          # replaces the GET /auth/v1/user JSON body when set
 
     # --- helpers for assertions -------------------------------------------------------------
     def hosts(self) -> set[str]:
@@ -98,6 +100,15 @@ class FakeSupabase:
                                          "user_metadata": {"role": self.metadata_role.get(uid)}}
             return httpx.Response(200, json={"access_token": jwt(claims)})
         who, meta_admin = self._who(r)
+        if path == "/auth/v1/user" and r.method == "GET":
+            if who is None:
+                return httpx.Response(401)
+            if self.get_user_status != 200:
+                return httpx.Response(self.get_user_status)
+            if self.get_user_body is not None:
+                return httpx.Response(200, json=self.get_user_body)
+            meta = {"role": self.metadata_role[who]} if who in self.metadata_role else {}
+            return httpx.Response(200, json={"id": who, "user_metadata": meta})
         if path == "/auth/v1/user" and r.method == "PUT":
             if who is None:
                 return httpx.Response(401)
