@@ -105,7 +105,9 @@ def test_rpc_user_leak_finding() -> None:
     e = ExpectedAccess(target="f", op=Op.SELECT, role=Role.USER_B, scope=RowScope.OWN_ROWS_ONLY)
     o = ReadObservation(target="f", role=Role.USER_B, expected=e, forbidden=cr(200, 1, 1))
     (f,) = read_findings(t, o, read_cell(o))
-    assert (f.rule, f.severity) == ("SECURITY_DEFINER_RPC_DATA", Severity.MEDIUM)
+    # MS7 update (ADR-053): since MS6 (ADR-039, MS4 approval note 5 (b)) M3 names a read by role
+    # only; only M4 may relabel it SECURITY_DEFINER_RPC_DATA. Same behaviour: a Medium finding.
+    assert (f.rule, f.severity) == ("CROSS_TENANT_READ", Severity.MEDIUM)
 
 
 def run_probe(handler: Callable[[httpx.Request], httpx.Response], targets: list[Target],
@@ -115,31 +117,41 @@ def run_probe(handler: Callable[[httpx.Request], httpx.Response], targets: list[
     return matrix, findings, rec
 
 
-def test_public_profiles_anon_sensitive_warning_and_401_never_denied() -> None:
+@pytest.mark.parametrize("anon_401", [True, False])
+def test_public_profiles_anon_sensitive_warning_and_401_never_denied(anon_401: bool) -> None:
+    # MS7 update (ADR-053): written for MS2 (reads only) with Profile.CI; since MS3 ci also runs
+    # write probes, and since MS6 (ADR-040) the known-pk reads of one role are ONE GET, so a 401
+    # for anon makes the whole anon read inconclusive (no sensitive-column hint). Now run as
+    # audit (reads only, as in MS2) and check the hint with a 200 answer.
     rows = [("p1", A, True), ("p2", B, False)]
 
     def h(r: httpx.Request) -> httpx.Response:
         uid = {f"Bearer {TA}": A, f"Bearer {TB}": B}.get(r.headers["authorization"])
         p = r.url.params
         vis = [x for x in rows if x[2] or x[1] == uid]
-        if r.method == "GET":
-            vis = [x for x in vis if p["user_id"] == f"eq.{x[1]}" and p["is_public"] == ("is.true" if x[2] else "is.false")]
-            return httpx.Response(200, json=[{"id": x[0]} for x in vis])
-        if uid is None and "p2" in p["id"]:
+        if uid is None and anon_401 and "id" in p:
             return httpx.Response(401)
-        want = p["id"]
-        n = len([x for x in vis if f'"{x[0]}"' in want])
+        if "id" in p:
+            hit = [x for x in vis if f'"{x[0]}"' in p["id"]]
+        else:
+            hit = [x for x in vis if p.get("user_id", f"eq.{x[1]}") == f"eq.{x[1]}"
+                   and p.get("is_public", "is.true" if x[2] else "is.false") == ("is.true" if x[2] else "is.false")]
+        if r.method == "GET":
+            return httpx.Response(200, json=[{"id": x[0]} for x in hit])
+        n = len(hit)
         return httpx.Response(200, headers={"Content-Range": f"*/{n}" if not n else f"0-{n - 1}/{n}"})
 
     t = Target(name="pp", kind="table", columns=["id", "user_id", "email", "is_public"], primary_key=["id"],
                discovered_by="openapi", confidence="confirmed")
     pol = ExpectedPolicy(tables={"pp": TablePolicy(owner_column="user_id", public_column="is_public", select=RoleScopes(
         anon=RowScope.PUBLIC_ROWS_ONLY, user=RowScope.PUBLIC_OR_OWN_ROWS))})
-    matrix, findings, rec = run_probe(h, [t], pol)
+    rec = Recorder(h)
+    matrix, findings = run(lambda c: probe(c, URL, ANON, [t], SESS, pol, Profile.AUDIT), rec, Profile.AUDIT)
     cells = {(c.role, c.op): c for c in matrix.cells}
-    assert cells[(Role.ANON, Op.SELECT)].outcome is Outcome.INCONCLUSIVE   # 401 is never "denied"
+    anon = cells[(Role.ANON, Op.SELECT)].outcome
+    assert anon is (Outcome.INCONCLUSIVE if anon_401 else Outcome.DENIED)   # 401 is never "denied"
     assert cells[(Role.USER_A, Op.SELECT)].outcome is Outcome.DENIED
     assert cells[(Role.USER_B, Op.SELECT)].outcome is Outcome.INCONCLUSIVE  # A has only a public row
-    assert ("SENSITIVE_COLUMN_PUBLIC", Role.ANON) in {(f.rule, f.role) for f in findings}
+    assert (("SENSITIVE_COLUMN_PUBLIC", Role.ANON) in {(f.rule, f.role) for f in findings}) is (not anon_401)
     assert not any(f.evidence.value == "confirmed" for f in findings)
     assert rec.methods() <= {"GET", "HEAD"}
