@@ -12,9 +12,11 @@ def is_sensitive_column(name: str) -> bool:
 
 
 def read_rule(target_kind: str, role: Role) -> str:
-    """Rule id for a confirmed read beyond scope: an RPC is always the L07 pattern."""
-    if target_kind == "rpc":
-        return "SECURITY_DEFINER_RPC_DATA"
+    """Rule id for a confirmed read beyond scope, by role only (ADR-039).
+
+    M3 cannot know whether an RPC is SECURITY DEFINER; M4 correlate relabels when proven.
+    """
+    del target_kind
     if role is Role.ANON:
         return "ANON_READ_OWNER_SCOPED"
     return "CROSS_TENANT_READ"
