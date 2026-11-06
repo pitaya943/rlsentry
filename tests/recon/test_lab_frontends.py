@@ -1,4 +1,4 @@
-"""recon() over real HTTP against every lab frontend (labctl.serve_frontend; no Docker; T-189/T-190).
+"""recon() over real HTTP against every lab frontend (labctl.serve_frontend; no Docker; T-187/T-188).
 
 MS5 focus: the service_role key in L08 is Critical; the anon key present in all 16 frontends is
 never reported as a finding.

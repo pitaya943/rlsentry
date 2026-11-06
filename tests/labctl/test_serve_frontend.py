@@ -1,4 +1,4 @@
-"""labctl.serve_frontend: static, local-only, closed afterwards (ADR-036; T-190). No Docker."""
+"""labctl.serve_frontend: static, local-only, closed afterwards (ADR-036; T-188). No Docker."""
 from __future__ import annotations
 
 import urllib.error

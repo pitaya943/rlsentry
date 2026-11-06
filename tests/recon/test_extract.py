@@ -1,4 +1,4 @@
-"""recon/extract.py: URLs, key candidates, entropy filter (FR-02; SPEC §5 M1 steps 3, 5; T-185)."""
+"""recon/extract.py: URLs, key candidates, entropy filter (FR-02; SPEC §5 M1 steps 3, 5; T-183)."""
 from __future__ import annotations
 
 import math
