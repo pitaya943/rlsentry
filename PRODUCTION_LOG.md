@@ -280,7 +280,7 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - subagent tokens（約）：whitebox-dev 每張 19k–41k；probe-dev 15k–30k；lab-dev 22k–30k；auditor 80k（第 2 次）＋102k（第 1 次未完成）。
 
 
-## MS5 M1 Recon（進行中）
+## MS5 M1 Recon（等待審查，main @ 5a41a7327）
 
 ### Holdout（派工前紀錄，§2）
 | 檔案 | sha256 |
@@ -297,3 +297,24 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 | --- | --- |
 | 容器在 T-188 驗收的試合併中途重啟，留下未完成的 merge；hook 禁止 architect 自行 `merge --abort` | 以 harness 的 accept 路徑清除（它在合併失敗時會 abort），代價是 T-188 第 1 次嘗試記為 merge conflict（events.jsonl 有紀錄） |
 | T-188 第 2 次驗收：`test_whitebox_lab.py::test_l01_rls_disabled_is_reported` 失敗，與 T-188 無關（在不含 T-188 的分支上可重現） | 根因：容器被強制終止 → Postgres crash recovery 重設統計 → `_realtime.extensions` 索引 idx_scan=0 → splinter 的 PERFORMANCE lint `unused_index` 出現在非 public schema。`supabase stop --no-backup` 後重建乾淨 lab（與 Codespaces／Actions 相同）即通過；第 3 次驗收通過。MS4 該測試對「非正常關機」敏感，列入 MS5 清單已知限制，未修改已核准的測試 |
+| auditor 違反「只讀程式碼」指示跑了完整測試（含 lab），與 architect 第一次 benchmark 同時執行 | 該次 benchmark 作廢；在 T-193 之後的最終程式碼上、無其他 lab 使用時重跑 |
+| 稽核 P1 S1：同源回 200 的 URL 原樣進入 `chunks_scanned`／`source_file`（合約只要求遮罩 skipped，architect 的缺口） | T-192（合約 `report_url`、KeyFinding validator、ADR-036 補記）／T-193（實作）；S2、S3、S6 一併修正 |
+| architect 以 `commit -a` 誤把 harness 紀錄檔帶進 `arch/T-191`；切回後工作樹的 ticket 狀態與 5 行 events 遺失；hook 禁止跨分支複製檔案 | 重新 `start` T-189／T-191 恢復狀態（attempts 仍為 1）；以只含測試檔的 `arch/T-191b` 驗收；遺失的 events 原文保留在 `arch/T-191` 的 commit |
+
+### Ticket（14 張，全部 done）
+| 批次 | ticket | 嘗試次數 |
+| --- | --- | --- |
+| MS4 核准意見＋合約＋ADR | T-180 | 1 |
+| 可見測試與真實框架 fixture | T-181、T-191（docstring） | 1 |
+| 實作 | T-182 classify、T-183 extract、T-184 links、T-185 sourcemap、T-186 fetch、T-187 run、T-188 serve_frontend、T-189 bench | T-188 為 3（皆環境因素），其餘 1 |
+| benchmark | T-190 | 1 |
+| 稽核修正 | T-192、T-193 | 1 |
+
+### ADR
+036（M1 設計）＋補記（report_url、userinfo、KeyFinding 一致性）、037（D2：不支援無頭瀏覽器）。D2 已決定。
+
+### 指標
+- acceptance `--milestone MS5 --no-vc`：ALL PASSED（holdout 8）。
+- benchmark（`docs/benchmark/MS5-bench.json`）：recall 30/32、precision 30/30、FPR 0/72、coverage 1.0、probe-only 2 類（不含 L08）；audit 16/16 情境寫入 0；runtime 5／20／50 張 7.5／28.5／70.7 s（未改 M2／M3）。
+- 必做變異 5 項全部實測會失敗（第 3 段）。
+- subagent tokens（約）：recon-dev 每張 17k–32k；lab-dev 15k；whitebox-dev 20k；auditor 93k。
