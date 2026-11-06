@@ -1,0 +1,47 @@
+[
+  {
+    "check": "tickets & checklist",
+    "ok": true,
+    "detail": "tickets valid, checklist consistent"
+  },
+  {
+    "check": "provenance",
+    "ok": true,
+    "detail": "every product-code commit is a genuine accept merge (scope and cheat checks recomputed)"
+  },
+  {
+    "check": "ruff",
+    "ok": true,
+    "detail": "All checks passed!\n"
+  },
+  {
+    "check": "mypy",
+    "ok": true,
+    "detail": "Success: no issues found in 78 source files\n"
+  },
+  {
+    "check": "tests",
+    "ok": true,
+    "detail": "........................................................................ [  5%]\n........................................................................ [ 11%]\n........................................................................ [ 17%]\n........................................................................ [ 23%]\n........................................................................ [ 29%]\n........................................................................ [ 34%]\n........................................................................ [ 40%]\n........................................................................ [ 46%]\n........................................................................ [ 52%]\n........................................................................ [ 58%]\n........................................................................ [ 64%]\n........................................................................ [ 69%]\n........................................................................ [ 75%]\n........................................................................ [ 81%]\n........................................................................ [ 87%]\n........................................................................ [ 93%]\n........................................................................ [ 99%]\n...........                                                              [100%]\n1235 passed in 769.70s (0:12:49)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
+  },
+  {
+    "check": "holdout",
+    "ok": true,
+    "detail": "................                                                         [100%]\n=============================== warnings summary ===============================\ntests/probe/test_seed_pass.py:82\n  /home/user/rlsentry/tests/probe/test_seed_pass.py:82: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\ntests/probe/test_escalation.py:115\n  /home/user/rlsentry/tests/probe/test_escalation.py:115: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n16 passed, 2 warnings in 0.32s\n"
+  },
+  {
+    "check": "safety invariants",
+    "ok": true,
+    "detail": "........................................................................ [ 31%]\n........................................................................ [ 63%]\n........................................................................ [ 95%]\n...........                                                              [100%]\n227 passed, 1008 deselected in 460.60s (0:07:40)\n"
+  },
+  {
+    "check": "mutation",
+    "ok": true,
+    "detail": "mutation testing skipped (set MUTATION=1 to run)"
+  },
+  {
+    "check": "checklist sync",
+    "ok": true,
+    "detail": "CHECKLIST.md up to date"
+  }
+]
