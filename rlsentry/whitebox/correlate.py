@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from rlsentry.contracts.models import Evidence, Finding, Op, Role, finding_id
+from rlsentry.contracts import whitebox as _wb_contract
+from rlsentry.contracts.models import SEVERITY_RANK, Evidence, Finding, Op, Role, finding_id
 from rlsentry.contracts.recon import KEY_RULES
 from rlsentry.contracts.rules import RULES
 from rlsentry.contracts.whitebox import (
@@ -32,8 +33,10 @@ def _warning(target: str, rule: str, role: Role | None, op: Op | None, lint: str
 
 
 def correlate(findings: list[Finding], lints: list[Lint],
-              db_schemas: Sequence[str] = DEFAULT_DB_SCHEMAS) -> list[Finding]:
+              db_schemas: Sequence[str] = DEFAULT_DB_SCHEMAS, *,
+              keep_higher: bool | None = None) -> list[Finding]:
     """Annotate proven findings confirmed/probe_only and add lint-only warnings (see contract)."""
+    higher = _wb_contract.RELABEL_KEEPS_HIGHER_SEVERITY if keep_higher is None else keep_higher
     schemas = set(db_schemas)
     by_object: dict[str, list[Lint]] = {}
     for ln in lints:
@@ -59,7 +62,10 @@ def correlate(findings: list[Finding], lints: list[Lint],
                     and any(ln.name in SECURITY_DEFINER_LINTS
                             and f.role in DEFINER_LINT_ROLES[ln.name] for ln in obj_lints)):
                 rule = "SECURITY_DEFINER_RPC_DATA"
-                update.update(rule=rule, severity=RULES[rule].severity,
+                new_sev = RULES[rule].severity
+                if higher and SEVERITY_RANK[f.severity] > SEVERITY_RANK[new_sev]:
+                    new_sev = f.severity
+                update.update(rule=rule, severity=new_sev,
                               id=finding_id(f.target, f.role, f.op, rule))
             out.append(f.model_copy(update=update))
         else:
