@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from urllib.parse import parse_qsl, urlsplit
 
@@ -59,6 +60,8 @@ class FakeSupabase:
     requests: list[httpx.Request] = field(default_factory=list)
     metadata_role: dict[str, object] = field(default_factory=dict)   # uid -> role claim
     put_metadata_status: int = 200
+    restore_status: int | None = None     # status for PUTs clearing the role (None: as above)
+    fail_when: Callable[[httpx.Request], bool] | None = None   # raise ReadTimeout for these
 
     # --- helpers for assertions -------------------------------------------------------------
     def hosts(self) -> set[str]:
@@ -77,6 +80,8 @@ class FakeSupabase:
     # --- request handling ---------------------------------------------------------------------
     def __call__(self, r: httpx.Request) -> httpx.Response:
         self.requests.append(r)
+        if self.fail_when is not None and self.fail_when(r):
+            raise httpx.ReadTimeout("simulated timeout", request=r)
         if r.url.host == urlsplit(APP).hostname:
             return self._frontend(r)
         api = urlsplit(self.api)
@@ -97,9 +102,12 @@ class FakeSupabase:
             if who is None:
                 return httpx.Response(401)
             role = json.loads(r.content)["data"]["role"]
-            if self.put_metadata_status == 200:
+            status = self.put_metadata_status
+            if role is None and self.restore_status is not None:
+                status = self.restore_status
+            if status == 200:
                 self.metadata_role[who] = role
-            return httpx.Response(self.put_metadata_status)
+            return httpx.Response(status)
         if path == "/rest/v1/":
             return httpx.Response(200, json=self._openapi())
         name = path.removeprefix("/rest/v1/")

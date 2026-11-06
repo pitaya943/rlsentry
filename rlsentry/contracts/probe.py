@@ -748,12 +748,14 @@ async def escalate_user_metadata(client: SafeClientContract, supabase_url: str, 
 
 
 async def restore_user_metadata(client: SafeClientContract, supabase_url: str, anon_key: str,
-                                 token: str) -> None:
+                                 token: str) -> bool:
     """Contract only; implemented by rlsentry.probe.metadata.restore_user_metadata. ⚠ writes.
 
     `PUT <supabase_url>/auth/v1/user` with body {"data": {"role": None}}, clearing the role the
-    escalation set, so the probe leaves the test account as it found it (SPEC §5 M3 清理). Best
-    effort: a non-200 is ignored (the caller already recorded the escalation).
+    escalation set, so the probe leaves the test account as it found it (SPEC §5 M3 清理).
+    Returns True iff the PUT returned 200. Never raises httpx.HTTPError (a transport error returns
+    False): the caller must be able to report a failed restore instead of losing it (MS6 audit,
+    ADR-047). Known limit: the role is cleared to null, not set back to an earlier value.
     """
     raise NotImplementedError
 
@@ -775,7 +777,9 @@ async def seed_reads(client: SafeClientContract, supabase_url: str, anon_key: st
     e.public_column, run.pick_text_column(target, e.owner_column, e.public_column), sessions);
     collect rows; each note becomes "<target>: <note>". A WriteRefused stops the pass: the note
     "read seeding refused by the safety gate: <str(exc)>" is added and no further target is
-    seeded. Returns (all rows, notes).
+    seeded. An httpx.HTTPError for one target → note "<target>: seeding failed (<exception
+    class>)" and the pass continues; rows already seeded are always returned (ADR-047: a row the
+    caller never hears about could never be cleaned up). Returns (all rows, notes).
     """
     raise NotImplementedError
 
@@ -787,7 +791,8 @@ async def cleanup_reads(client: SafeClientContract, supabase_url: str, anon_key:
 
     For each target (input order) that has rows in `seeded` (matched by SeededRow.target ==
     target.name): left = cleanup_seeded(client, ..., target, those rows, sessions); a
-    WriteRefused makes left = those rows. Returns the concatenated cleanup_findings(target,
+    WriteRefused or httpx.HTTPError makes left = those rows, and the next target is still
+    cleaned (ADR-047). Returns the concatenated cleanup_findings(target,
     left) (CLEANUP_FAILED; ADR-029 #8). Rows of a target name absent from `targets` are
     reported with a Target(name=<name>, kind="table", discovered_by="policy",
     confidence="unknown") so a leftover is never silent.
@@ -826,6 +831,8 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
        created; ADR-042 補記). No candidate → nothing is written for this role.
     3. (status, changed) = escalate_user_metadata(client, ..., sessions.tokens[role]).
        Not changed → note "<role>: user_metadata not changed (<status>)", next role.
+       An httpx.HTTPError from it → note "<role>: escalation request failed (<exception class>)",
+       then restore anyway (the server may have applied it; ADR-047), then next role.
     4. try: token2, _ = login(client, ..., user.email, password); for each candidate:
        res = visible_pks(client, ..., target, token2, hidden); trustworthy (res.visible not
        None, status 200/206) and n = len(res.visible) > 0 → one Finding: rule
@@ -834,9 +841,13 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
        known_rows_checked=len(hidden), reason=ESCALATION_REASON + f": {n}/{len(hidden)}
        known rows outside the expected scope are visible", http_status=res.status,
        evidence_curl=res.curl)], id=finding_id(name, role, SELECT, rule).
-       LoginFailed → note "<role>: re-login after escalation failed (<exc>)".
+       LoginFailed → note "<role>: re-login after escalation failed (<exc>)"; an httpx.HTTPError
+       inside this try → note "<role>: escalation check failed (<exception class>)".
        finally: restore_user_metadata(client, ..., token2 if obtained else the original
-       token) — ALWAYS, so the test account is left as found (SPEC §5 M3 清理).
+       token) — ALWAYS, so the test account is left as found (SPEC §5 M3 清理). A False return →
+       note "<role>: user_metadata restore failed; the test account may still carry role=admin
+       and must be cleared by hand" (ADR-047). escalation_pass itself never raises
+       httpx.HTTPError.
     A WriteRefused from escalate_user_metadata → note "user_metadata escalation refused by the
     safety gate: <str(exc)>" and the pass stops (nothing was changed). Returns (findings, notes).
     The matrix is not modified: escalation findings carry their own ProbeResult.

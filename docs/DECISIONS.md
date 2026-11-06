@@ -692,3 +692,16 @@ D2–D4 由 architect 決定並記錄於此。
 ### ADR-042 補記 2：實作時的澄清（2026-11-06，T-219、T-220 回報）
 - **M4 失敗的處理範圍**：合約寫「任何例外 → note」，T-219 只攔 `psycopg.Error`、`OSError`、`ValueError`、`RuntimeError`（ruff 的 BLE001 禁止 `except Exception`，專案也禁止行內的 lint 豁免註解）。其他例外會中止掃描。這偏向 fail-closed：意料之外的錯誤不會被靜默吞掉；已知的連線、權限、雜湊錯誤仍只記 note。
 - **CLI**：預設輸出格式依實際生效的 profile（`report.profile`），不是設定檔的 profile；TARGET 與設定檔 target 比較前去掉結尾的 `/`；未知的 `--format` 值 → exit 2；SARIF 的 artifact uri 為使用者輸入的 `--config` 路徑；`init` 必須有設定檔（不接受 TARGET）。
+
+## ADR-047：MS6 稽核的處理（例外時的清理與還原、CLI 崩潰、報告 URL；拒絕 limit 的 P1）
+- 日期：2026-11-06 · Milestone：MS6 · 相關：NFR-01、NFR-03、FR-13、ADR-029 #8–#9、ADR-040、ADR-042、ADR-044；auditor（兩部分，base 5a41a7327）
+- 接受並修正（T-232 合約與測試，T-233–T-235 實作）：
+  1. **例外時仍清理**：`run_scan` 在 seed_reads 之後以 try/finally 包住 probe 與提權，確保 cleanup_reads 一定執行；`seed_reads` 遇到單一表的網路錯誤只記 note 並保留已植入的列；`cleanup_reads` 遇到單一表的錯誤，該表的列記為 CLEANUP_FAILED，其他表照常清理。
+  2. **提權一定嘗試還原，失敗必定回報**：提權 PUT 發生網路錯誤時仍會還原（伺服器可能已經套用）；`restore_user_metadata` 改為回傳是否成功、不拋網路錯誤；還原失敗加 note，明確說明測試帳號可能殘留 role=admin、需人工清除。
+  3. **CLI**：Typer 明確設 `pretty_exceptions_show_locals=False`（traceback 不得印出 env、key、DB URL）；網路／OS／runtime 錯誤以 `EXIT_ERROR = 5` 結束，只印例外類別，CI 不會把崩潰誤認為「有 finding」。
+  4. **報告**：`recon.supabase_url` 來自 bundle，JSON／HTML 也經 `report_url`。
+  5. **correlate 自身排除 KEY_RULES**（ADR-036 #7 由兩處把關）。
+  6. **測試**：`test_audit_sends_only_reads_and_the_login_post` 加上「確實有請求」的斷言（原本零請求也會通過）。
+- 不接受：**P1「limit=len(pks) 削弱過濾檢查」**。PostgREST 的 limit 只截斷 RLS 已允許的列，所以回傳的每一列都確實對該角色可見；若過濾被忽略，回傳的 N 列只要有任何一列不在查詢集合就判為不可信；若 N 列全在查詢集合，則查詢的 N 個主鍵恰好全部可見，結果正確。因此不會產生錯誤的 allowed 或 denied。`verdict.py` 的 `total <= queried` 檢查在合併讀取後恆真，保留作為防線。
+- 交人類決定（列入 MS6 清單第 4 段）：M4 把 anon 的 RPC 越權讀取改標 SECURITY_DEFINER_RPC_DATA 時，嚴重度依 SPEC §5 M5 表格由 High（含敏感欄位時 Critical）降為 Medium。提供 DB 連線反而使嚴重度降低，可能讓 `fail_on: high` 的 CI 通過。
+- 列為已知限制（P2）：修補 SQL 一律使用 `db_schemas[0]`；函式 DDL 不含參數簽章（多載函式會失敗）；DROP POLICY 不看 policy 的 roles；policy 名稱超過 63 bytes 會被截斷；還原把 role 設為 null 而非原值；JWT 的「表擁有者 role」（如 supabase_storage_admin）不在 Critical 集合（ADR-038 以 superuser／BYPASSRLS 定義）；GitHub Action 對 `profile: audit` 的設定檔永遠不會失敗（較嚴者勝）；M3 的計時在 dev 含植入、提權與清理。

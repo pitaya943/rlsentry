@@ -193,7 +193,9 @@ def correlate(findings: list[Finding], lints: list[Lint],
         id=finding_id(target, role, op, "SECURITY_DEFINER_RPC_DATA"): only splinter can prove
         a function is SECURITY DEFINER, so only M4 may use that rule;
       - other proven finding → correlation="probe_only", lint=None;
-      - every other finding unchanged;
+      - every other finding unchanged — in particular findings whose rule is in
+        recon.KEY_RULES are never correlated, even if a caller passes them in (ADR-036 #7,
+        enforced here too since the MS6 audit, ADR-047);
     followed by the new findings, sorted by (target, rule, role value or ""):
       - per object with relevant lints:
         * each relevant lint L whose name is in SECURITY_DEFINER_LINTS → one
