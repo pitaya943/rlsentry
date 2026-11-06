@@ -108,8 +108,10 @@ def test_holdout_fix_sql_quotes_schema_and_policy() -> None:
     sql = fix_sql(f, FixContext(kind="table", schema_name='my"schema', scope=None, policies=[PolicyRow(
         schema='my"schema', table="orders", name="open read", command="ALL", roles=["anon"], permissive=True)]))
     assert sql is not None and '"my""schema"."orders"' in sql and 'DROP POLICY "open read"' in sql
+    # MS7 update (ADR-053): since ADR-051 #1 only policies that can serve the finding's role are
+    # dropped, so the unsafe name sits on a policy for anon (pg_policies never has empty roles).
     bad = FixContext(kind="table", policies=[PolicyRow(schema="public", table="orders", name="x\n; DROP", command="ALL",
-                                                       roles=[], permissive=True)])
+                                                       roles=["anon"], permissive=True)])
     assert fix_sql(f, bad) is None
 
 
