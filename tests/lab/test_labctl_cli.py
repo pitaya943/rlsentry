@@ -14,8 +14,8 @@ from pathlib import Path
 
 import httpx
 import pytest
-from lab._shared.__main__ import main
 
+from lab._shared import __main__ as lab_cli
 from lab._shared import labctl
 from rlsentry.contracts.ground_truth import LAB_USERS
 from rlsentry.contracts.lab import LAB_ENV_ANON, LAB_ENV_DB, LabInfo
@@ -23,7 +23,7 @@ from rlsentry.contracts.models import Role
 
 
 def run(argv: list[str], capsys: pytest.CaptureFixture[str]) -> tuple[int, str, str]:
-    code = main(argv)
+    code = lab_cli.main(argv)
     out, err = capsys.readouterr()
     return code, out, err
 
