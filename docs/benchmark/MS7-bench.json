@@ -1,0 +1,1574 @@
+{
+  "tp": 32,
+  "fp": 0,
+  "fn": 0,
+  "tn": 72,
+  "fp_safe": 0,
+  "recall": 1.0,
+  "precision": 1.0,
+  "fpr": 0.0,
+  "coverage": 1.0,
+  "inconclusive_ratio": 0.06422018348623854,
+  "safe_decided_ratio": 1.0,
+  "runtime": {
+    "5": 5.6,
+    "20": 20.7,
+    "50": 50.8
+  },
+  "scenarios": [
+    {
+      "scenario": "L01",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L01-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V3",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V4",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V5",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V6",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V7",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V8",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V9",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V10",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V11",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V12",
+          "verdict": "tp",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.366374621000432,
+      "cells_total": 12,
+      "cells_tested": 12,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 0,
+      "safe_denied_decided": 0,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_disabled_in_public:customers"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 34
+    },
+    {
+      "scenario": "L01",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L01-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V5",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L01-V6",
+          "verdict": "tp",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.16984315300032904,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 0,
+      "safe_denied_decided": 0,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_disabled_in_public:customers"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L02",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L02-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-V3",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S4",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S5",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S6",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S7",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S8",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-S9",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.2406919579989335,
+      "cells_total": 12,
+      "cells_tested": 12,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 9,
+      "safe_denied_decided": 9,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [
+        "L02-V1",
+        "L02-V2",
+        "L02-V3"
+      ],
+      "db_writes": 31
+    },
+    {
+      "scenario": "L02",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L02-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L02-V3",
+          "verdict": "tp",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.16500186899975233,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 0,
+      "safe_denied_decided": 0,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [
+        "L02-V1",
+        "L02-V2",
+        "L02-V3"
+      ],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L03",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L03-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L03-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L03-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L03-S2",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.8372250409993285,
+      "cells_total": 4,
+      "cells_tested": 4,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_references_user_metadata:reports"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 13
+    },
+    {
+      "scenario": "L03",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L03-S1",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.17762478999975428,
+      "cells_total": 1,
+      "cells_tested": 1,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 1,
+      "safe_denied_decided": 1,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_references_user_metadata:reports"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L04",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L04-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-S4",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-S5",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.2484011779997672,
+      "cells_total": 7,
+      "cells_tested": 7,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 5,
+      "safe_denied_decided": 5,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [
+        "L04-V1",
+        "L04-V2"
+      ],
+      "db_writes": 31
+    },
+    {
+      "scenario": "L04",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L04-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L04-S1",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.16849000899946986,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 1,
+      "safe_denied_decided": 1,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [
+        "L04-V1",
+        "L04-V2"
+      ],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L05",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L05-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S4",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S5",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S6",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S7",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S8",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S9",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S10",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.5716043009988425,
+      "cells_total": 12,
+      "cells_tested": 12,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 10,
+      "safe_denied_decided": 10,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_policy_always_true:projects"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 31
+    },
+    {
+      "scenario": "L05",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L05-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L05-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.16634683999927802,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 3,
+      "safe_denied_decided": 3,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_policy_always_true:projects"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L06",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L06-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-V3",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.648897742000372,
+      "cells_total": 6,
+      "cells_tested": 6,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 3,
+      "safe_denied_decided": 3,
+      "splinter": "reported",
+      "splinter_lints": [
+        "security_definer_view:invoice_summary"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 32
+    },
+    {
+      "scenario": "L06",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L06-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-V3",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L06-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.282651442000315,
+      "cells_total": 6,
+      "cells_tested": 6,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 3,
+      "safe_denied_decided": 3,
+      "splinter": "reported",
+      "splinter_lints": [
+        "security_definer_view:invoice_summary"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L07",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L07-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-V3",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-W1",
+          "verdict": "warning_seen",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.3757053769995764,
+      "cells_total": 7,
+      "cells_tested": 7,
+      "cells_inconclusive": 1,
+      "safe_denied_total": 3,
+      "safe_denied_decided": 3,
+      "splinter": "reported",
+      "splinter_lints": [
+        "anon_security_definer_function_executable:get_all_accounts",
+        "anon_security_definer_function_executable:ping_definer",
+        "authenticated_security_definer_function_executable:get_all_accounts",
+        "authenticated_security_definer_function_executable:ping_definer"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 22
+    },
+    {
+      "scenario": "L07",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L07-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-V3",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "L07-W1",
+          "verdict": "warning_seen",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.2837526120001712,
+      "cells_total": 7,
+      "cells_tested": 7,
+      "cells_inconclusive": 1,
+      "safe_denied_total": 3,
+      "safe_denied_decided": 3,
+      "splinter": "reported",
+      "splinter_lints": [
+        "anon_security_definer_function_executable:get_all_accounts",
+        "anon_security_definer_function_executable:ping_definer",
+        "authenticated_security_definer_function_executable:get_all_accounts",
+        "authenticated_security_definer_function_executable:ping_definer"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L08",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L08-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L08-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L08-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L08-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.5729160590008178,
+      "cells_total": 2,
+      "cells_tested": 2,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 31
+    },
+    {
+      "scenario": "L08",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L08-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L08-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L08-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L08-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.16608704999998736,
+      "cells_total": 2,
+      "cells_tested": 2,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L09",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L09-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-V2",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-V3",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S4",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S5",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S6",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S7",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.7012168189994554,
+      "cells_total": 10,
+      "cells_tested": 10,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 7,
+      "safe_denied_decided": 7,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_policy_always_true:feedback"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 34
+    },
+    {
+      "scenario": "L09",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L09-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L09-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.17145902700031002,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 3,
+      "safe_denied_decided": 3,
+      "splinter": "reported",
+      "splinter_lints": [
+        "rls_policy_always_true:feedback"
+      ],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L10",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L10-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-S4",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-S5",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-W1",
+          "verdict": "warning_seen",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.8226872969999022,
+      "cells_total": 5,
+      "cells_tested": 5,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 4,
+      "safe_denied_decided": 4,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 35
+    },
+    {
+      "scenario": "L10",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L10-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L10-W1",
+          "verdict": "warning_seen",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.20809020599881478,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 1,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L11",
+      "profile": "dev",
+      "scored": false,
+      "cases": [
+        {
+          "case_id": "L11-V1",
+          "verdict": "fn",
+          "detail": "no cell"
+        },
+        {
+          "case_id": "L11-V2",
+          "verdict": "fn",
+          "detail": "no cell"
+        },
+        {
+          "case_id": "L11-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L11-S2",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.07170531199972174,
+      "cells_total": 0,
+      "cells_tested": 0,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 0,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L11",
+      "profile": "audit",
+      "scored": false,
+      "cases": [
+        {
+          "case_id": "L11-V1",
+          "verdict": "fn",
+          "detail": "no cell"
+        },
+        {
+          "case_id": "L11-V2",
+          "verdict": "fn",
+          "detail": "no cell"
+        },
+        {
+          "case_id": "L11-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L11-S2",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.07066194299932249,
+      "cells_total": 0,
+      "cells_tested": 0,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 0,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "L12",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L12-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-I2",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.7811896129996967,
+      "cells_total": 5,
+      "cells_tested": 5,
+      "cells_inconclusive": 2,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [
+        "rls_enabled_no_policy:audit_log"
+      ],
+      "splinter_match": true,
+      "probe_only": [
+        "L12-V1"
+      ],
+      "db_writes": 10
+    },
+    {
+      "scenario": "L12",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "L12-V1",
+          "verdict": "tp",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "L12-I2",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.1755963649993646,
+      "cells_total": 5,
+      "cells_tested": 5,
+      "cells_inconclusive": 2,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [
+        "rls_enabled_no_policy:audit_log"
+      ],
+      "splinter_match": true,
+      "probe_only": [
+        "L12-V1"
+      ],
+      "db_writes": 0
+    },
+    {
+      "scenario": "C01",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C01-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S4",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S5",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S6",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S7",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S8",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S9",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S10",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S11",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S12",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.5908793219996369,
+      "cells_total": 12,
+      "cells_tested": 12,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 12,
+      "safe_denied_decided": 12,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 31
+    },
+    {
+      "scenario": "C01",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C01-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C01-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.166105255999355,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 3,
+      "safe_denied_decided": 3,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "C02",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C02-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S3",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S4",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S5",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S6",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S7",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 1.8215533980001055,
+      "cells_total": 7,
+      "cells_tested": 7,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 6,
+      "safe_denied_decided": 6,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 35
+    },
+    {
+      "scenario": "C02",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C02-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C02-S3",
+          "verdict": "tn",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.20654165999985707,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 0,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "C03",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C03-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C03-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C03-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "C03-I2",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "C03-I3",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.4360688699998718,
+      "cells_total": 5,
+      "cells_tested": 5,
+      "cells_inconclusive": 3,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 13
+    },
+    {
+      "scenario": "C03",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C03-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "C03-I2",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        },
+        {
+          "case_id": "C03-I3",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.11724114099979488,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 3,
+      "safe_denied_total": 0,
+      "safe_denied_decided": 0,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    },
+    {
+      "scenario": "C04",
+      "profile": "dev",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C04-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C04-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C04-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.6713113819996579,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 1,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 13
+    },
+    {
+      "scenario": "C04",
+      "profile": "audit",
+      "scored": true,
+      "cases": [
+        {
+          "case_id": "C04-S1",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C04-S2",
+          "verdict": "tn",
+          "detail": ""
+        },
+        {
+          "case_id": "C04-I1",
+          "verdict": "inconclusive_ok",
+          "detail": ""
+        }
+      ],
+      "unmatched_findings": [],
+      "runtime_s": 0.16855810200013366,
+      "cells_total": 3,
+      "cells_tested": 3,
+      "cells_inconclusive": 1,
+      "safe_denied_total": 2,
+      "safe_denied_decided": 2,
+      "splinter": "not_reported",
+      "splinter_lints": [],
+      "splinter_match": true,
+      "probe_only": [],
+      "db_writes": 0
+    }
+  ],
+  "probe_only": {
+    "L02": [
+      "L02-V1",
+      "L02-V2",
+      "L02-V3"
+    ],
+    "L04": [
+      "L04-V1",
+      "L04-V2"
+    ],
+    "L12": [
+      "L12-V1"
+    ]
+  }
+}
