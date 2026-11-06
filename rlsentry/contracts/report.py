@@ -31,6 +31,7 @@ EXIT_FINDINGS = 1      # ci: a finding meets fail_on (FR-13)
 EXIT_USAGE = 2         # bad config / missing input (ConfigError, ScanSetupError, CLI misuse)
 EXIT_REFUSED = 3       # AuthorizationRefused, EndpointRefused, WriteRefused
 EXIT_CLEANUP = 4       # ci: a CLEANUP_FAILED finding and no fail_on hit (ADR-014 補記 #4)
+EXIT_ERROR = 5         # the scan crashed (network/OS/runtime error); never confused with findings (ADR-047)
 
 EVIDENCE_RANK: dict[Evidence, int] = {
     Evidence.CONFIRMED: 2, Evidence.SUSPECTED: 1, Evidence.CONFIG_WARNING: 0,
@@ -166,7 +167,9 @@ def render_json(report: ScanReport) -> str:
     """Contract only; implemented by rlsentry.report.json.render_json. Pure.
 
     mask_text(copy.model_dump_json(indent=2, by_alias=True)) where copy = report with
-    target = recon.report_url(report.target). Parses back with ScanReport.model_validate_json.
+    target = recon.report_url(report.target) and, when report.recon is set, recon.supabase_url =
+    report_url(it) (it comes from the target's bundle; MS6 audit, ADR-047). Parses back with
+    ScanReport.model_validate_json.
     """
     raise NotImplementedError
 
@@ -185,7 +188,8 @@ def render_html(report: ScanReport) -> str:
     op, correlation and lint, its probes (outcome, known_rows_checked, http_status, reason),
     repro in <pre>, fix_sql in <pre>, and references as <a href> links; pg_policies (when
     present); the access matrix; the recon scope (chunks_scanned, chunks_skipped, keys with
-    masked values only). The final string goes through mask_text.
+    masked values only); recon.supabase_url is written via report_url (ADR-047). The final string
+    goes through mask_text.
     """
     raise NotImplementedError
 

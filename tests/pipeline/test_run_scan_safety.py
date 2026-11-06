@@ -82,6 +82,7 @@ def test_config_and_cli_url_disagree_is_refused_before_any_api_request() -> None
 def test_audit_sends_only_reads_and_the_login_post() -> None:
     fake = FakeSupabase(tables={"notes": notes_table(rls="all")})
     scan(fake, cfg(profile=Profile.AUDIT))
+    assert len(fake.to(API)) >= 5          # not vacuous: discovery, logins and reads did happen (MS6 audit)
     for r in fake.requests:
         assert r.headers["user-agent"] == USER_AGENT
         if r.method not in ("GET", "HEAD"):

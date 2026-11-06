@@ -149,7 +149,10 @@ async def run_scan(config: ScanConfig, *, cli_confirmed: bool = False,
        dev/ci only: seeded, seed_notes = seed_reads(...) (probe/seed_pass.py).
        matrix, m3 = probe(client, url, anon_key, found.targets, sessions, config.policy, profile).
        dev/ci only: esc, esc_notes = escalation_pass(..., config.test_users, env, matrix);
-       m3 += esc; m3 += cleanup_reads(... seeded ...). audit: none of these three is called
+       m3 += esc; m3 += cleanup_reads(... seeded ...). ADR-047 (MS6 audit): everything after
+       seed_reads up to cleanup runs inside try/finally, so cleanup_reads runs (and the seeded
+       canaries are deleted) even when probe or escalation_pass raises; the exception then
+       propagates. audit: none of these three is called
        and the note WRITES_AUDIT_NOTE is added.
        When any matrix cell's reason starts with probe.WRITE_REFUSED_REASON, add one note
        "<n> write cells inconclusive: writes to <host> refused by the safety gate (ADR-041)".
@@ -216,6 +219,10 @@ async def run_init(config: ScanConfig, *, cli_confirmed: bool = False,
 #   Terminal: one summary line per evidence level with counts per severity, then each finding
 #   at Confirmed level as "<SEVERITY> <rule> <target> <role> <op>", then the written paths.
 #   Never prints a key, password or DB URL; everything printed passes through mask_text.
+#   Typer is created with pretty_exceptions_show_locals=False (a traceback must never print
+#   run_scan's locals: env, keys, DB URL; MS6 audit, ADR-047). httpx.HTTPError, OSError and
+#   RuntimeError escaping run_scan → stderr "scan failed: <exception class>" (no message) and
+#   EXIT_ERROR, so CI can tell a crash from findings.
 #   Exit code: report.exit_code(report, config.fail_on); ConfigError/ScanSetupError/
 #   EndpointRefused/AuthorizationRefused/WriteRefused → message on stderr (mask_text) and
 #   EXIT_USAGE for ConfigError/ScanSetupError, EXIT_REFUSED for the three refusals.
