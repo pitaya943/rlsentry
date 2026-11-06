@@ -1,4 +1,4 @@
-"""NFR-03: no complete key in any recon output, repr or skipped-URL entry (SPEC §9 安全不變式; T-189)."""
+"""NFR-03: no complete key in any recon output, repr or skipped-URL entry (SPEC §9 安全不變式; T-187)."""
 from __future__ import annotations
 
 import pytest

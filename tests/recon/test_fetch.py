@@ -1,4 +1,4 @@
-"""recon/fetch.py: crawl order, same-origin only, limits, maps, GET without credentials (FR-01; T-188)."""
+"""recon/fetch.py: crawl order, same-origin only, limits, maps, GET without credentials (FR-01; T-186)."""
 from __future__ import annotations
 
 import base64

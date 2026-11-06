@@ -1,4 +1,4 @@
-"""recon/links.py: script URLs, chunk paths, webpack chunk maps, source-map URLs (FR-01; T-186)."""
+"""recon/links.py: script URLs, chunk paths, webpack chunk maps, source-map URLs (FR-01; T-184)."""
 from __future__ import annotations
 
 from rlsentry.recon.links import (
