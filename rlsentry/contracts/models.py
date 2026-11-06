@@ -93,8 +93,11 @@ class KeyFinding(_Strict):
     def _consistent(self) -> KeyFinding:
         # MS5 audit S6: the report must never say "publishable" for a service_role key (or the
         # reverse), and `masked` must really be masked (contains MASK_FILL "****").
-        fixed = {"jwt:anon": "publishable", "sb_publishable": "publishable",
-                 "jwt:service_role": "secret", "sb_secret": "secret"}
+        # MS5 approval note 4 (ADR-038): every role in recon.SECRET_JWT_ROLES (roles that are
+        # superuser or BYPASSRLS in a stock Supabase project, measured) is a secret key.
+        from rlsentry.contracts.recon import SECRET_JWT_ROLES  # local: recon imports this module
+        fixed = {"jwt:anon": "publishable", "sb_publishable": "publishable", "sb_secret": "secret"}
+        fixed.update({f"jwt:{r}": "secret" for r in SECRET_JWT_ROLES})
         expected = fixed.get(self.label, "unverified")
         if self.kind != expected:
             raise ValueError(f"label {self.label} requires kind {expected}")
@@ -165,6 +168,10 @@ class Finding(_Strict):
     lint: str | None = None
     correlation: str | None = Field(default=None, pattern=r"^(confirmed|lint_only|probe_only)$")
     fix_sql: str | None = None
+    # ADR-044 (M5, FR-12): filled by report.enrich; None/[] until then.
+    title: str | None = None          # RULES[rule].description
+    repro: str | None = None          # curl reproduction command, keys masked (NFR-03)
+    references: list[str] = []        # documentation links (report.REFERENCES)
 
     @model_validator(mode="after")
     def _known_rule(self) -> Finding:
@@ -219,6 +226,11 @@ class AuthorizationRecord(_Strict):
     method: str = Field(pattern=r"^(cli_flag|config)$")
     confirmed_at: datetime
     write_hosts: list[str] = []      # ADR-017: remote hosts this run may write to (ci only)
+    # ADR-043 (MS5 audit S4): the Supabase API URL every API request of this run went to, and
+    # who named it: the config file (`supabase_url`) or the CLI flag `--supabase-url`. Never
+    # a URL taken from the target's bundle alone. None until the pipeline resolves it.
+    supabase_url: str | None = None
+    supabase_url_method: str | None = Field(default=None, pattern=r"^(config|cli_flag)$")
 
 
 class PolicyRow(_Strict):
@@ -250,3 +262,8 @@ class ScanReport(_Strict):
     matrix: AccessMatrix = AccessMatrix()
     findings: list[Finding] = []
     policies: list[PolicyRow] = []    # M4 (SPEC §5 M4 第 2 點; ADR-032): pg_policies conditions
+    # ADR-042: modules that ran ("M1".."M5"), why some did not / what was skipped (no secrets,
+    # URLs via report_url), and seconds spent per module ("M1".."M4").
+    modules: list[str] = []
+    notes: list[str] = []
+    timings: dict[str, float] = {}

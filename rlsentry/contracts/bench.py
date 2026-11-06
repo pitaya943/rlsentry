@@ -16,6 +16,7 @@ from typing import Literal
 from rlsentry.contracts.ground_truth import BenchReport, GroundTruth, ScenarioResult
 from rlsentry.contracts.lab import LabInfo
 from rlsentry.contracts.models import AccessMatrix, Finding, Profile
+from rlsentry.contracts.policy import ExpectedPolicy, ScanConfig
 from rlsentry.contracts.whitebox import Lint
 
 SCORING_PROFILE = Profile.DEV
@@ -39,10 +40,12 @@ RUNTIME_PROFILE = Profile.AUDIT
 
 # --- bench/score.py (pure) ---------------------------------------------------------------------
 
-def splinter_status(gt: GroundTruth, lints: list[Lint]) -> Literal["reported", "not_reported"]:
+def splinter_status(gt: GroundTruth, lints: list[Lint],
+                    db_schemas: Sequence[str] = ("public",)) -> Literal["reported", "not_reported"]:
     """Contract only; implemented by rlsentry.bench.score.splinter_status. Pure (ADR-033).
 
-    "reported" iff some lint has "SECURITY" in categories, object_schema == "public" and
+    MS4 approval note 5 (c): the exposed schemas are a parameter, never hard-coded "public".
+    "reported" iff some lint has "SECURITY" in categories, object_schema in db_schemas and
     object_name equal to the `target` of one of gt.vulnerable_cases whose kind is ACCESS or
     STORAGE (any profile); else "not_reported". So a scenario whose planted flaw splinter
     flags counts as reported; lints on other objects (e.g. L12 audit_log) or non-security lints
@@ -61,7 +64,8 @@ def lint_labels(lints: list[Lint]) -> list[str]:
 
 def score_scenario(gt: GroundTruth, profile: Profile, matrix: AccessMatrix,
                    findings: list[Finding], runtime_s: float, *,
-                   lints: list[Lint] | None = None, db_writes: int | None = None) -> ScenarioResult:
+                   lints: list[Lint] | None = None, db_writes: int | None = None,
+                   db_schemas: Sequence[str] = ("public",)) -> ScenarioResult:
     """Contract only; implemented by rlsentry.bench.score.score_scenario. Pure (ADR-011, ADR-033).
 
     Only cases whose `profiles` contain `profile` are scored; the rest are omitted from
@@ -87,7 +91,7 @@ def score_scenario(gt: GroundTruth, profile: Profile, matrix: AccessMatrix,
     - safe_denied_total = scored safe cases with expect DENIED; safe_denied_decided = those
       whose matrix cell outcome is DENIED.
     - scored = (gt.priority != "P2"). splinter fields when `lints` is not None:
-      splinter = splinter_status(gt, lints), splinter_lints = lint_labels(lints),
+      splinter = splinter_status(gt, lints, db_schemas), splinter_lints = lint_labels(lints),
       splinter_match = None if gt.splinter_expected == "measure" else
       (gt.splinter_expected == splinter). With lints None all three stay None/[].
     - probe_only = sorted ids of "tp" vulnerable cases whose FIRST matching finding (in
@@ -114,37 +118,56 @@ def aggregate(results: Sequence[ScenarioResult], runtime: dict[str, float]) -> B
 
 # --- bench/run.py (lab, I/O) -------------------------------------------------------------------
 
+BENCH_ANON_KEY_ENV = "RLSENTRY_BENCH_ANON_KEY"
+BENCH_DB_URL_ENV = "RLSENTRY_BENCH_DB_URL"
+"""Environment variable NAMES used in the in-memory env dict the bench passes to run_scan; the
+values are the lab's (labctl.ensure_up()). Nothing is exported to the process environment."""
+
+
+def bench_config(target_url: str, info: LabInfo, policy: ExpectedPolicy, profile: Profile,
+                 rps: float, with_db: bool) -> tuple[ScanConfig, dict[str, str]]:
+    """Contract only; implemented by rlsentry.bench.run.bench_config. Pure (ADR-042).
+
+    The ScanConfig a user of the lab would write, plus the env dict run_scan reads:
+    ScanConfig(target=target_url, authorized=True, profile=profile, rate_limit_rps=rps,
+    test_users=[TestUser(name=role, email=u["email"], password_env=u["password_env"]) for
+    LAB_USERS], supabase_url=info.api_url, anon_key_env=BENCH_ANON_KEY_ENV,
+    db_url_env=BENCH_DB_URL_ENV if with_db else None, tables=policy.tables,
+    defaults=policy.defaults) and env = {password_env: labctl.lab_password(role) for LAB_USERS}
+    | {BENCH_ANON_KEY_ENV: info.anon_key} | ({BENCH_DB_URL_ENV: info.db_url} if with_db).
+    """
+    raise NotImplementedError
+
+
 def run_scenario(sid: str, profile: Profile, info: LabInfo, *,
                  rps: float = BENCH_RPS, with_whitebox: bool = True) -> ScenarioResult:
     """Contract only; implemented by rlsentry.bench.run.run_scenario. ⚠ lab writes (dev).
 
-    Holding labctl.lock(): labctl.apply(sid); gt = the scenario's expected.yaml
-    (labctl.scenario_dir(sid) / "expected.yaml", GroundTruth.model_validate); marker =
-    labctl.db_log_marker(); then exactly what the pipeline will do, through ONE
-    SafeClient(profile=profile, limiter=RateLimiter(rps=rps, concurrency=4)):
-    M1 (MS5, ADR-036): inside `labctl.serve_frontend(sid) as url`, rec = recon(client, url)
-    (not timed); then start a monotonic clock; M2+M3: discover(client, info.api_url,
-    info.anon_key, gt.policy, rec.sources); build_sessions with LAB_USERS as TestUser and env
-    {password_env: labctl.lab_password(role)}; probe(..., gt.policy, profile) → (matrix,
-    probe_findings). Stop the clock → runtime_s (M2+M3 only, ADR-033 #6). The lab's own
-    anon key (info.anon_key) is still what M2/M3 use, so a recon defect shows up as a key
-    FN, never as a broken probe. db_writes = number of labctl.db_writes_since(marker) entries
-    whose role is in POSTGREST_ROLES. If with_whitebox: lints = run_splinter(info.db_url) and
-    probe_findings = correlate(probe_findings, lints) (M4 after M3, read-only, not timed).
-    findings = probe_findings + rec.findings: M1 key findings never go through correlate
-    (contracts.recon.KEY_RULES; a key is outside splinter's scope and must not count as
-    probe_only). Return score_scenario(gt, profile, matrix, findings, runtime_s,
-    lints=lints if with_whitebox else None, db_writes=db_writes). An empty lint list is a
-    measurement ("splinter reported nothing", e.g. L11), not "not run" (ADR-033 補記)."""
+    MS6 (ADR-042, ADR-020 #6): the bench measures the product path itself, run_scan, so the
+    only SafeClient is the one pipeline.py builds. Holding labctl.lock(): labctl.apply(sid);
+    gt = the scenario's expected.yaml (GroundTruth.model_validate); marker =
+    labctl.db_log_marker(); inside `labctl.serve_frontend(sid) as url`: config, env =
+    bench_config(url, info, gt.policy, profile, rps, with_whitebox); report =
+    asyncio.run(pipeline.run_scan(config, confirmed_by="rlsentry-bench", env=env)).
+    runtime_s = report.timings.get("M2", 0) + report.timings.get("M3", 0) (M2+M3 only,
+    ADR-033 #6). db_writes = number of labctl.db_writes_since(marker) entries whose role is in
+    POSTGREST_ROLES. lints = run_splinter(info.db_url, config.db_schemas) if with_whitebox
+    else None (a second, read-only run used only for splinter_status; run_scan already
+    correlated). Return score_scenario(gt, profile, report.matrix, report.findings, runtime_s,
+    lints=lints, db_writes=db_writes, db_schemas=config.db_schemas).
+    An empty lint list is a measurement ("splinter reported nothing", e.g. L11), not "not
+    run" (ADR-033 補記)."""
     raise NotImplementedError
 
 
 def run_runtime(info: LabInfo, tables: Sequence[int] = RUNTIME_TABLES) -> dict[str, float]:
     """Contract only; implemented by rlsentry.bench.run.run_runtime. ⚠ lab writes (setup only).
 
-    For each n: holding labctl.lock(), policy = labctl.apply_synthetic(n); time discover +
-    build_sessions + probe in RUNTIME_PROFILE with RateLimiter(rps=RUNTIME_RPS,
-    concurrency=4), bundle_sources=[]; record seconds rounded to 0.1 under key str(n)."""
+    For each n: holding labctl.lock(), policy = labctl.apply_synthetic(n); config, env =
+    bench_config(info.api_url, info, policy, RUNTIME_PROFILE, RUNTIME_RPS, with_db=False);
+    report = asyncio.run(run_scan(config, confirmed_by="rlsentry-bench", env=env)); record
+    round(report.timings["M2"] + report.timings["M3"], 1) under key str(n). (M1 fetches the API
+    root once, untimed; M4 is off.)"""
     raise NotImplementedError
 
 

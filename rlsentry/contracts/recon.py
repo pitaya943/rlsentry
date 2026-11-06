@@ -120,9 +120,14 @@ JWT_CLAIMS_KEPT: tuple[str, ...] = ("role", "ref", "exp")
 are dropped (CLAUDE.md: never store real user data)."""
 
 PUBLISHABLE_JWT_ROLES: frozenset[str] = frozenset({"anon"})
-SECRET_JWT_ROLES: frozenset[str] = frozenset({"service_role"})
-"""FR-03. Any other role (authenticated, supabase_admin, …) is "unverified": shown as a
-Configuration warning for a human to judge, never silently dropped (ADR-036 #5)."""
+SECRET_JWT_ROLES: frozenset[str] = frozenset({
+    "service_role", "supabase_admin", "postgres", "supabase_etl_admin", "supabase_read_only_user",
+})
+"""FR-03; MS5 approval note 4 (ADR-038). JWT roles that are superuser or BYPASSRLS in a stock
+Supabase project, measured on the lab (Supabase CLI 3.0.0: `SELECT rolname FROM pg_roles WHERE
+rolsuper OR rolbypassrls`): a JWT carrying one of them is a secret key → SECRET_KEY_IN_BUNDLE
+(Critical, Confirmed). `authenticated` and any other role stay "unverified" (Configuration
+warning, a human judges); `anon` is publishable and yields no finding (ADR-036 #5)."""
 
 KEY_LABEL_RE = re.compile(r"^(jwt:[a-z_]+|sb_secret|sb_publishable|unverified)$")
 """Allowed KeyFinding.label / key Finding.target values; identical to the ground truth's

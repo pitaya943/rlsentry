@@ -63,6 +63,10 @@ downloaded; primary keys are the only values RLSentry ever reads, CLAUDE.md)."""
 
 AUDIT_WRITE_REASON = "audit profile is read-only (NFR-01)"
 WRITE_PENDING_REASON = "write probes are not implemented yet (MS3)"
+WRITE_REFUSED_REASON = "write refused by the safety gate for this host (ADR-041)"
+"""Reason prefix of write cells that could not be probed because the SafeClient gate refused
+the write (dev against a remote host, ci host not in write_hosts). Such cells are INCONCLUSIVE,
+never denied: nothing was tested (MS3 approval note 1)."""
 """Reasons of the NOT_TESTED write cells produced by probe() in MS2."""
 
 CONTENT_RANGE_TOTAL_RE = r"^(?:\*|\d+-\d+)/(\d+)$"
@@ -209,6 +213,47 @@ async def count_visible(client: SafeClientContract, supabase_url: str, anon_key:
     raise NotImplementedError
 
 
+class VisibleResult(_Strict):
+    """One merged GET over a role's known primary keys (ADR-040): which of them it can see."""
+
+    queried: int = Field(ge=1)
+    status: int | None             # None: transport error
+    visible: list[str] | None      # queried pks the response contained; None = untrustworthy
+    curl: str                      # reproduction command, secrets masked (curl_command)
+
+
+async def visible_pks(client: SafeClientContract, supabase_url: str, anon_key: str,
+                      target: Target, token: str, pks: list[str]) -> VisibleResult:
+    """Contract only; implemented by rlsentry.probe.read.visible_pks. Downloads primary keys only.
+
+    MS4 approval note 2 (ADR-040): one request per (target, role) instead of one HEAD for the
+    forbidden and one for the permitted known rows. Precondition: pks non-empty and
+    len(target.primary_key) == 1 (else ValueError).
+    GET <base>/rest/v1/<name> (RPC: /rest/v1/rpc/<name>) with params select=<pk>,
+    <pk>=in.(<v1>,…) (same double-quoted literals as count_visible) and limit=<len(pks)>,
+    headers apikey: <anon_key>, Authorization: Bearer <token> (no Prefer header).
+    visible = [str(item[pk]) for each item, first occurrence, response order] ONLY when the
+    status is 200 or 206, the body is a JSON list, every item is a dict whose pk value is not
+    None, and every str(item[pk]) is one of `pks`; otherwise visible = None (a row outside the
+    queried set means the filter was not applied: untrustworthy, ADR-023 #3).
+    curl = curl_command("GET", <final URL with params, as sent>, <the same headers>).
+    Transport errors → status=None, visible=None (never raised).
+    """
+    raise NotImplementedError
+
+
+def observation_counts(res: VisibleResult | None, forbidden: list[str],
+                       permitted: list[str]) -> tuple[CountResult | None, CountResult | None]:
+    """Contract only; implemented by rlsentry.probe.read.observation_counts. Pure (ADR-040).
+
+    Splits one VisibleResult back into the two CountResults read_cell / read_findings expect:
+    for each of forbidden, permitted: [] → None; else CountResult(queried=len(list),
+    status=res.status, total=len(set(res.visible) & set(list)) if res.visible is not None
+    else None, curl=res.curl). res None with a non-empty list → ValueError.
+    """
+    raise NotImplementedError
+
+
 # --- probe/verdict.py -----------------------------------------------------------------------
 
 def split_known(expected: ExpectedAccess, rows: list[KnownRow],
@@ -287,9 +332,11 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
        Else expected = resolve_expected(policy, name, SELECT, role, columns) and:
        - expected.is_review → observation with nothing sent;
        - len(primary_key) != 1 → nothing sent, note "needs a single-column primary key";
-       - else (forbidden, permitted) = split_known(...); count_visible for each non-empty
-         list (forbidden first); note "no known row outside the expected scope of <role>"
-         plus the KnownRows notes when forbidden is empty.
+       - else (forbidden, permitted) = split_known(...); when either is non-empty, ONE
+         visible_pks call over forbidden + permitted (that order, duplicates dropped) and
+         (obs.forbidden, obs.permitted) = observation_counts(...) (ADR-040: one request per
+         role and target; MS2–MS5 sent a HEAD count per list); note "no known row outside
+         the expected scope of <role>" plus the KnownRows notes when forbidden is empty.
        cell = read_cell(obs); findings += read_findings(target, obs, cell).
     3. Write cells (SPEC §5 M3 writes; FR-09; ADR-029, revised in the ADR-029 補記):
        - audit → for each op in WRITE_OPS and role in PROBE_ROLES a NOT_TESTED cell, known 0,
@@ -314,6 +361,14 @@ async def probe(client: SafeClientContract, supabase_url: str, anon_key: str,
          silently).
        - A role without a token still yields NOT_TESTED write cells (reason from
          sessions.missing), no request.
+       - WriteRefused (ADR-041; MS3 approval note 1): if any request of a table's write path
+         raises WriteRefused (the gate refused it before sending: dev against a remote host,
+         ci host not in write_hosts), that table's write path stops and EVERY (role, op)
+         write cell of the table is INCONCLUSIVE, known 0, evidence "", reason
+         WRITE_REFUSED_REASON + ": " + str(exc) (the gate message names profile, method and
+         host only). Canaries created before the refusal still go to cleanup_seeded; a
+         WriteRefused there turns the remaining rows into CLEANUP_FAILED findings. No other
+         finding is added for refused cells, and the scan continues with the next target.
        MS3 does NOT call seed_known_rows: reads use collect_known_rows on existing rows (as in
        MS2). dev/ci read-seeding of empty targets (SPEC "dev／ci 植入已知資料") and the L03
        user_metadata escalation read pass both need inputs probe() does not receive (a re-login
@@ -699,5 +754,85 @@ async def restore_user_metadata(client: SafeClientContract, supabase_url: str, a
     `PUT <supabase_url>/auth/v1/user` with body {"data": {"role": None}}, clearing the role the
     escalation set, so the probe leaves the test account as it found it (SPEC §5 M3 清理). Best
     effort: a non-200 is ignored (the caller already recorded the escalation).
+    """
+    raise NotImplementedError
+
+
+# --- probe/seed_pass.py (dev/ci read seeding; ADR-042, ADR-029 補記 2) ------------------------
+
+async def seed_reads(client: SafeClientContract, supabase_url: str, anon_key: str,
+                     targets: list[Target], policy: ExpectedPolicy,
+                     sessions: Sessions) -> tuple[list[SeededRow], list[str]]:
+    """Contract only; implemented by rlsentry.probe.seed_pass.seed_reads. ⚠ sends POSTs.
+
+    SPEC §4 step 4 ("dev／ci 植入已知擁有者的資料"): before probe(), give every user a known
+    row in each table so reads can be judged even where a user has no data of its own. The
+    seeded rows are owned by the seeding user, so collect_known_rows inside probe() finds them
+    like any other own row. Called by run_scan in dev/ci only, never in audit.
+    For each target in order with kind == "table" and len(primary_key) == 1:
+    e = resolve_expected(policy, name, Op.SELECT, Role.USER_A, tuple(columns));
+    rows, notes = seed_known_rows(client, supabase_url, anon_key, target, e.owner_column,
+    e.public_column, run.pick_text_column(target, e.owner_column, e.public_column), sessions);
+    collect rows; each note becomes "<target>: <note>". A WriteRefused stops the pass: the note
+    "read seeding refused by the safety gate: <str(exc)>" is added and no further target is
+    seeded. Returns (all rows, notes).
+    """
+    raise NotImplementedError
+
+
+async def cleanup_reads(client: SafeClientContract, supabase_url: str, anon_key: str,
+                        targets: list[Target], seeded: list[SeededRow],
+                        sessions: Sessions) -> list[Finding]:
+    """Contract only; implemented by rlsentry.probe.seed_pass.cleanup_reads. ⚠ sends DELETEs.
+
+    For each target (input order) that has rows in `seeded` (matched by SeededRow.target ==
+    target.name): left = cleanup_seeded(client, ..., target, those rows, sessions); a
+    WriteRefused makes left = those rows. Returns the concatenated cleanup_findings(target,
+    left) (CLEANUP_FAILED; ADR-029 #8). Rows of a target name absent from `targets` are
+    reported with a Target(name=<name>, kind="table", discovered_by="policy",
+    confidence="unknown") so a leftover is never silent.
+    """
+    raise NotImplementedError
+
+
+# --- probe/escalation.py (L03 USER_METADATA_ESCALATION; dev/ci; ADR-042) ----------------------
+
+ESCALATION_REASON = "after setting its own user_metadata.role=admin and logging in again"
+
+
+async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_key: str,
+                          targets: list[Target], policy: ExpectedPolicy, sessions: Sessions,
+                          users: list[TestUser], env: Mapping[str, str],
+                          matrix: AccessMatrix) -> tuple[list[Finding], list[str]]:
+    """Contract only; implemented by rlsentry.probe.escalation.escalation_pass. ⚠ writes Auth.
+
+    The L03 technique (ADR-029 #9), wired in now that the caller has the passwords needed to
+    log in again (MS3 approval note 1). Called by run_scan in dev/ci only. Per role in
+    USER_ROLES, in that order:
+    1. Skip silently unless the role has a token, a user id, a TestUser in `users` and a
+       non-empty env[password_env].
+    2. candidates = targets with len(primary_key) == 1 whose matrix cell (target, role,
+       SELECT) is DENIED (only a verified "cannot see" can show that metadata changed it; an
+       ALLOWED cell is already reported, an inconclusive one proves nothing), whose
+       e = resolve_expected(policy, name, SELECT, role, columns) is not review, and whose
+       forbidden list is non-empty: known = collect_known_rows(..., e.owner_column,
+       e.public_column, sessions) with the ORIGINAL sessions; forbidden = split_known(e,
+       known.rows, sessions.user_ids)[0]. No candidate → nothing is written for this role.
+    3. (status, changed) = escalate_user_metadata(client, ..., sessions.tokens[role]).
+       Not changed → note "<role>: user_metadata not changed (<status>)", next role.
+    4. try: token2, _ = login(client, ..., user.email, password); for each candidate:
+       res = visible_pks(client, ..., target, token2, forbidden); trustworthy (res.visible not
+       None, status 200/206) and n = len(res.visible) > 0 → one Finding: rule
+       USER_METADATA_ESCALATION, evidence/severity from RULES, target=name, role, op SELECT,
+       probes=[ProbeResult(target=name, role, op=SELECT, outcome=ALLOWED,
+       known_rows_checked=len(forbidden), reason=ESCALATION_REASON + f": {n}/{len(forbidden)}
+       known rows outside the expected scope are visible", http_status=res.status,
+       evidence_curl=res.curl)], id=finding_id(name, role, SELECT, rule).
+       LoginFailed → note "<role>: re-login after escalation failed (<exc>)".
+       finally: restore_user_metadata(client, ..., token2 if obtained else the original
+       token) — ALWAYS, so the test account is left as found (SPEC §5 M3 清理).
+    A WriteRefused from escalate_user_metadata → note "user_metadata escalation refused by the
+    safety gate: <str(exc)>" and the pass stops (nothing was changed). Returns (findings, notes).
+    The matrix is not modified: escalation findings carry their own ProbeResult.
     """
     raise NotImplementedError
