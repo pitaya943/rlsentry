@@ -1,9 +1,11 @@
 """report/fix_sql.py: fix SQL templates (SPEC §5 M5; ADR-044). Advice only, never executed."""
 from __future__ import annotations
 
+import hashlib
+
 from rlsentry.contracts.models import Finding, Op, Role
 from rlsentry.contracts.policy import RowScope
-from rlsentry.contracts.report import FIX_SQL_HEADER, FixContext
+from rlsentry.contracts.report import FIX_SQL_HEADER, PG_NAME_MAX_BYTES, POLICY_ROLES_FOR, FixContext
 
 _ACCESS_RULES = frozenset({
     "ANON_READ_OWNER_SCOPED", "CROSS_TENANT_READ", "USER_METADATA_ESCALATION", "ANON_WRITE",
@@ -31,6 +33,19 @@ def quote_ident(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
 
+def policy_name(target: str, op: str, anon: bool) -> str:
+    """Policy name bounded to PG_NAME_MAX_BYTES; long names get a hash suffix (ADR-051 #2).
+
+    Why: PostgreSQL silently truncates names, which could make two policies collide.
+    """
+    full = f"rlsentry_{target}_{op}_{'anon' if anon else 'user'}"
+    if len(full.encode("utf-8")) <= PG_NAME_MAX_BYTES:
+        return full
+    budget = PG_NAME_MAX_BYTES - 9
+    head = full.encode("utf-8")[:budget].decode("utf-8", errors="ignore")
+    return head + "_" + hashlib.sha256(full.encode("utf-8")).hexdigest()[:8]
+
+
 def _expr(ctx: FixContext) -> str | None:
     """Scope expression, or None when no policy can be generated."""
     o = quote_ident(ctx.owner_column) if ctx.owner_column else None
@@ -52,7 +67,8 @@ def _table_lines(f: Finding, ctx: FixContext, rel: str, target: str) -> list[str
     anon = f.role is Role.ANON
     lines = [f"ALTER TABLE {rel} ENABLE ROW LEVEL SECURITY;"]
     for p in ctx.policies:
-        if p.permissive and p.command.upper() in (up, "ALL"):
+        if (p.permissive and p.command.upper() in (up, "ALL")
+                and set(p.roles) & POLICY_ROLES_FOR["anon" if anon else "user"]):
             lines.append(f"DROP POLICY {quote_ident(p.name)} ON {rel};")
     if not ctx.policies:
         lines.append(_NO_M4)
@@ -62,7 +78,7 @@ def _table_lines(f: Finding, ctx: FixContext, rel: str, target: str) -> list[str
             if ctx.scope is not None and ctx.scope is not RowScope.ALL:
                 lines.append(_NO_COLUMN)
         else:
-            name = quote_ident(f"rlsentry_{target}_{op}_{'anon' if anon else 'user'}")
+            name = quote_ident(policy_name(target, op, anon))
             head = f"CREATE POLICY {name} ON {rel} FOR {up} TO {'anon' if anon else 'authenticated'} "
             tail = {Op.INSERT.value: f"WITH CHECK ({expr});",
                     Op.UPDATE.value: f"USING ({expr}) WITH CHECK ({expr});"}.get(op, f"USING ({expr});")
