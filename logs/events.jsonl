@@ -1345,3 +1345,5 @@
 {"ts": "2026-11-06T01:13:44", "kind": "subagent_stop", "id": "7673df14", "agent": "recon-dev", "ticket": null, "review": null}
 {"ts": "2026-11-06T01:21:02", "kind": "ticket_accepted", "ticket": "T-193", "commit": "ec0d1d6b316703211ba4745463605a6141bcdee6", "files": ["rlsentry/recon/fetch.py", "rlsentry/recon/links.py", "rlsentry/recon/run.py"]}
 {"ts": "2026-11-06T01:35:46", "kind": "ticket_accepted", "ticket": "T-190", "commit": "5a41a73270dba7592132366ebd1ca32885af288d", "files": ["BENCHMARK_REPORT.md", "docs/benchmark/MS5-bench.json"]}
+{"ts": "2026-11-06T01:51:48", "kind": "acceptance_run", "scope": "MS5", "failed": []}
+{"ts": "2026-11-06T01:58:06", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS5"}

@@ -144,7 +144,7 @@
 - [x] T-176 probe/write.py：INSERT 探測的其他 uuid 必填欄位填攻擊者自己的 id（稽核 P1-1）（probe-dev，done，1 次）
 - 驗證清單：docs/verification/MS4-v1.md（v1）
 
-## [ ] MS5 M1 Recon（進行中）
+## [ ] MS5 M1 Recon（等待你審查）
 - [x] T-180 MS4 核准意見（PLAN）＋M1 合約（contracts/recon.py、KeyFinding.label、chunks_skipped、serve_frontend、bench 接線）＋ADR-036／037（D2）（architect，done，1 次）
 - [x] T-181 可見測試：M1 recon（真實 Next.js／Vite／CRA fixture、links、extract、classify、sourcemap、fetch、遮罩、lab 前端、bench 接線）（architect，done，1 次）
 - [x] T-182 recon/classify.py：JWT 不驗簽解碼、FR-03 三類、標籤、key finding（recon-dev，done，1 次）
@@ -159,6 +159,7 @@
 - [x] T-191 可見測試 docstring 的 ticket 編號更正（只改註解）（architect，done，1 次）
 - [x] T-192 稽核修正（合約與測試）：報告 URL 一律經 report_url、userinfo 不算同源、KeyFinding 一致性；ADR-036 補記；PLAN 記入 S4（architect，done，1 次）
 - [x] T-193 稽核修正（實作）：report_url、userinfo 不算同源、fetch／run 的報告 URL 一律經 report_url（recon-dev，done，1 次）
+- 驗證清單：docs/verification/MS5-v1.md（v1）
 
 ## [ ] MS6 M5 Report + 介面 + profiles（鎖定）
 
