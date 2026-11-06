@@ -11,6 +11,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Annotated
 
+import httpx
 import typer
 from pydantic import ValidationError
 
@@ -20,6 +21,7 @@ from rlsentry.contracts.pipeline import EndpointRefused, ScanSetupError
 from rlsentry.contracts.policy import ConfigError, ScanConfig
 from rlsentry.contracts.report import (
     DEFAULT_FORMATS,
+    EXIT_ERROR,
     EXIT_OK,
     EXIT_REFUSED,
     EXIT_USAGE,
@@ -33,7 +35,7 @@ from rlsentry.report.json import render_json
 from rlsentry.report.sarif import render_sarif
 from rlsentry.safety.mask import mask_text
 
-app = typer.Typer(add_completion=False, no_args_is_help=True,
+app = typer.Typer(add_completion=False, pretty_exceptions_show_locals=False, no_args_is_help=True,
                   help="RLSentry: verify Supabase authorization from an attacker's point of view.")
 
 _FORMATS = ("json", "html", "sarif")
@@ -110,6 +112,8 @@ def scan(
         raise _fail(str(e), EXIT_REFUSED) from None
     except (ConfigError, ScanSetupError) as e:
         raise _fail(str(e), EXIT_USAGE) from None
+    except (httpx.HTTPError, OSError, RuntimeError) as e:
+        raise _fail(f"scan failed: {type(e).__name__}", EXIT_ERROR) from None
     formats = _parse_formats(fmt, report.profile)
     out.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []

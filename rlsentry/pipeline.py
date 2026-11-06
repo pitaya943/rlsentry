@@ -147,18 +147,22 @@ async def run_scan(config: ScanConfig, *, cli_confirmed: bool = False,
             seeded, seed_notes = await seed_reads(client, url, anon_key, found.targets,
                                                   config.policy, sessions)
             notes.extend(seed_notes)
-        matrix, m3 = await probe(client, url, anon_key, found.targets, sessions,
-                                 config.policy, profile)
-        if writes:
-            esc, esc_notes = await escalation_pass(client, url, anon_key, found.targets,
-                                                   config.policy, sessions, config.test_users,
-                                                   env, matrix)
-            m3 = m3 + esc
-            notes.extend(esc_notes)
-            m3 = m3 + await cleanup_reads(client, url, anon_key, found.targets, seeded,
-                                          sessions)
-        else:
-            notes.append(WRITES_AUDIT_NOTE)
+        try:
+            matrix, m3 = await probe(client, url, anon_key, found.targets, sessions,
+                                     config.policy, profile)
+            if writes:
+                esc, esc_notes = await escalation_pass(client, url, anon_key, found.targets,
+                                                       config.policy, sessions,
+                                                       config.test_users, env, matrix)
+                m3 = m3 + esc
+                notes.extend(esc_notes)
+            else:
+                notes.append(WRITES_AUDIT_NOTE)
+        finally:
+            # ADR-047: canaries are deleted even when probe or escalation crashes.
+            cleanup = (await cleanup_reads(client, url, anon_key, found.targets, seeded,
+                                           sessions) if writes else [])
+        m3 = m3 + cleanup
         refused = sum(1 for c in matrix.cells if c.reason.startswith(WRITE_REFUSED_REASON))
         if refused:
             notes.append(f"{refused} write cells inconclusive: writes to "

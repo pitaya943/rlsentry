@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from rlsentry.contracts.models import Evidence, Finding, Op, Role, finding_id
+from rlsentry.contracts.recon import KEY_RULES
 from rlsentry.contracts.rules import RULES
 from rlsentry.contracts.whitebox import (
     DEFAULT_DB_SCHEMAS,
@@ -43,7 +44,7 @@ def correlate(findings: list[Finding], lints: list[Lint],
     out: list[Finding] = []
     proven_roles: dict[str, set[Role]] = {}
     for f in findings:
-        if f.target is not None and _proven(f):
+        if f.rule not in KEY_RULES and f.target is not None and _proven(f):
             if f.role is not None:
                 proven_roles.setdefault(f.target, set()).add(f.role)
             else:
