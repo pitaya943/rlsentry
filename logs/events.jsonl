@@ -1421,3 +1421,9 @@
 {"ts": "2026-11-06T06:31:35", "kind": "ticket_accepted", "ticket": "T-218", "commit": "c95fe36062e74aa7795d9cefc18e1586c8ae2908", "files": ["rlsentry/report/exit_code.py", "rlsentry/report/sarif.py"]}
 {"ts": "2026-11-06T06:39:39", "kind": "ticket_accepted", "ticket": "T-221", "commit": "9f39ecc9a233181f970e3c241c2bf545cb7f5b63", "files": ["action/action.yml"]}
 {"ts": "2026-11-06T06:40:43", "kind": "ticket_start", "ticket": "T-219", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T06:41:10", "kind": "dispatch", "id": "2f0268cd", "agent": "whitebox-dev", "ticket": "T-219", "review": null, "body": "logs/messages/2f0268cd-dispatch.json"}
+{"ts": "2026-11-06T06:41:23", "kind": "report", "id": "b8d87bb6", "agent": "whitebox-dev", "ticket": "T-219", "review": null, "body": "logs/messages/b8d87bb6-report.json"}
+{"ts": "2026-11-06T06:41:23", "kind": "subagent_start", "id": "4a4124f9", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:43:20", "kind": "subagent_stop", "id": "436f0d06", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:43:45", "kind": "stop_blocked", "attempt": 2, "state": "active", "milestone": "MS6"}
+{"ts": "2026-11-06T06:51:33", "kind": "ticket_accepted", "ticket": "T-219", "commit": "eb35e5e1fabca442759ea6a79bd4ebd17450a4b1", "files": ["rlsentry/pipeline.py"]}
