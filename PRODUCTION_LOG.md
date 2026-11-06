@@ -291,3 +291,9 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - 以 Next.js 15.5、Vite 8、CRA 5 實際建置三個 supabase-js 專案（`tests/recon/fixtures/`）。發現：壓縮後看不到 `createClient(`、Vite 用反引號、source map 內含 supabase-js 文件範例 URL、Next.js／CRA 的延遲 chunk 只在 `_buildManifest`／webpack chunk map 中、phoenix 常數 entropy 3.52 → 全部寫進合約（ADR-036）。
 - 草稿參考實作跑全部可見測試＋holdout：抓到 2 個問題並在派工前修正——可見測試的 SPA fallback 頁缺 `<!doctype`；合約的 key 語境漏了 supabase-js 自己的參數名 `supabaseKey`（holdout 抓到）。
 - lab 參考實測（草稿 bench 接線）：L08-V1 在 dev／audit 皆 TP、L08-S1 TN、audit 0 寫入、L12-V1 以 recon 抓到的 bundle 仍 TP。
+
+### 失敗與修正（進行中）
+| 問題 | 修正 |
+| --- | --- |
+| 容器在 T-188 驗收的試合併中途重啟，留下未完成的 merge；hook 禁止 architect 自行 `merge --abort` | 以 harness 的 accept 路徑清除（它在合併失敗時會 abort），代價是 T-188 第 1 次嘗試記為 merge conflict（events.jsonl 有紀錄） |
+| T-188 第 2 次驗收：`test_whitebox_lab.py::test_l01_rls_disabled_is_reported` 失敗，與 T-188 無關（在不含 T-188 的分支上可重現） | 根因：容器被強制終止 → Postgres crash recovery 重設統計 → `_realtime.extensions` 索引 idx_scan=0 → splinter 的 PERFORMANCE lint `unused_index` 出現在非 public schema。`supabase stop --no-backup` 後重建乾淨 lab（與 Codespaces／Actions 相同）即通過；第 3 次驗收通過。MS4 該測試對「非正常關機」敏感，列入 MS5 清單已知限制，未修改已核准的測試 |
