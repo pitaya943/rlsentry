@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 144/156 · 進行中 1 · blocked 1
+自動產生，請勿手改 · 完成 145/156 · 進行中 0 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -172,10 +172,10 @@
 - [ ] T-214 probe：dev／ci 讀取植入與 L03 user_metadata 提權（seed_pass.py、escalation.py）（probe-dev，todo，0 次） ← 依賴 T-213✓ T-202✓
 - [x] T-215 safety/endpoint.py：Supabase URL 必須來自設定檔或 CLI 確認（MS5 稽核 S4）（recon-dev，done，1 次）
 - [x] T-216 report：修補 SQL 模板與 finding 補充（fix_sql.py、enrich.py）（whitebox-dev，done，1 次）
-- [ ] T-217 report：JSON 與 HTML 報告（json.py、html.py）（whitebox-dev，in_progress，1 次） ← 依賴 T-201✓
+- [x] T-217 report：JSON 與 HTML 報告（json.py、html.py）（whitebox-dev，done，1 次）
 - [ ] T-218 report：SARIF 2.1.0 與 fail_on exit code（sarif.py、exit_code.py）（whitebox-dev，todo，0 次） ← 依賴 T-201✓
 - [ ] T-219 pipeline.py：run_scan 與 run_init（授權 → M1 → S4 → M2 → M3 → M4 → M5，單一 SafeClient）（whitebox-dev，todo，0 次） ← 依賴 T-211✓ T-212… T-213✓ T-214… T-215✓ T-216✓
-- [ ] T-220 cli.py：Typer CLI（scan、init）（whitebox-dev，todo，0 次） ← 依賴 T-217… T-218… T-219…
+- [ ] T-220 cli.py：Typer CLI（scan、init）（whitebox-dev，todo，0 次） ← 依賴 T-217✓ T-218… T-219…
 - [ ] T-221 GitHub Action（action/action.yml）（whitebox-dev，todo，0 次） ← 依賴 T-201✓
 - [ ] T-222 bench：改經 run_scan 執行；splinter_status 依設定的曝露 schema（P2 c）（whitebox-dev，todo，0 次） ← 依賴 T-219…
 - [ ] T-230 Profile 端到端（e2e_profiles）、展示情境 L04 修補後重掃、L03 提權 lab、Python API 匯出（architect，todo，0 次） ← 依賴 T-220… T-221… T-222…

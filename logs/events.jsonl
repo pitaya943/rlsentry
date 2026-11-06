@@ -1397,3 +1397,4 @@
 {"ts": "2026-11-06T05:42:59", "kind": "ticket_accepted", "ticket": "T-213", "commit": "ac1d56a8940cd7e9ce1bd0c010a9e820f8490e01", "files": ["rlsentry/probe/read.py", "rlsentry/probe/run.py"]}
 {"ts": "2026-11-06T05:47:51", "kind": "ticket_accepted", "ticket": "T-202", "commit": "927d13a33323bfa2204116c8b431da1d71253b59", "files": ["docs/DECISIONS.md", "rlsentry/contracts/probe.py", "rlsentry/report/__init__.py", "tests/lab/test_policies_readonly.py", "tests/pipeline/fake_supabase.py", "tests/probe/test_escalation.py"]}
 {"ts": "2026-11-06T05:53:09", "kind": "ticket_accepted", "ticket": "T-216", "commit": "d32ecb4f00ec2b2e1e14aa819c9a7726d901d13a", "files": ["rlsentry/report/enrich.py", "rlsentry/report/fix_sql.py"]}
+{"ts": "2026-11-06T05:58:51", "kind": "ticket_accepted", "ticket": "T-217", "commit": "65f0c55d6aff03c2bf65c25e380ac066c12d6f34", "files": ["rlsentry/report/html.py", "rlsentry/report/json.py"]}
