@@ -10,6 +10,7 @@ import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from types import FrameType
+from typing import NoReturn
 
 from lab._shared import labctl
 from rlsentry.contracts.ground_truth import LAB_USERS
@@ -23,7 +24,7 @@ class _Quiet(SimpleHTTPRequestHandler):
 
 
 class _Parser(argparse.ArgumentParser):
-    def error(self, message: str) -> None:
+    def error(self, message: str) -> NoReturn:
         self.print_usage(sys.stderr)
         print(message, file=sys.stderr)
         raise SystemExit(2)
