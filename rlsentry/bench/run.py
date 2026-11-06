@@ -17,6 +17,7 @@ from rlsentry.contracts.policy import ExpectedPolicy, TestUser
 from rlsentry.discovery.discover import discover
 from rlsentry.probe.run import probe
 from rlsentry.probe.session import build_sessions
+from rlsentry.recon.run import recon
 from rlsentry.safety.http import SafeClient
 from rlsentry.safety.ratelimit import RateLimiter
 from rlsentry.whitebox.correlate import correlate
@@ -37,25 +38,40 @@ async def _pipeline(profile: Profile, info: LabInfo, policy: ExpectedPolicy, sou
                            policy, profile)
 
 
+async def _scenario_pipeline(sid: str, profile: Profile, info: LabInfo, policy: ExpectedPolicy,
+                             rps: float) -> tuple[AccessMatrix, list[Finding], list[Finding], float]:
+    """M1 (untimed) then M2+M3 (timed) through one SafeClient; returns M1 findings and runtime."""
+    env = {u["password_env"]: labctl.lab_password(role) for role, u in LAB_USERS.items()}
+    async with SafeClient(profile=profile, limiter=RateLimiter(rps=rps, concurrency=4)) as client:
+        with labctl.serve_frontend(sid) as url:
+            rec = await recon(client, url)
+        start = time.monotonic()
+        found = await discover(client, info.api_url, info.anon_key, policy, rec.sources)
+        sessions = await build_sessions(client, info.api_url, info.anon_key, _USERS, env)
+        matrix, probe_findings = await probe(client, info.api_url, info.anon_key, found.targets,
+                                             sessions, policy, profile)
+        return matrix, probe_findings, rec.findings, time.monotonic() - start
+
+
 def run_scenario(sid: str, profile: Profile, info: LabInfo, *,
                  rps: float = BENCH_RPS, with_whitebox: bool = True) -> ScenarioResult:
-    """Apply one scenario, scan it and score against its expected.yaml (writes only in dev)."""
+    """Apply one scenario, scan it and score against its expected.yaml (writes only in dev).
+
+    Why: M1 key findings skip correlate (a key is outside splinter's scope) and recon is not timed.
+    """
     with labctl.lock():
         labctl.apply(sid)
         sdir = labctl.scenario_dir(sid)
         gt = GroundTruth.model_validate(
             yaml.safe_load((sdir / "expected.yaml").read_text("utf-8")))
-        sources = [p.read_text("utf-8", errors="replace")
-                   for p in sorted((sdir / "frontend").rglob("*.js"))]
         marker = labctl.db_log_marker()
-        start = time.monotonic()
-        matrix, findings = asyncio.run(_pipeline(profile, info, gt.policy, sources, rps))
-        runtime_s = time.monotonic() - start
+        matrix, probe_findings, rec_findings, runtime_s = asyncio.run(
+            _scenario_pipeline(sid, profile, info, gt.policy, rps))
         db_writes = sum(1 for w in labctl.db_writes_since(marker) if w.role in POSTGREST_ROLES)
         lints = run_splinter(info.db_url) if with_whitebox else None
         if lints is not None:
-            findings = correlate(findings, lints)
-        return score_scenario(gt, profile, matrix, findings, runtime_s,
+            probe_findings = correlate(probe_findings, lints)
+        return score_scenario(gt, profile, matrix, probe_findings + rec_findings, runtime_s,
                               lints=lints, db_writes=db_writes)
 
 
