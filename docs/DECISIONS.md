@@ -688,3 +688,7 @@ D2–D4 由 architect 決定並記錄於此。
 - 問題：參考 benchmark 在 L05（dev）產生 2 個 USER_METADATA_ESCALATION 偽陽性。原因：提權在 M3 寫入探測之後執行；L05 的擁有者轉移把使用者自己建立的 canary 轉給對方，這些列因 `created_by = auth.uid()` 仍對原使用者可見；以 M3 一開始的 DENIED 讀取當基準，就把「本來就看得到」誤認為「提權後才看得到」。
 - 決定：`escalation_pass` 在提權前以原 token 對同一批「不該看到的已知列」重新量測一次；只有「此刻看不到」的列（hidden）才進入提權後的比較，`known_rows_checked` 與比例也以 hidden 計。hidden 為空就不寫入 metadata。測試：`tests/probe/test_escalation.py` 新增兩個案例。
 - 後果：每個候選表多一個 GET（只在 dev／ci）。
+
+### ADR-042 補記 2：實作時的澄清（2026-11-06，T-219、T-220 回報）
+- **M4 失敗的處理範圍**：合約寫「任何例外 → note」，T-219 只攔 `psycopg.Error`、`OSError`、`ValueError`、`RuntimeError`（ruff 的 BLE001 禁止 `except Exception`，專案也禁止 `noqa`）。其他例外會中止掃描。這偏向 fail-closed：意料之外的錯誤不會被靜默吞掉；已知的連線、權限、雜湊錯誤仍只記 note。
+- **CLI**：預設輸出格式依實際生效的 profile（`report.profile`），不是設定檔的 profile；TARGET 與設定檔 target 比較前去掉結尾的 `/`；未知的 `--format` 值 → exit 2；SARIF 的 artifact uri 為使用者輸入的 `--config` 路徑；`init` 必須有設定檔（不接受 TARGET）。
