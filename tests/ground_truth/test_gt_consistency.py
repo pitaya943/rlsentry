@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 from rlsentry.contracts.ground_truth import LAB_USERS, Case, CaseKind, GroundTruth, SeedRow
-from rlsentry.contracts.models import Op, Outcome, Role
+from rlsentry.contracts.models import SEVERITY_RANK, Op, Outcome, Role
 from rlsentry.contracts.rules import RULES, SENSITIVE_COLUMN_PATTERNS
 from rlsentry.policy.resolve import resolve_expected
 from rlsentry.policy.visibility import row_permitted
@@ -106,4 +106,10 @@ def test_rule_role_and_severity_are_coherent(gt: GroundTruth, case: Case) -> Non
     sensitive = any(p in col.lower() for col in gt.schema_[case.target or ""].columns
                     for p in SENSITIVE_COLUMN_PATTERNS)
     want = spec.escalates_to if (spec.escalates_to and sensitive) else spec.severity
+    if case.rule == "SECURITY_DEFINER_RPC_DATA":
+        # ADR-049 (MS6 approval note 1): M4's relabel keeps the higher of Medium and the
+        # severity M3 gives the same read (anon: High, Critical with sensitive columns).
+        m3 = RULES["ANON_READ_OWNER_SCOPED" if case.role is Role.ANON else "CROSS_TENANT_READ"]
+        m3_sev = m3.escalates_to if (m3.escalates_to and sensitive) else m3.severity
+        want = max(want, m3_sev, key=lambda s: SEVERITY_RANK[s])
     assert case.severity is want, f"{case.id}: severity {case.severity} != {want}"

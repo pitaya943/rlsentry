@@ -45,10 +45,11 @@ def test_dev_runs_every_module_and_confirms_the_l05_transfer(lab: LabInfo) -> No
         assert lab.anon_key not in text and lab.db_url not in text
 
 
-@pytest.mark.parametrize("sid, code", [("L05", EXIT_FINDINGS), ("L04", EXIT_OK), ("C01", EXIT_OK), ("L07", EXIT_OK)])
+@pytest.mark.parametrize("sid, code", [("L05", EXIT_FINDINGS), ("L04", EXIT_OK), ("C01", EXIT_OK), ("L07", EXIT_FINDINGS)])
 def test_ci_fails_only_on_confirmed_high(lab: LabInfo, sid: str, code: int) -> None:
-    # L05 cross-tenant write = high → fail; L04 cross-tenant read and L07 definer RPC = medium,
-    # plus warnings and inconclusive cells → pass (SPEC §5 M5 fail_on default)
+    # L05 cross-tenant write = high → fail; L04 cross-tenant read = medium, plus warnings and
+    # inconclusive cells → pass (SPEC §5 M5 fail_on default). L07: anon reads through the
+    # SECURITY DEFINER RPC = high even after M4's relabel (ADR-049, MS6 approval note 1) → fail.
     labctl.apply(sid)
     rep = scan(lab_config("http://127.0.0.1:1", lab, gt(sid).policy, Profile.CI), lab_env(lab))
     assert rep.modules == ["M2", "M3", "M4", "M5"] and rep.recon is None
