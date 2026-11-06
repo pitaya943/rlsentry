@@ -288,7 +288,7 @@
     <tr><td>MS3</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>probe 寫入（seed work row／write／read-back／verdict／cleanup）</td><td>寫入類漏洞（L01／L09 的 INSERT；安全表誤報為 0）</td></tr>
     <tr><td>MS4</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>whitebox（splinter、pg_policies、correlate）、bench、OpenAPI 型別植入</td><td>第一次完整計分：recall 29/32、precision 29/29、FPR 0/72；probe-only 2 類</td></tr>
     <tr><td>MS5</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>recon/*（fetch、links、sourcemap、extract、classify、run）、labctl.serve_frontend、bench 接上 M1</td><td>從網址出發找到 Supabase URL 與 key；service_role → Critical、anon 不報；recall 30/32</td></tr>
-    <tr><td>MS6</td><td><i class="dot" style="background:var(--wip)"></i>等待你審查</td><td>pipeline.run_scan、safety/endpoint（S4）、report/*（JSON、HTML、SARIF、修補 SQL、exit code）、CLI、GitHub Action、L03 提權與 dev／ci 讀取植入</td><td>一個指令跑完全部；recall 32/32、precision 32/32、FPR 0/72；50 張表 50.8 s（達標）</td></tr>
+    <tr><td>MS6</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>pipeline.run_scan、safety/endpoint（S4）、report/*（JSON、HTML、SARIF、修補 SQL、exit code）、CLI、GitHub Action、L03 提權與 dev／ci 讀取植入</td><td>一個指令跑完全部；recall 32/32、precision 32/32、FPR 0/72；50 張表 50.8 s（達標）</td></tr>
     <tr><td>MS7</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>整合與交付</td><td>USAGE、BENCHMARK_REPORT、demo</td></tr>
   </table>
 </section>
