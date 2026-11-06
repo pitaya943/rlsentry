@@ -17,8 +17,19 @@ from rlsentry.probe.seed_pass import cleanup_reads, seed_reads
 from rlsentry.probe.session import build_sessions
 from rlsentry.safety.http import SafeClient
 from rlsentry.safety.ratelimit import RateLimiter
-from tests.pipeline.fake_supabase import ANON_KEY, API, ENV, REMOTE, A, B, FakeSupabase, Table, notes_table
-from tests.pipeline.helpers import OWNER_ONLY, USERS
+from tests.pipeline.fake_supabase import (
+    ANON_KEY,
+    API,
+    ENV,
+    OWNER_ONLY,
+    REMOTE,
+    USERS,
+    A,
+    B,
+    FakeSupabase,
+    Table,
+    notes_table,
+)
 
 POLICY = ExpectedPolicy(tables={"notes": OWNER_ONLY, "locked": OWNER_ONLY})
 

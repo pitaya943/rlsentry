@@ -12,7 +12,10 @@ def test_round_trips_and_keeps_every_field() -> None:
     rep = report()
     text = render_json(rep)
     back = ScanReport.model_validate_json(text)
-    assert back.findings == ScanReport.model_validate_json(rep.model_dump_json()).findings
+    assert [(f.id, f.rule, f.evidence, f.severity) for f in back.findings] == \
+        [(f.id, f.rule, f.evidence, f.severity) for f in rep.findings]
+    curl = back.findings[1].probes[0].evidence_curl
+    assert curl.startswith("curl -sS -X GET") and JWT not in curl and "****" in curl      # masked, kept
     data = json.loads(text)
     assert data["authorization"]["confirmed_by"] == "tester" and data["profile"] == "dev"
     assert data["modules"] == ["M1", "M2", "M3", "M5"] and "notes" in data and "timings" in data

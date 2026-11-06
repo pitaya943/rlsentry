@@ -10,6 +10,7 @@ import httpx
 import pytest
 
 from rlsentry.contracts.models import Op, Outcome, Role, Target
+from rlsentry.contracts.policy import ExpectedPolicy, RoleScopes, RowScope, TablePolicy
 from rlsentry.contracts.probe import CountResult, VisibleResult
 from rlsentry.probe.read import observation_counts, visible_pks
 from tests.fakes import ANON, URL, Recorder, fake_jwt, run
@@ -100,9 +101,11 @@ def test_probe_sends_one_request_per_role_and_keeps_the_verdicts() -> None:
 
 
 def test_probe_permitted_rows_still_feed_the_hints() -> None:
-    # user_a cannot see its own row → EXPECTED_ACCESS_DENIED from the same merged request
-    deny_all = Rel(TWO, rls=lambda uid, r: False)
-    cells, findings, rec = scan(FakeRest({"todos": deny_all}), [todos()])
+    # expected: users may read every row; actual RLS: own rows only → the permitted part of the
+    # same merged request yields EXPECTED_ACCESS_DENIED (a functional hint, not a vulnerability)
+    policy = ExpectedPolicy(tables={"todos": TablePolicy(owner_column="owner_id", select=RoleScopes(
+        anon=RowScope.DENY, user=RowScope.ALL))})
+    cells, findings, rec = scan(FakeRest({"todos": Rel(TWO)}), [todos()], policy=policy)
     assert ("todos", Role.USER_A, "EXPECTED_ACCESS_DENIED") in findings
     assert len([r for r in rec.requests if "id" in r.url.params]) == 3
-    assert cells[("todos", Role.USER_A, Op.SELECT)][0] is Outcome.DENIED
+    assert cells[("todos", Role.ANON, Op.SELECT)][0] is Outcome.DENIED

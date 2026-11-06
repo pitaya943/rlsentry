@@ -26,8 +26,19 @@ from rlsentry.probe.escalation import escalation_pass
 from rlsentry.probe.session import build_sessions
 from rlsentry.safety.http import SafeClient
 from rlsentry.safety.ratelimit import RateLimiter
-from tests.pipeline.fake_supabase import ANON_KEY, API, ENV, REMOTE, A, B, FakeSupabase, Table, notes_table
-from tests.pipeline.helpers import OWNER_ONLY, USERS
+from tests.pipeline.fake_supabase import (
+    ANON_KEY,
+    API,
+    ENV,
+    OWNER_ONLY,
+    REMOTE,
+    USERS,
+    A,
+    B,
+    FakeSupabase,
+    Table,
+    notes_table,
+)
 from tests.probe.test_seed_pass import tgt
 
 POLICY = ExpectedPolicy(tables={"notes": OWNER_ONLY})

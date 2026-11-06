@@ -127,7 +127,7 @@ async def run_scan(config: ScanConfig, *, cli_confirmed: bool = False,
        modules = modules_for(profile, db_url).
     3. Checks that need no network, in this order (each raises before any request):
        - "M1" not in modules (ci) → resolve_endpoint(config, cli_supabase_url, None) now
-         (EndpointRefused propagates);
+         (EndpointRefused propagates) and the note M1_SKIPPED_NOTE;
        - config.anon_key_env set and env value missing/empty → ScanSetupError naming the
          variable; "M1" not in modules and config.anon_key_env unset → ScanSetupError("ci needs
          anon_key_env: the anon key is not taken from a bundle in ci").

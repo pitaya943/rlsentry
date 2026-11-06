@@ -4,15 +4,12 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from rlsentry.contracts.models import Profile, Role, ScanReport
-from rlsentry.contracts.policy import RoleScopes, RowScope, ScanConfig, TablePolicy, TestUser
+from rlsentry.contracts.models import Profile, ScanReport
+from rlsentry.contracts.policy import ScanConfig
 from rlsentry.pipeline import run_scan
-from tests.pipeline.fake_supabase import API, APP, ENV, FakeSupabase
+from tests.pipeline.fake_supabase import API, APP, ENV, OWNER_ONLY, USERS, FakeSupabase
 
-USERS = [TestUser(name=Role.USER_A, email="a@test.dev", password_env="RLS_A_PW"),
-         TestUser(name=Role.USER_B, email="b@test.dev", password_env="RLS_B_PW")]
-OWNER_ONLY = TablePolicy(owner_column="owner_id",
-                         select=RoleScopes(anon=RowScope.DENY, user=RowScope.OWN_ROWS_ONLY))
+__all__ = ["OWNER_ONLY", "USERS", "cfg", "rules", "scan"]
 
 
 def cfg(**kw: Any) -> ScanConfig:

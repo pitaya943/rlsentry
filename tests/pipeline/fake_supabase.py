@@ -14,12 +14,19 @@ from urllib.parse import parse_qsl, urlsplit
 
 import httpx
 
+from rlsentry.contracts.models import Role
+from rlsentry.contracts.policy import RoleScopes, RowScope, TablePolicy, TestUser
+
 API = "http://127.0.0.1:54321"      # local: dev/ci may write here (lab-like)
 REMOTE = "http://api.test"         # remote: the gate refuses dev writes here
 APP = "http://app.test"
 A, B = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-USERS = {"a@test.dev": ("pw-a", A), "b@test.dev": ("pw-b", B)}
+ACCOUNTS = {"a@test.dev": ("pw-a", A), "b@test.dev": ("pw-b", B)}
 ENV = {"RLS_A_PW": "pw-a", "RLS_B_PW": "pw-b", "SB_ANON": "", "DB": ""}
+USERS = [TestUser(name=Role.USER_A, email="a@test.dev", password_env="RLS_A_PW"),
+         TestUser(name=Role.USER_B, email="b@test.dev", password_env="RLS_B_PW")]
+OWNER_ONLY = TablePolicy(owner_column="owner_id",
+                         select=RoleScopes(anon=RowScope.DENY, user=RowScope.OWN_ROWS_ONLY))
 
 
 def jwt(payload: dict[str, object]) -> str:
@@ -77,7 +84,7 @@ class FakeSupabase:
         path = r.url.path
         if path == "/auth/v1/token" and r.method == "POST":
             body = json.loads(r.content)
-            pw_uid = USERS.get(body.get("email"))
+            pw_uid = ACCOUNTS.get(body.get("email"))
             if not pw_uid or pw_uid[0] != body.get("password"):
                 return httpx.Response(400, json={"error": "invalid_grant"})
             uid = pw_uid[1]

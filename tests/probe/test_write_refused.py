@@ -22,7 +22,7 @@ REMOTE = "https://preview.example.test"
 
 
 def remote_scan(profile: Profile, write_hosts: tuple[str, ...] = ()) -> tuple[dict[tuple[str, Role, Op], ProbeResult], Recorder]:
-    rec = Recorder(FakeRest({"todos": Rel(TWO)}))
+    rec = Recorder(FakeRest({"todos": Rel(TWO), "other": Rel(TWO)}))
 
     async def go() -> tuple[AccessMatrix, list[Finding]]:
         async with SafeClient(profile=profile, limiter=RateLimiter(rps=1e6, concurrency=8),
