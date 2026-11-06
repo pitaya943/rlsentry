@@ -186,7 +186,7 @@
 - [x] T-235 report：JSON／HTML 中 recon.supabase_url 經 report_url（ADR-047）（whitebox-dev，done，1 次）
 - 驗證清單：docs/verification/MS6-v1.md（v1）
 
-## [ ] MS7 整合與交付（進行中）
+## [ ] MS7 整合與交付（等待你審查）
 - [x] T-240 合約與測試：MS6 核准意見第 1 點（分段上線）、ADR-047 三項修正、lab 命令列入口；ADR-049–052、D3、D4（architect，done，1 次）
 - [x] T-241 whitebox/correlate.py：改標 SECURITY_DEFINER_RPC_DATA 時保留較高的嚴重度（keep_higher；MS6 核准意見第 1 點）（whitebox-dev，done，1 次）
 - [x] T-242 report/fix_sql.py：DROP POLICY 依 roles、policy 名稱 63 bytes（ADR-051 第 1、2 項）（whitebox-dev，done，1 次）
@@ -196,3 +196,4 @@
 - [x] T-246 USAGE.md（dev／ci／audit／demo doctest）、範例設定檔、完整 benchmark 重跑與 BENCHMARK_REPORT（MS4 核准意見第 1 點）（architect，done，1 次）
 - [x] T-247 稽核修正（文件）：doctest 斷言 probe_only 與修補前 Confirmed、Python API 斷言、coverage 原始數量、ADR 補記與 traceability（architect，done，1 次）
 - [x] T-248 make acceptance 修正：過時的 MS2／MS6 holdout 更新（ADR-053）、traceability 中已解決的 MS0 P0 列（architect，done，1 次）
+- 驗證清單：docs/verification/MS7-v1.md（v1）

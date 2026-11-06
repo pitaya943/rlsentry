@@ -22,17 +22,17 @@
   {
     "check": "tests",
     "ok": true,
-    "detail": "........................................................................ [  5%]\n........................................................................ [ 11%]\n........................................................................ [ 16%]\n........................................................................ [ 22%]\n........................................................................ [ 28%]\n........................................................................ [ 33%]\n........................................................................ [ 39%]\n........................................................................ [ 44%]\n........................................................................ [ 50%]\n........................................................................ [ 56%]\n........................................................................ [ 61%]\n........................................................................ [ 67%]\n........................................................................ [ 73%]\n........................................................................ [ 78%]\n........................................................................ [ 84%]\n........................................................................ [ 89%]\n........................................................................ [ 95%]\n..........................................................               [100%]\n1282 passed in 723.53s (0:12:03)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
+    "detail": "........................................................................ [  5%]\n........................................................................ [ 11%]\n........................................................................ [ 16%]\n........................................................................ [ 22%]\n........................................................................ [ 28%]\n........................................................................ [ 33%]\n........................................................................ [ 39%]\n........................................................................ [ 44%]\n........................................................................ [ 50%]\n........................................................................ [ 56%]\n........................................................................ [ 61%]\n........................................................................ [ 67%]\n........................................................................ [ 73%]\n........................................................................ [ 78%]\n........................................................................ [ 84%]\n........................................................................ [ 89%]\n........................................................................ [ 95%]\n..........................................................               [100%]\n1282 passed in 868.55s (0:14:28)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
   },
   {
     "check": "holdout",
-    "ok": false,
-    "detail": "is warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n../../../tmp/tmp0sdhnbp3/MS2/test_holdout_probe.py:89\n  /tmp/tmp0sdhnbp3/MS2/test_holdout_probe.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\ntests/probe/test_seed_pass.py:82\n  /home/user/rlsentry/tests/probe/test_seed_pass.py:82: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\ntests/probe/test_escalation.py:115\n  /home/user/rlsentry/tests/probe/test_escalation.py:115: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED test_holdout_probe.py::test_rpc_user_leak_finding - AssertionError: as...\nFAILED test_holdout_probe.py::test_public_profiles_anon_sensitive_warning_and_401_never_denied\nFAILED test_holdout_ms6.py::test_holdout_fix_sql_quotes_schema_and_policy - a...\n3 failed, 95 passed, 5 warnings in 14.35s\n"
+    "ok": true,
+    "detail": "ks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    pytestmark = pytest.mark.safety\n\n../../../tmp/tmptbv1nl6k/MS2/test_holdout_probe.py:64\n  /tmp/tmptbv1nl6k/MS2/test_holdout_probe.py:64: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n../../../tmp/tmptbv1nl6k/MS2/test_holdout_probe.py:89\n  /tmp/tmptbv1nl6k/MS2/test_holdout_probe.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\ntests/probe/test_seed_pass.py:82\n  /home/user/rlsentry/tests/probe/test_seed_pass.py:82: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\ntests/probe/test_escalation.py:115\n  /home/user/rlsentry/tests/probe/test_escalation.py:115: PytestUnknownMarkWarning: Unknown pytest.mark.safety - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    @pytest.mark.safety\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n99 passed, 5 warnings in 14.74s\n"
   },
   {
     "check": "safety invariants",
     "ok": true,
-    "detail": "........................................................................ [ 31%]\n........................................................................ [ 63%]\n........................................................................ [ 95%]\n...........                                                              [100%]\n227 passed, 1055 deselected in 424.76s (0:07:04)\n"
+    "detail": "........................................................................ [ 31%]\n........................................................................ [ 63%]\n........................................................................ [ 95%]\n...........                                                              [100%]\n227 passed, 1055 deselected in 528.56s (0:08:48)\n"
   },
   {
     "check": "mutation",
@@ -57,7 +57,7 @@
   {
     "check": "profile end-to-end",
     "ok": true,
-    "detail": "................                                                         [100%]\n16 passed, 1283 deselected in 46.90s\n"
+    "detail": "................                                                         [100%]\n16 passed, 1283 deselected in 49.25s\n"
   },
   {
     "check": "USAGE.md doctests",
@@ -71,7 +71,7 @@
   },
   {
     "check": "traceability",
-    "ok": false,
-    "detail": "| §8 ground truth 與真實 Postgres 一致 | 無；L05 紙上即不成立（G1） | MISSING P0 | L05 已修（T-029）；實測在 MS1 tests/lab |"
+    "ok": true,
+    "detail": "every P0 requirement traced to tests"
   }
 ]
