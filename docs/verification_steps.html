@@ -226,6 +226,13 @@ python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519</pre>
 </ul>
 </div>
 
+<h3>MS7（交付）的額外步驟 <span class="tag t-cs">Codespaces</span></h3>
+<ul>
+  <li><b>步驟 5 之中</b>：除了 <code>make verify-milestone MS=MS7</code>，再在 Codespaces 執行一次 <code>make acceptance</code>（含完整 benchmark、三種 profile 端到端、USAGE.md 的 doctest、所有 milestone 的 holdout；約 40 分鐘，需要 lab）。最後一行應為 <code>final: ALL PASSED</code>。</li>
+  <li><b>照 <code>USAGE.md</code> 親手跑一次</b>（SPEC §11 MS7 審查重點）：清單會列出 dev、ci、audit 與展示情境各一條單行指令，它們執行的就是 USAGE.md 中同一個 doctest 區塊。</li>
+  <li><b>步驟 8 之後</b>：MS7 核准後由你自己把 <code>main</code> fast-forward 到 session 分支（ADR-027）；agent 不會合併或推送 <code>main</code>。</li>
+</ul>
+
 <h2>3. 核准意見怎麼寫</h2>
 <ul>
   <li>每一條意見寫成一個可執行的指示（「把 X 改成 Y」「下一個 milestone 開始前先做 Z」），agent 會逐條轉成 ticket 或 ADR。</li>

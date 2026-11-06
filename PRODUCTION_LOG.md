@@ -360,12 +360,14 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - 必做變異 3 項（audit 兩道防線、fail_on 證據等級、S4）實測會失敗（清單第 3 段）。
 - subagent tokens（約）：probe-dev 17k–45k；whitebox-dev 15k–43k；recon-dev 22k；auditor 114k（未完成）＋58k＋63k。
 
-## MS7 整合與交付（進行中）
+## MS7 整合與交付（等待審查，main @ 0ef14ba0a）
 
 ### Holdout（派工前紀錄，§2）
 | 檔案 | sha256 |
 | --- | --- |
 | rlsentry-holdout:MS7/test_ms7_holdout.py | 37964c0288a2dcd2075eac272ff501b44cfea8b81a776ea93591c4e58b02a52b |
+| rlsentry-holdout:MS2/test_holdout_probe.py（ADR-053 更新） | 9ffdacaafd0bdf3e340c95787bf6d5e5fdc871518e41c0c11f7789b861ad0557 |
+| rlsentry-holdout:MS6/test_holdout_ms6.py（ADR-053 更新） | db638a8bcd4fbeebc15ee5f1e14c7519806080bbcd0a9fa48f390e79038f55e9 |
 
 註：`holdout.py add` 一併提交了 scratch 資料夾中的 `.ruff_cache/` 與 `__pycache__/`（我在登錄前對該資料夾跑過 ruff 與 pytest）；它們不是測試，`holdout.py` 只收集 `test_*.py`，不影響驗證。
 
@@ -374,3 +376,30 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - 抓到 3 個測試本身的問題並在 T-240 派工前修正：「已是 admin」案例在會依 metadata 放行的表上不會成為候選（改用忽略 metadata 的表）；`from lab._shared.__main__ import` 的 ruff import 分組會在檔案出現後改變，T-244 驗收必定失敗（改為匯入模組）；fix_sql 草稿 import 排序。
 - 真實 GoTrue：L03 先把 user_a 的 `user_metadata.role` 設為 `editor`，ci 掃描提權並還原後仍為 `editor`（ADR-051 #3）。
 - USAGE 範例：dev L04（13 s，2 個 CROSS_TENANT_READ Medium，exit 0）、ci L05（15 s，2 個 CROSS_TENANT_WRITE High，exit 1）、audit L08（2 s，SECRET_KEY_IN_BUNDLE Critical，exit 0）。
+
+### 失敗與修正
+| 問題 | 修正 |
+| --- | --- |
+| 既有回歸測試（L07 嚴重度）在舊實作與新 ground truth 間不可能同時成立；實作 ticket 不能改測試、architect 不能改實作 | 合約常數分段上線（T-240 False → T-241 → T-245 切換），每次合併皆綠（ADR-049 #3） |
+| ticket 標題中的 `#` 被 YAML 當成註解截斷 | 改寫標題後再派工 |
+| auditor Part B：demo doctest 沒有斷言修補前的 Confirmed、「splinter 沒報」沒有斷言、Python API 沒有斷言、coverage 缺原始數量 | T-247 |
+| `make acceptance` 第 1 次：3 個舊 holdout 被已核准的行為變更打破（MS2 ×2：ADR-039、ADR-040；MS6 ×1：ADR-051 #1）；traceability 一列已解決的 MS0 P0 仍寫缺 | T-248、ADR-053（以 `holdout.py add` 覆寫，逐項揭露）；第 2 次 ALL PASSED |
+| 流程教訓 | 參考實測應跑所有 milestone 的 holdout，而不只本 milestone |
+
+### Ticket（MS7）
+| 批次 | ticket | 嘗試次數 |
+| --- | --- | --- |
+| 合約、測試、ADR | T-240、T-245 | 1 |
+| 實作（並行派工） | T-241（whitebox）、T-242（whitebox）、T-243（probe）、T-244（lab） | 1 |
+| 文件、benchmark | T-246、T-247、T-248 | 1 |
+
+事件：各 ticket 的 accept 見 `logs/events.jsonl` 的 `ticket_accepted`（T-240 ab0ff50 … T-248 0ef14ba）；acceptance 紀錄 `logs/acceptance-final.json`、`logs/acceptance-MS7.json`。
+
+### ADR
+049（改標保留較高嚴重度，偏離 SPEC §5 M5 表）、050（D3）、051（ADR-047 已知限制：修三項、維持五項）＋補記、052（USAGE doctest、lab 入口、demo）、053（舊 holdout 更新）；ADR-013 補記（D4、更正）。
+
+### 指標
+- benchmark（`docs/benchmark/MS7-bench.json`）：recall 32/32、precision 32/32、FPR 0/72、coverage 109/109、inconclusive 7/109、safe_decided 69/69、probe-only 2 類；audit 16/16 情境寫入 0；runtime 5／20／50 張 5.6／20.7／50.8 s（rps 5 未調）。計分欄位與 MS6 完全相同。
+- `make acceptance`：final ALL PASSED（6 個 USAGE doctest、16 個 e2e、全部 holdout）。
+- 必做變異 3 項（嚴重度規則、doctest 的 probe_only 斷言、還原原值）實測會失敗（清單第 3 段）。
+- subagent tokens（約）：whitebox-dev 19k ×2；probe-dev 35k；lab-dev 32k（大部分時間在等 lab lock）；auditor 45k＋60k。
