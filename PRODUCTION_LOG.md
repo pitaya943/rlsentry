@@ -320,7 +320,7 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - subagent tokens（約）：recon-dev 每張 17k–32k；lab-dev 15k；whitebox-dev 20k；auditor 93k。
 
 
-## MS6 M5 Report + 介面 + profiles（進行中）
+## MS6 M5 Report + 介面 + profiles（等待審查，main @ b3c8c2bb2）
 
 ### Holdout（派工前紀錄，§2）
 | 檔案 | sha256 |
@@ -330,3 +330,32 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 ### 派工前參考實測（architect，草稿程式未提交，`/tmp` 的獨立 worktree）
 - lab：L03 提權可偵測（user_a 讀 B 的列：提權前 0、提權並重新登入後 1、還原後 0）；C04 植入回 403（沒有 INSERT policy），所以 C04 在 dev 仍是 inconclusive（PLAN 原述不成立，ADR-042 #5）；高權限 role 實測集合（ADR-038）；L04 修補 SQL 套用後只剩 owner-scoped SELECT policy；合併讀取後 50 張表 50.6 s（ADR-040）。
 - 草稿參考實作跑全部可見測試與 holdout：派工前修正了 6 個測試本身的問題（helper 匯入 pipeline 造成 T-214 依賴 T-219、帳號 dict 與 TestUser list 撞名、提示測試的 RLS 設定矛盾、測試目標缺表、JSON 往返比對未考慮遮罩、rename 遺漏）。
+
+### 失敗與修正
+| 問題 | 修正 |
+| --- | --- |
+| 參考 benchmark：L05 dev 出現 2 個 USER_METADATA_ESCALATION 偽陽性（寫入探測的擁有者轉移改變了「提權前看不到」的基準） | 派工前修正合約：提權前重測基準（T-202，ADR-042 補記） |
+| T-212 驗收失敗 ×2：read_rule 改依角色後，lab 測試直接比對 L07 規則；第 1 次因 T-211（M4 改標）尚未合併（architect 排序錯誤），第 2 次因 `test_scan_writes.py` 未經 M4 | T-203 讓該測試先經 M4；T-212 加上依賴 T-211、T-203；程式未改，第 3 次通過 |
+| worker 重啟中斷驗收鏈，Docker 停止 | 重啟 dockerd、`supabase stop --no-backup` 後重建乾淨 lab，續跑驗收 |
+| T-230 第 1 次：ADR 文字含被禁止的字詞，被作弊檢查擋下 | 改寫 ADR 用詞，第 2 次通過 |
+| auditor 第 1 次派工在 30 回合上限內未交報告 | 改為兩個範圍較小的部分（safety／正確性）重派，各在 20 次工具呼叫內完成 |
+| 稽核 P1：例外時 canary 不清理、提權還原可能不執行或靜默失敗、CLI 崩潰的 exit code 與 traceback、一個安全測試零請求也會過 | T-232（合約與測試，ADR-047）→ T-233、T-234、T-235 |
+| 人類指出 progress.html 未在核准後更新 | 原因：ADR-015／031 沒有「核准後」的時間點，且本 session 高風險驗收後漏跑；已重跑並提交；SOP（`/final-question`、`/approved`）待人類確認後寫入 |
+
+### Ticket（MS6）
+| 批次 | ticket | 嘗試次數 |
+| --- | --- | --- |
+| 合約、測試、ADR | T-200、T-201、T-202、T-203、T-232 | 1 |
+| 實作 | T-211、T-213、T-214、T-215、T-216、T-217、T-218、T-219、T-220、T-221、T-222 | 1 |
+| 實作（排序問題） | T-212 | 3 |
+| 稽核修正 | T-233、T-234、T-235 | 1 |
+| 端到端與 benchmark | T-230（2）、T-231（1） | |
+| 取消 | T-210（併入 T-200：classify 直接引用合約常數） | — |
+
+### ADR
+038（高權限 JWT）、039（SECURITY DEFINER 由 M4 判定、依角色抑制）、040（合併讀取）、041（WriteRefused → inconclusive）、042（pipeline）＋補記 ×2、043（S4）、044（M5 報告、CLI、Action）、045（MS5 第 7 點）、047（稽核處理）。
+
+### 指標
+- benchmark（`docs/benchmark/MS6-bench.json`）：recall 32/32、precision 32/32、FPR 0/72、coverage 1.0、inconclusive 0.064、probe-only 2 類；audit 16/16 情境寫入 0；runtime 5／20／50 張 5.6／20.7／50.8 s（達標，rps 5 未調）。
+- 必做變異 3 項（audit 兩道防線、fail_on 證據等級、S4）實測會失敗（清單第 3 段）。
+- subagent tokens（約）：probe-dev 17k–45k；whitebox-dev 15k–43k；recon-dev 22k；auditor 114k（未完成）＋58k＋63k。

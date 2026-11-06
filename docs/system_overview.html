@@ -100,9 +100,9 @@
     <rect x="720" y="30" width="140" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44" stroke-dasharray="5,4"/>
     <text x="790" y="60" text-anchor="middle" font-size="14" font-weight="bold">M4 Whitebox</text>
     <text x="790" y="80" text-anchor="middle" font-size="12">splinter 交叉 ✓（選配）</text>
-    <rect x="890" y="30" width="190" height="70" rx="8" fill="#f1f3f5" stroke="#adb5bd"/>
+    <rect x="890" y="30" width="190" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
     <text x="985" y="60" text-anchor="middle" font-size="14" font-weight="bold">M5 Report</text>
-    <text x="985" y="80" text-anchor="middle" font-size="12">JSON／HTML／SARIF（MS6）</text>
+    <text x="985" y="80" text-anchor="middle" font-size="12">JSON／HTML／SARIF ✓</text>
     <line x1="180" y1="65" x2="226" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
     <line x1="350" y1="65" x2="376" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
     <line x1="510" y1="65" x2="536" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
@@ -136,7 +136,7 @@
     <line x1="95" y1="190" x2="95" y2="250" stroke="#334e68" stroke-width="2"/>
     <line x1="95" y1="250" x2="246" y2="250" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
     <text x="100" y="240" font-size="12" fill="#334e68">沒授權就不建立 client</text>
-    <text x="20" y="330" font-size="11" fill="#c92a2a">授權與 client 的綁定在 MS6（ADR-020 #6）</text>
+    <text x="20" y="330" font-size="11" fill="#c92a2a">唯一的 SafeClient 只在 pipeline 授權後建立（ADR-020 #6 ✓）</text>
   </svg>
   <p class="note">虛線箭頭＝模組透過 SafeClient 發請求。只有 bench（MS4）可以看 ground truth；掃描器本身永遠看不到答案（ADR-014 #10，有測試把關）。</p>
 </section>
@@ -287,8 +287,8 @@
     <tr><td>MS2</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>discovery/*、probe 讀取、diff、severity、init</td><td>第一次能說出「這裡有讀取漏洞」</td></tr>
     <tr><td>MS3</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>probe 寫入（seed work row／write／read-back／verdict／cleanup）</td><td>寫入類漏洞（L01／L09 的 INSERT；安全表誤報為 0）</td></tr>
     <tr><td>MS4</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>whitebox（splinter、pg_policies、correlate）、bench、OpenAPI 型別植入</td><td>第一次完整計分：recall 29/32、precision 29/29、FPR 0/72；probe-only 2 類</td></tr>
-    <tr><td>MS5</td><td><i class="dot" style="background:var(--wip)"></i>等待你審查</td><td>recon/*（fetch、links、sourcemap、extract、classify、run）、labctl.serve_frontend、bench 接上 M1</td><td>從網址出發找到 Supabase URL 與 key；service_role → Critical、anon 不報；recall 30/32</td></tr>
-    <tr><td>MS6</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>report、pipeline、CLI、Action</td><td>一個指令跑完全部；授權綁定（ADR-020 #6）</td></tr>
+    <tr><td>MS5</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>recon/*（fetch、links、sourcemap、extract、classify、run）、labctl.serve_frontend、bench 接上 M1</td><td>從網址出發找到 Supabase URL 與 key；service_role → Critical、anon 不報；recall 30/32</td></tr>
+    <tr><td>MS6</td><td><i class="dot" style="background:var(--wip)"></i>等待你審查</td><td>pipeline.run_scan、safety/endpoint（S4）、report/*（JSON、HTML、SARIF、修補 SQL、exit code）、CLI、GitHub Action、L03 提權與 dev／ci 讀取植入</td><td>一個指令跑完全部；recall 32/32、precision 32/32、FPR 0/72；50 張表 50.8 s（達標）</td></tr>
     <tr><td>MS7</td><td><i class="dot" style="background:var(--todo)"></i>鎖定</td><td>整合與交付</td><td>USAGE、BENCHMARK_REPORT、demo</td></tr>
   </table>
 </section>
@@ -296,6 +296,9 @@
 <!-- 8 ------------------------------------------------------------------>
 <section id="s8">
   <h2>8. 本 milestone 的過程（overview）</h2>
+  <h3>MS6：M5 Report、pipeline、CLI、Action、profiles（ADR-038–047）</h3>
+  <p><b>一次掃描怎麼跑</b>（<code>pipeline.run_scan</code>，CLI、Python API、GitHub Action 共用）：先授權（不送任何請求）→ 建立唯一的 SafeClient → M1 掃前端 → <b>S4：Supabase URL 必須由設定檔或 <code>--supabase-url</code> 指名</b>，bundle 中的 URL 只出現在拒絕訊息 → M2 → 登入、dev／ci 讀取植入、M3、dev／ci L03 提權（提權前重測基準、一定還原）、清理（例外時也清理）→ M4（有 DB 連線時）→ M1 的 key finding 附在 correlate 之後 → M5 依「證據等級 → 嚴重度」排序並補上標題、遮罩後的 curl、修補 SQL、參考連結。<b>audit 三道防線</b>：不呼叫植入與提權、寫入 cell 一律 not_tested、SafeClient 閘門拒絕非 GET。<b>CI 只在 Confirmed 且 ≥ high 時失敗</b>（exit 1）；清理失敗 4；崩潰 5。</p>
+  <p><b>判定的改變</b>：M3 不再自稱 SECURITY_DEFINER_RPC_DATA，由 M4 依 splinter lint 改標，警告依（物件, 角色）抑制（ADR-039）；明確的高權限 JWT（supabase_admin、postgres…）判為 Critical（ADR-038）；同一身分的已知主鍵合併為一個只取主鍵的 GET（ADR-040）。<b>benchmark</b>：recall 32/32、precision 32/32、FPR 0/72、50 張表 50.8 s。<b>auditor</b>（兩部分）找到 4 類 P1（例外時不清理、還原可能失敗、CLI 崩潰的 exit code 與 traceback、一個測試零請求也會過）→ T-232–T-235 修正；「limit 削弱過濾檢查」不成立（ADR-047）。</p>
   <h3>MS5：M1 Recon（ADR-036、037＋補記）</h3>
   <p><b>M1 怎麼運作</b>：對目標網址送 GET（不帶任何 header）→ 解析 HTML 的 <code>&lt;script src&gt;</code>／<code>modulepreload</code> → 逐一抓同源 JS，從字串常值找 chunk 路徑（Vite 的 <code>import(`./x.js`)</code>、Next.js 的 <code>_buildManifest.js</code>）、依 <code>sourceMappingURL</code> 抓 source map；佇列清空後再由 webpack 的 chunk map（CRA）或 <code>.e(43)</code>（Next.js）補抓延遲 chunk。跨源（CDN）、帶 userinfo、超過上限的 URL 只列入 <code>chunks_skipped</code>，一個請求都不送。擷取：JWT（不驗簽解碼，只留 role／ref／exp）、<code>sb_publishable_</code>／<code>sb_secret_</code>、以及在 key 語境中的高 entropy 字串。分類：<b>service_role／sb_secret → SECRET_KEY_IN_BUNDLE（Critical）</b>；<b>anon／publishable → 不產生 finding</b>；其他 → UNVERIFIED_KEY（Configuration warning）。報告只有前 6 後 4 的遮罩值，所有 URL 經 <code>report_url</code>（省略 query string）。</p>
   <p><b>D2（ADR-037）</b>：不支援無頭瀏覽器。瀏覽器會執行目標的 JS、自行對任意主機發請求，繞過 SafeClient 的寫入閘門、限速與 User-Agent，audit 的「0 次寫入」就無法保證；而三個真實框架 fixture 的延遲 chunk 全部能靜態找到。</p>
@@ -361,9 +364,9 @@
     <tr><td>1</td><td>使用者把正式環境 host 列進 write_hosts</td><td>ci 在正式 DB 植入／修改／刪除測試列</td><td>只有 ci 會寫、必須完全比對、報告列出可寫入的 host</td><td>MS3 清理失敗即 exit≠0；MS6 報告</td></tr>
     <tr><td>2</td><td>有模組繞過授權直接建立 SafeClient</td><td>未經授權就發出請求</td><td>目前沒有任何呼叫端</td><td>MS6 靜態測試＋計數測試（ADR-020 #6）</td></tr>
     <tr><td>3</td><td>oracle 與 lab 共用同一個錯誤假設</td><td>ground truth 錯了而沒人發現，指標失真</td><td>變異測試、auditor 抽查、你的抽查</td><td>每個 milestone 至少一項變異測試（ADR-005 補記）</td></tr>
-    <tr><td>4</td><td>主鍵值本身是個資（如以 email 當主鍵）</td><td>報告的 curl 帶出他人的主鍵</td><td>只記錄主鍵（CLAUDE.md 允許的唯一值）</td><td>MS6 報告決定是否遮罩（ADR-023 補記 S2）</td></tr>
+    <tr><td>4</td><td>主鍵值本身是個資（如以 email 當主鍵）</td><td>報告的 curl 帶出他人的主鍵</td><td>只記錄主鍵（CLAUDE.md 允許的唯一值）</td><td>MS6：維持只記主鍵、不遮罩（重現指令需要主鍵；已知限制，ADR-044）</td></tr>
     <tr><td>5</td><td>沒有擁有者欄位的表</td><td>anon 讀得到全部也只報 inconclusive</td><td>NO_OWNER_COLUMN／INCONCLUSIVE_CELL 提示，不寫成安全</td><td>MS3 植入資料後可判定</td></tr>
-    <tr><td>6</td><td>目標 bundle 指定 supabase_url（MS5 稽核 S4）</td><td>惡意前端讓 M2／M3 把 anon key 與探測送往別的主機</td><td>bench 使用 lab 自己的 URL；recon 只抓同源</td><td>MS6 pipeline：URL 必須經設定檔或使用者確認（PLAN）</td></tr>
+    <tr><td>6</td><td>目標 bundle 指定 supabase_url（MS5 稽核 S4）</td><td>惡意前端讓 M2／M3 把 anon key 與探測送往別的主機</td><td>MS6：URL 必須由設定檔或 <code>--supabase-url</code> 指名，否則 API 主機收不到任何請求（ADR-043）</td><td>已處理</td></tr>
     <tr><td>7</td><td>lab 清除不完整（role 層級設定）</td><td>情境之間互相汙染</td><td>目前沒有情境建立 role</td><td>出現時補上</td></tr>
   </table>
 </section>
@@ -377,8 +380,8 @@
     <tr><td>某個函式在做什麼、哪張 ticket 加的</td><td><code>docs/progress.html</code>（程式自動產生）</td></tr>
     <tr><td>每個 milestone 發生了什麼、哪裡失敗</td><td><code>PRODUCTION_LOG.md</code></td></tr>
     <tr><td>SPEC 需求對到哪個檔案、哪個測試</td><td><code>docs/verification/traceability.md</code></td></tr>
-    <tr><td>這次要親手驗證什麼</td><td><code>docs/verification/MS5-v1.md</code></td></tr>
-    <tr><td>高風險 ticket 的 diff</td><td><code>docs/reviews/MS5-high-risk.md</code></td></tr>
+    <tr><td>這次要親手驗證什麼</td><td><code>docs/verification/MS6-v1.md</code></td></tr>
+    <tr><td>高風險 ticket 的 diff</td><td><code>docs/reviews/MS6-high-risk.md</code></td></tr>
     <tr><td>每個 milestone 固定的審查步驟（同步、Actions、sha 比對、簽章）與異常狀況對照</td><td><code>docs/verification_steps.html</code></td></tr>
     <tr><td>模組之間交換什麼資料</td><td><code>rlsentry/contracts/</code>（每個檔案開頭的 docstring）</td></tr>
   </table>
