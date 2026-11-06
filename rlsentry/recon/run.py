@@ -14,6 +14,7 @@ from rlsentry.contracts.safety import JWT_RE, SafeClientContract
 from rlsentry.recon.classify import classify_key, findings_from_keys, key_finding
 from rlsentry.recon.extract import client_pairs, key_candidates, supabase_hosts
 from rlsentry.recon.fetch import fetch_bundle
+from rlsentry.recon.links import report_url
 
 
 def _pair_form(key: str) -> CandidateForm:
@@ -32,7 +33,7 @@ def _collect_keys(files: list[FetchedFile]) -> list[KeyFinding]:
             if (c.value, f.url) in seen:
                 continue
             seen.add((c.value, f.url))
-            keys.append(key_finding(c, f.url))
+            keys.append(key_finding(c, report_url(f.url)))
     return keys
 
 
@@ -81,7 +82,7 @@ async def recon(client: SafeClientContract, target_url: str, *, max_files: int =
     result = ReconResult(
         supabase_url=supabase_url,
         keys=keys,
-        chunks_scanned=[f.url for f in files if f.kind in ("html", "js", "map")],
+        chunks_scanned=[report_url(f.url) for f in files if f.kind in ("html", "js", "map")],
         chunks_skipped=fetched.skipped,
     )
     return ReconOutput(

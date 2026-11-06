@@ -20,12 +20,12 @@ from rlsentry.contracts.safety import SafeClientContract
 from rlsentry.recon.links import (
     html_script_urls,
     js_chunk_urls,
+    report_url,
     same_origin,
     source_map_url,
     webpack_chunk_urls,
 )
 from rlsentry.recon.sourcemap import decode_data_url, map_sources
-from rlsentry.safety.mask import mask_text
 
 
 async def _get(client: SafeClientContract, url: str, max_bytes: int) -> tuple[str | None, str, dict[str, str]]:
@@ -55,7 +55,7 @@ async def fetch_bundle(client: SafeClientContract, target_url: str, *,
     forbids sending credentials or touching other origins. Never raises for HTTP-level problems.
     """
     def skip(url: str, reason: str) -> None:
-        skipped.append(mask_text(f"{url} ({reason})"))
+        skipped.append(f"{report_url(url)} ({reason})")
 
     skipped: list[str] = []
     body, reason, _ = await _get(client, target_url, max_bytes)
