@@ -36,9 +36,10 @@ def test_every_role_proven_means_no_warning() -> None:
 def test_proven_reads_on_a_definer_function_are_relabelled_by_m4() -> None:
     fs = [fnd("f", "ANON_READ_OWNER_SCOPED", role=Role.ANON), fnd("f", "CROSS_TENANT_READ", role=Role.USER_A)]
     out = correlate(fs, [lint(ANON_LINT, "f"), lint(AUTH_LINT, "f")])
-    for got, role in zip(out, (Role.ANON, Role.USER_A), strict=True):
+    # ADR-049: the relabel keeps the higher severity (anon High, user Medium)
+    for got, role, sev in zip(out, (Role.ANON, Role.USER_A), (Severity.HIGH, Severity.MEDIUM), strict=True):
         assert (got.rule, got.severity, got.correlation, got.role) == (
-            "SECURITY_DEFINER_RPC_DATA", Severity.MEDIUM, "confirmed", role)
+            "SECURITY_DEFINER_RPC_DATA", sev, "confirmed", role)
         assert got.id == finding_id("f", role, Op.SELECT, "SECURITY_DEFINER_RPC_DATA")
         assert got.lint == f"{ANON_LINT},{AUTH_LINT}"
     assert fs[0].rule == "ANON_READ_OWNER_SCOPED"                         # inputs not mutated

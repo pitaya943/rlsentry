@@ -28,7 +28,8 @@ policy:
       select: {anon: all, user: all}
 vulnerable_cases:
   # RPC 呼叫以 op=select 表示（ADR-007）
-  - {id: L07-V1, target: get_all_accounts, op: select, role: anon, rows: [acc_a1, acc_b1], expect: allowed, rule: SECURITY_DEFINER_RPC_DATA, severity: medium}
+  # MS6 核准意見第 1 點（ADR-049）：改標時保留較高的嚴重度；anon 讀 owner-scoped 資料為 High（無敏感欄位）
+  - {id: L07-V1, target: get_all_accounts, op: select, role: anon, rows: [acc_a1, acc_b1], expect: allowed, rule: SECURITY_DEFINER_RPC_DATA, severity: high}
   - {id: L07-V2, target: get_all_accounts, op: select, role: user_a, rows: [acc_b1], expect: allowed, rule: SECURITY_DEFINER_RPC_DATA, severity: medium}
   - {id: L07-V3, target: get_all_accounts, op: select, role: user_b, rows: [acc_a1], expect: allowed, rule: SECURITY_DEFINER_RPC_DATA, severity: medium}
 safe_cases:

@@ -71,15 +71,16 @@ DEFINER_RELABEL_RULES: frozenset[str] = frozenset({"ANON_READ_OWNER_SCOPED", "CR
 """M3 read rules that correlate turns into SECURITY_DEFINER_RPC_DATA when splinter proves the
 object is an executable SECURITY DEFINER function (ADR-039)."""
 
-RELABEL_KEEPS_HIGHER_SEVERITY: bool = False
+RELABEL_KEEPS_HIGHER_SEVERITY: bool = True
 """MS6 approval note 1 (option B), ADR-049: when correlate relabels a proven read as
 SECURITY_DEFINER_RPC_DATA, the severity becomes max(the finding's own severity,
 RULES["SECURITY_DEFINER_RPC_DATA"].severity) by SEVERITY_RANK, so supplying a DB connection can
 never lower a severity (anon + sensitive columns stays Critical, anon stays High, a user's
 cross-tenant read stays Medium). False = the SPEC §5 M5 table literally (always Medium).
 correlate reads this module attribute at call time when its `keep_higher` argument is None.
-Staged rollout (ADR-049): False until the implementation is accepted, then the architect flips
-it together with the L07 ground truth so every merge keeps the regression set green."""
+Staged rollout (ADR-049): False until the implementation was accepted (T-241), then flipped
+to True by the architect together with the L07 ground truth (T-245), so every merge kept the
+regression set green."""
 
 
 STATEMENT_TIMEOUT_MS = 30_000
