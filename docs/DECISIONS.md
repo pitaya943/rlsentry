@@ -690,5 +690,5 @@ D2–D4 由 architect 決定並記錄於此。
 - 後果：每個候選表多一個 GET（只在 dev／ci）。
 
 ### ADR-042 補記 2：實作時的澄清（2026-11-06，T-219、T-220 回報）
-- **M4 失敗的處理範圍**：合約寫「任何例外 → note」，T-219 只攔 `psycopg.Error`、`OSError`、`ValueError`、`RuntimeError`（ruff 的 BLE001 禁止 `except Exception`，專案也禁止 `noqa`）。其他例外會中止掃描。這偏向 fail-closed：意料之外的錯誤不會被靜默吞掉；已知的連線、權限、雜湊錯誤仍只記 note。
+- **M4 失敗的處理範圍**：合約寫「任何例外 → note」，T-219 只攔 `psycopg.Error`、`OSError`、`ValueError`、`RuntimeError`（ruff 的 BLE001 禁止 `except Exception`，專案也禁止行內的 lint 豁免註解）。其他例外會中止掃描。這偏向 fail-closed：意料之外的錯誤不會被靜默吞掉；已知的連線、權限、雜湊錯誤仍只記 note。
 - **CLI**：預設輸出格式依實際生效的 profile（`report.profile`），不是設定檔的 profile；TARGET 與設定檔 target 比較前去掉結尾的 `/`；未知的 `--format` 值 → exit 2；SARIF 的 artifact uri 為使用者輸入的 `--config` 路徑；`init` 必須有設定檔（不接受 TARGET）。
