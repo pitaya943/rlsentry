@@ -1,0 +1,45 @@
+name: RLSentry
+description: Verify Supabase authorization (RLS) from an attacker's point of view and upload SARIF results.
+inputs:
+  config:
+    description: Path to the rlsentry config file (must contain authorized true).
+    default: rlsentry.yaml
+  profile:
+    description: Scan profile (dev, ci or audit).
+    default: ci
+  supabase-url:
+    description: Optional Supabase URL override; empty means use the config value.
+    default: ""
+  out:
+    description: Output directory for the report files.
+    default: rlsentry-report
+  upload-sarif:
+    description: Upload the SARIF report to GitHub code scanning when "true".
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install RLSentry
+      shell: bash
+      run: python -m pip install "$GITHUB_ACTION_PATH/.."
+    - name: Run RLSentry scan
+      shell: bash
+      env:
+        RLS_CONFIG: ${{ inputs.config }}
+        RLS_PROFILE: ${{ inputs.profile }}
+        RLS_OUT: ${{ inputs.out }}
+        RLS_SUPABASE_URL: ${{ inputs.supabase-url }}
+      run: |
+        args=(--config "$RLS_CONFIG" --profile "$RLS_PROFILE" --out "$RLS_OUT" --format json,sarif)
+        if [ -n "$RLS_SUPABASE_URL" ]; then
+          args+=(--supabase-url "$RLS_SUPABASE_URL")
+        fi
+        rlsentry scan "${args[@]}"
+    - name: Upload SARIF
+      if: ${{ always() && inputs.upload-sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.out }}/rlsentry-report.sarif
