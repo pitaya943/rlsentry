@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "aed7a86fb135fc0a5",
+  "description": "MS7 audit part B traceability",
+  "resolvedModel": "claude-opus-5-5",
+  "prompt": "Review: MS7\nBase: b3c8c2bb2\nPart B of 2 (traceability and delivery docs). Read code and docs only: do NOT run pytest, the benchmark, the lab, or any command that touches the lab or the network. Limit: at most 20 tool calls; deliver the report even if incomplete.\nScope: SPEC §9 (評估指標, 展示情境, Profile 端到端), §11 MS7 row and 紀錄與交付, §12 D2–D4 (use `python3 harness/spec.py \"<section>\"`). Files: USAGE.md, docs/examples/*.yaml, BENCHMARK_REPORT.md, docs/benchmark/MS7-bench.json (summary keys only), docs/DECISIONS.md ADR-013 補記 and ADR-037/049–052, tests added or changed since base (`git diff --stat b3c8c2bb2..HEAD -- tests lab`).\nDeliver: a markdown traceability table `| 需求 | 優先度 | 證據（test 或文件:行） | 狀態 |` for the MS7 requirements (USAGE doctests per profile, demo L04, five metrics with raw counts, D2/D3/D4 ADRs, MS6 approval note 1 severity rule incl. fail_on consistency, MS4 note 1 rerun). Status values: OK / PARTIAL / MISSING. Plus P0/P1/P2 findings (honesty of claims, doctest correctness, deviations not disclosed). Terse.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/f320f62a-0e4b-54c8-af69-1db23e4252be/tasks/aed7a86fb135fc0a5.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

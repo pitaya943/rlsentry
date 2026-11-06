@@ -1,0 +1,5 @@
+{
+  "description": "MS7 audit part A safety",
+  "prompt": "Review: MS7\nBase: b3c8c2bb2\nPart A of 2 (safety and correctness of product code). Read code only: do NOT run pytest, the benchmark, the lab, or any command that touches the lab or the network. Limit: at most 20 tool calls; deliver the report even if incomplete.\nScope: `git diff b3c8c2bb2..HEAD -- rlsentry lab/_shared` (correlate keep_higher, fix_sql roles/policy_name, probe metadata/escalation restore-original, lab/_shared/__main__.py). Check against contracts in rlsentry/contracts/{whitebox,report,probe,lab}.py and ADR-049, ADR-051, ADR-052 in docs/DECISIONS.md.\nFocus: can the M4 relabel ever lower a severity; can escalation write when it cannot restore, or leak the original metadata value; fix SQL quoting/drop scope; lab CLI binds only 127.0.0.1 and never reaches non-local hosts.\nReport: P0/P1/P2 findings with path:line, and a short safety verdict. Terse.",
+  "subagent_type": "auditor"
+}
