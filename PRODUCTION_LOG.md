@@ -359,3 +359,18 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - benchmark（`docs/benchmark/MS6-bench.json`）：recall 32/32、precision 32/32、FPR 0/72、coverage 1.0、inconclusive 0.064、probe-only 2 類；audit 16/16 情境寫入 0；runtime 5／20／50 張 5.6／20.7／50.8 s（達標，rps 5 未調）。
 - 必做變異 3 項（audit 兩道防線、fail_on 證據等級、S4）實測會失敗（清單第 3 段）。
 - subagent tokens（約）：probe-dev 17k–45k；whitebox-dev 15k–43k；recon-dev 22k；auditor 114k（未完成）＋58k＋63k。
+
+## MS7 整合與交付（進行中）
+
+### Holdout（派工前紀錄，§2）
+| 檔案 | sha256 |
+| --- | --- |
+| rlsentry-holdout:MS7/test_ms7_holdout.py | 37964c0288a2dcd2075eac272ff501b44cfea8b81a776ea93591c4e58b02a52b |
+
+註：`holdout.py add` 一併提交了 scratch 資料夾中的 `.ruff_cache/` 與 `__pycache__/`（我在登錄前對該資料夾跑過 ruff 與 pytest）；它們不是測試，`holdout.py` 只收集 `test_*.py`，不影響驗證。
+
+### 派工前參考實測（architect，草稿程式未提交，scratchpad 的獨立 worktree）
+- 草稿實作 T-241–T-245 後跑可見測試、lab 與 e2e：319 passed；holdout 7 passed。
+- 抓到 3 個測試本身的問題並在 T-240 派工前修正：「已是 admin」案例在會依 metadata 放行的表上不會成為候選（改用忽略 metadata 的表）；`from lab._shared.__main__ import` 的 ruff import 分組會在檔案出現後改變，T-244 驗收必定失敗（改為匯入模組）；fix_sql 草稿 import 排序。
+- 真實 GoTrue：L03 先把 user_a 的 `user_metadata.role` 設為 `editor`，ci 掃描提權並還原後仍為 `editor`（ADR-051 #3）。
+- USAGE 範例：dev L04（13 s，2 個 CROSS_TENANT_READ Medium，exit 0）、ci L05（15 s，2 個 CROSS_TENANT_WRITE High，exit 1）、audit L08（2 s，SECRET_KEY_IN_BUNDLE Critical，exit 0）。
