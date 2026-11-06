@@ -156,3 +156,26 @@
 - 已確認：只送 `GET` 且無 header；同源檢查在上限檢查與請求之前；service_role → CRITICAL／CONFIRMED；bench 中 recon 在計時之前、只有 probe findings 經 correlate。
 - 過擬合疑慮：無依測試資料的特例；ENTROPY_MIN 依 fixture 量測；generic key 需要 key 語境名稱，壓縮後名稱無意義時會漏；URL 在執行期組出時 `supabase_url=None`（無測試覆蓋 None 路徑）；16 個 lab 前端形狀相同。
 - 交人類親手檢查：(1) S1 修正後，同源 200 URL 的 query 中的 key 不出現在報告；(2) bench/run.py 的計時與 correlate 順序；(3) `.map` 範圍決定（ADR-036 #2）。
+
+## MS6 M5 Report + 介面 + profiles（auditor 兩部分，base 5a41a7327；只讀程式碼）
+
+| 需求 | 程式 | 測試 | 狀態 |
+| --- | --- | --- | --- |
+| NFR-01 audit 不寫入 | safety/mode.py；probe/run.py（audit 寫入 cell）；pipeline.py（dev／ci 才植入、提權） | tests/pipeline/test_run_scan_safety.py（加上非空斷言，ADR-047）、tests/e2e/test_profiles.py::test_audit_never_writes_by_the_database_log（DB log）、tests/lab/test_policies_readonly.py | 已涵蓋（稽核 P1-4 已修正） |
+| NFR-02 授權後才建立唯一的 SafeClient | pipeline.py；safety/gate.py | test_run_scan_safety.py（未授權 0 請求、恰好一個 client）、tests/pipeline/test_static_client.py | 已涵蓋 |
+| NFR-03 報告遮罩 | report/{json,html,sarif}.py（最終 mask_text）、cli.py | tests/report/*、tests/cli/test_cli.py、tests/report/test_recon_url.py、tests/pipeline/test_run_scan_errors.py（CLI 崩潰不印祕密） | 稽核 P1-3、P2-1 → T-234／T-235 |
+| FR-12 JSON／HTML、證據等級＋嚴重度、curl、修補 SQL | report/{enrich,fix_sql,json,html}.py | tests/report/*、tests/e2e/test_demo_l04.py（套用修補 SQL 後重掃無漏洞） | 已涵蓋 |
+| FR-13 SARIF 2.1.0、fail_on exit code | report/{sarif,exit_code}.py、action/action.yml | tests/report/test_sarif.py（官方 schema）、test_exit_code.py、tests/e2e/test_profiles.py::test_ci_fails_only_on_confirmed_high、tests/action/test_action.py | 已涵蓋 |
+| FR-15 `rlsentry init` | pipeline.run_init、cli.py | tests/cli/test_cli.py::test_init_writes_a_draft_and_refuses_to_overwrite | 已涵蓋（CLI 層） |
+| FR-16 Python API＝CLI＝Action | rlsentry/__init__.py、pipeline.py | tests/e2e/test_profiles.py::test_python_api_is_the_pipeline | 已涵蓋 |
+| MS5 第 4 點：高權限 JWT → Critical | contracts/recon.SECRET_JWT_ROLES、recon/classify.py | tests/recon/test_classify_privileged.py、holdout | 已涵蓋 |
+| MS5 第 6 點／ADR-043：S4 | safety/endpoint.py、pipeline.py | tests/safety/test_endpoint.py、test_run_scan_safety.py、tests/e2e/test_endpoint_lab.py（lab：API 埠 0 請求） | 已涵蓋 |
+| MS5 第 7 點 | tests/lab/test_whitebox_lab.py | 同左 | 已處理（ADR-045） |
+| MS4 第 5 點 (a)(b) | whitebox/correlate.py、rules/severity.py | tests/whitebox/test_correlate_roles.py、tests/probe/test_rule_rpc.py | 已涵蓋；(b) 的嚴重度下降交人類決定（ADR-047） |
+| MS4 第 5 點 (c)(d) | bench/score.py、pipeline.py（db_schemas）；whitebox/policies.py | tests/bench/test_splinter_schemas.py、test_run_scan.py::test_m4_correlates_m3_only_and_fills_policies、tests/lab/test_policies_readonly.py | 已涵蓋 |
+| MS4 第 2 點：合併讀取 | probe/read.py、probe/run.py | tests/probe/test_read_merge.py、holdout | 已涵蓋；稽核 P1「limit」不成立（ADR-047） |
+| MS4 第 3 點：L04 展示 | report/*、tests/e2e/test_demo_l04.py | 同左 | 已涵蓋 |
+| MS3 第 1 點：L03、讀取植入、WriteRefused | probe/{escalation,seed_pass,run}.py | tests/probe/test_{escalation,seed_pass,write_refused,failure_paths}.py、tests/lab/test_l03_escalation_lab.py | 稽核 P1（例外時清理／還原）→ T-233／T-234 |
+| ADR-036 #7：M1 不經 correlate | pipeline.py（順序）、correlate.py（排除 KEY_RULES） | test_run_scan.py::test_m4_correlates_m3_only_and_fills_policies、test_run_scan_errors.py::test_key_findings_are_never_correlated | 已涵蓋（雙重把關） |
+
+稽核發現的處理：ADR-047。auditor 第一次派工因 30 回合上限未交報告，改為兩個範圍較小的部分重派。
