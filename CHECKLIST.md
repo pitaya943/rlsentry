@@ -1,6 +1,6 @@
 # RLSentry 生產檢核清單
 
-自動產生，請勿手改 · 完成 161/167 · 進行中 3 · blocked 1
+自動產生，請勿手改 · 完成 162/167 · 進行中 2 · blocked 1
 
 ## [x] STAGE0 護欄測試（玩具 ticket）（已核准）
 - [x] T-000 Stage 0 toy ticket — add() plus harness canaries（recon-dev，done，1 次）
@@ -188,9 +188,9 @@
 
 ## [ ] MS7 整合與交付（進行中）
 - [x] T-240 合約與測試：MS6 核准意見第 1 點（分段上線）、ADR-047 三項修正、lab 命令列入口；ADR-049–052、D3、D4（architect，done，1 次）
-- [ ] T-241 whitebox/correlate.py：改標 SECURITY_DEFINER_RPC_DATA 時保留較高的嚴重度（keep_higher；MS6 核准意見第 1 點）（whitebox-dev，in_progress，1 次） ← 依賴 T-240✓
+- [x] T-241 whitebox/correlate.py：改標 SECURITY_DEFINER_RPC_DATA 時保留較高的嚴重度（keep_higher；MS6 核准意見第 1 點）（whitebox-dev，done，1 次）
 - [x] T-242 report/fix_sql.py：DROP POLICY 依 roles、policy 名稱 63 bytes（ADR-051 第 1、2 項）（whitebox-dev，done，1 次）
 - [ ] T-243 probe：提權前讀出 user_metadata.role，還原為原值；讀不到或已是 admin 就不寫入（ADR-051 第 3 項）（probe-dev，in_progress，1 次） ← 依賴 T-240✓
 - [ ] T-244 lab/_shared/__main__.py：shell 入口 up／apply／env／sql／serve（USAGE doctest 用；ADR-052）（lab-dev，in_progress，1 次） ← 依賴 T-240✓
-- [ ] T-245 切換 RELABEL_KEEPS_HIGHER_SEVERITY、L07 ground truth 與既有測試；ci 有無 DB 連線的 fail_on 一致（e2e）（architect，todo，0 次） ← 依賴 T-241…
+- [ ] T-245 切換 RELABEL_KEEPS_HIGHER_SEVERITY、L07 ground truth 與既有測試；ci 有無 DB 連線的 fail_on 一致（e2e）（architect，todo，0 次） ← 依賴 T-241✓
 - [ ] T-246 USAGE.md（dev／ci／audit／demo doctest）、範例設定檔、完整 benchmark 重跑與 BENCHMARK_REPORT（MS4 核准意見第 1 點）（architect，todo，0 次） ← 依賴 T-242✓ T-243… T-244… T-245…
