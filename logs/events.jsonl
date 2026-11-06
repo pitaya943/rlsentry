@@ -1327,3 +1327,4 @@
 {"ts": "2026-11-06T00:38:26", "kind": "ticket_start", "ticket": "T-189", "agent": "whitebox-dev", "attempt": 1}
 {"ts": "2026-11-06T00:38:54", "kind": "ticket_start", "ticket": "T-191", "agent": "architect", "attempt": 1}
 {"ts": "2026-11-06T00:44:37", "kind": "ticket_accepted", "ticket": "T-191", "commit": "0387d309f7a06c39ce4b5448d91c0dbeeaab34fc", "files": ["tests/labctl/test_serve_frontend.py", "tests/recon/test_classify.py", "tests/recon/test_extract.py", "tests/recon/test_fetch.py", "tests/recon/test_lab_frontends.py", "tests/recon/test_links.py", "tests/recon/test_recon_masking.py", "tests/recon/test_sourcemap.py"]}
+{"ts": "2026-11-06T00:50:46", "kind": "ticket_accepted", "ticket": "T-189", "commit": "157fcf9f18de9dfcf85bd82098062bbf9168c22c", "files": ["rlsentry/bench/run.py"]}
