@@ -71,6 +71,16 @@ DEFINER_RELABEL_RULES: frozenset[str] = frozenset({"ANON_READ_OWNER_SCOPED", "CR
 """M3 read rules that correlate turns into SECURITY_DEFINER_RPC_DATA when splinter proves the
 object is an executable SECURITY DEFINER function (ADR-039)."""
 
+RELABEL_KEEPS_HIGHER_SEVERITY: bool = False
+"""MS6 approval note 1 (option B), ADR-049: when correlate relabels a proven read as
+SECURITY_DEFINER_RPC_DATA, the severity becomes max(the finding's own severity,
+RULES["SECURITY_DEFINER_RPC_DATA"].severity) by SEVERITY_RANK, so supplying a DB connection can
+never lower a severity (anon + sensitive columns stays Critical, anon stays High, a user's
+cross-tenant read stays Medium). False = the SPEC §5 M5 table literally (always Medium).
+correlate reads this module attribute at call time when its `keep_higher` argument is None.
+Staged rollout (ADR-049): False until the implementation is accepted, then the architect flips
+it together with the L07 ground truth so every merge keeps the regression set green."""
+
 
 STATEMENT_TIMEOUT_MS = 30_000
 """`SET LOCAL statement_timeout` for every M4 transaction (a lint must not hang a scan)."""
@@ -170,8 +180,13 @@ def read_policies(db_url: str, db_schemas: Sequence[str] = DEFAULT_DB_SCHEMAS) -
 # --- whitebox/correlate.py ---------------------------------------------------------------------
 
 def correlate(findings: list[Finding], lints: list[Lint],
-              db_schemas: Sequence[str] = DEFAULT_DB_SCHEMAS) -> list[Finding]:
+              db_schemas: Sequence[str] = DEFAULT_DB_SCHEMAS, *,
+              keep_higher: bool | None = None) -> list[Finding]:
     """Contract only; implemented by rlsentry.whitebox.correlate.correlate. Pure (ADR-032).
+
+    keep_higher (MS7, ADR-049): None → use RELABEL_KEEPS_HIGHER_SEVERITY, read from this
+    module (rlsentry.contracts.whitebox) at call time, not copied at import. Only the severity
+    of a relabelled finding depends on it (see below); nothing else changes.
 
     Callers pass M3 (probe) findings only. M1 key findings (contracts.recon.KEY_RULES) are
     appended AFTER correlate by the caller (bench/run.py; MS6 pipeline): their targets are key
@@ -189,7 +204,9 @@ def correlate(findings: list[Finding], lints: list[Lint],
         additionally (ADR-039, MS4 approval note 5 (b)) when its rule is in
         DEFINER_RELABEL_RULES, its op is SELECT and the object has a relevant lint L with
         name in SECURITY_DEFINER_LINTS that *covers* the finding's role (see below), the copy
-        gets rule="SECURITY_DEFINER_RPC_DATA", severity=RULES[that].severity and
+        gets rule="SECURITY_DEFINER_RPC_DATA", severity = (keep_higher → the higher of the
+        finding's own severity and RULES[that].severity by SEVERITY_RANK; otherwise
+        RULES[that].severity) and
         id=finding_id(target, role, op, "SECURITY_DEFINER_RPC_DATA"): only splinter can prove
         a function is SECURITY DEFINER, so only M4 may use that rule;
       - other proven finding → correlation="probe_only", lint=None;

@@ -717,3 +717,61 @@ D2–D4 由 architect 決定並記錄於此。
   2. `/approved <MS>`：檢查 approvals 分支（`decision: approve`、`.sig` 存在、清單 sha256 一致、harness 狀態），全部通過才重跑 `progress.py`、更新 `system_overview.html` 的該列，只提交這三個檔並 push；任一項不符只回報、不修改；不開始下一個 milestone。
   3. skill 原文放在 `docs/sop/`（architect 維護），安裝副本在 `.claude/skills/`（凍結路徑，由人類以 `host/bootstrap.sh --refreeze` 安裝；安裝 commit `013adbc` 只含這兩個檔，與 `docs/sop/` 逐位元組相同）。`docs/verification_steps.html` 新增步驟 6.5，步驟 8 與第 3 節同步更新（ADR-028）。
 - 後果與風險：`docs/sop/` 與 `.claude/skills/` 可能漂移；修改 SOP 時 architect 只能改 `docs/sop/`，由人類重新複製並 refreeze。skill 在 session 啟動時載入，安裝後要開新 session 才會生效。
+
+### ADR-013 補記：MS7 交付時重新確認 D4（2026-11-06）
+- 確認：D4（Firebase Security Rules）維持「列為未來工作」。MS7 交付的合約、lab、ground truth 與 benchmark 全部以 Supabase／PostgREST 為前提；benchmark 指標只描述 Supabase lab，不推論到 Firebase。
+- 若日後支援：需要獨立的 lab（Firebase emulator）、以文件路徑為單位的 ground truth 格式與新的 ADR；不沿用 RowScope。
+
+## ADR-049：M4 改標 SECURITY_DEFINER_RPC_DATA 時保留較高的嚴重度（MS6 核准意見第 1 點，選項 B）
+- 日期：2026-11-06 · Milestone：MS7 · 相關：SPEC §5 M5 嚴重度表、FR-13、ADR-039、ADR-047「交人類決定」
+- 背景：ADR-039 起，M3 依角色給讀取規則（anon → ANON_READ_OWNER_SCOPED，High；含敏感欄位 Critical；使用者 → CROSS_TENANT_READ，Medium），M4 在 splinter 證實函式是 SECURITY DEFINER 時改標為 SECURITY_DEFINER_RPC_DATA，嚴重度依 SPEC 表為 Medium。結果是「提供 DB 連線反而讓嚴重度下降」，`fail_on: high` 的 CI 可能因此通過。
+- 考慮過的選項：
+  1. 照 SPEC 表（一律 Medium；MS6 現狀）
+  2. 改標時取 max(原本的嚴重度, Medium)（人類選定）
+- 決定：
+  1. 改標時嚴重度 = max(finding 原本的嚴重度, RULES["SECURITY_DEFINER_RPC_DATA"].severity)，依 SEVERITY_RANK 比較。結果：anon 經 SECURITY DEFINER RPC 讀到含敏感欄位的資料 → Critical；anon 一般情況 → High；使用者 → Medium。規則名稱與 id 仍改為 SECURITY_DEFINER_RPC_DATA（「怎麼漏的」是 M4 才能證明的事），只有嚴重度不下降。
+  2. 合約 `contracts/whitebox.RELABEL_KEEPS_HIGHER_SEVERITY` 與 `correlate(..., keep_higher=None)` 表達這個政策；None 時於呼叫當下讀合約常數。
+  3. **分段上線**（流程決定）：既有回歸測試（`test_scan_reads` 對 L07 ground truth 比對嚴重度、`test_gt_consistency`、e2e 的 L07 exit code）在「舊實作」與「新 ground truth」之間不可能同時成立，而實作 ticket 不能改測試與 ground truth、architect ticket 不能改實作。所以：T-240 合約常數預設 False（行為不變）→ T-241 實作 `keep_higher`（單元測試明確傳 True／False）→ T-245 由 architect 在同一個 merge 把常數改為 True、L07-V1 的 severity 改為 high、更新三個既有測試。每一次合併的回歸測試都是綠的，沒有任何一個 commit 停在紅燈。
+  4. L07 ground truth：V1（anon）`severity: high`；V2、V3（使用者）維持 `medium`。`test_gt_consistency` 對 SECURITY_DEFINER_RPC_DATA 的期望嚴重度改為 max(Medium, 該角色讀取規則的嚴重度)。
+- 理由：嚴重度描述「誰能讀到什麼」，不應依賴使用者是否提供 DB 連線；CI 的 fail_on 結果在有無 M4 時必須一致（以 `tests/whitebox/test_correlate_severity.py` 與 `tests/e2e/test_ci_definer_severity.py` 證明）。
+- 後果與風險：**偏離 SPEC §5 M5 表格的字面**（「anon 經 SECURITY DEFINER RPC 實際取得受保護資料」列在 Medium）。SPEC 那一列在本版本中只對使用者角色成立；anon 的情況等同於 anon 可讀 owner-scoped 表（High／Critical）。L07 在 ci 的預設 fail_on 下會失敗（exit 1），MS6 的 e2e 期望 EXIT_OK 改為 EXIT_FINDINGS。這修改了 MS6 已核准的行為，依核准意見以 MS7 ticket 處理，不 reopen。
+
+## ADR-050：D3：Web 介面範圍——不提供 Web 報告頁，由 CLI 產生靜態 HTML
+- 日期：2026-11-06 · Milestone：MS7 · 相關：SPEC §12 D3（已決定）、§5 M5、ADR-044
+- 背景：SPEC §12 把 D3 標為「已決定：移除 Web 報告頁，改由 CLI 產生靜態 HTML」，但先前只在 ADR-044 的段落中間接提到，沒有一則明確的 ADR。
+- 考慮過的選項：
+  1. 提供本機 Web 服務瀏覽報告（缺點：多一個常駐服務與攻擊面；報告含 curl 與主鍵，需要額外的存取控制）
+  2. CLI 寫出自包含的靜態 HTML（採用，SPEC 已決定）
+- 決定：RLSentry 不提供任何 Web 介面或伺服器；`rlsentry scan` 寫出 `rlsentry-report.html`（自包含、沒有 script、沒有外部資源，開啟不會對外連線；ADR-044 #1），另有 JSON 與 SARIF。GitHub Action 以 SARIF 上傳到 code scanning，作為團隊共用的檢視介面。
+- 理由：沒有伺服器就沒有額外的攻擊面；報告是檔案，存取控制沿用檔案系統與 CI artifact 的權限。
+- 後果與風險：沒有跨次掃描的歷史比較介面；使用者以 SARIF 的 `partialFingerprints`（finding id）在 GitHub 分辨新舊問題。
+
+## ADR-051：ADR-047 已知限制的處理：修三項、維持五項
+- 日期：2026-11-06 · Milestone：MS7 · 相關：ADR-044 #2、ADR-047、ADR-042 #6、SPEC §5 M3 清理、§5 M5
+- 背景：MS6 稽核列為已知限制的 P2 項目，交付前逐項評估「修正成本 vs. 對使用者的實際影響」。
+- 決定（修正，T-242、T-243）：
+  1. **DROP POLICY 依 roles**：修補 SQL 只 DROP「可能授予此 finding 角色存取」的 permissive policy：anon finding → roles 含 `anon` 或 `public`；使用者 finding → 含 `authenticated` 或 `public`（`contracts/report.POLICY_ROLES_FOR`）。理由：只服務其他角色的 policy 不可能造成這個 finding，刪掉它只會破壞正常功能。
+  2. **policy 名稱 ≤ 63 bytes**：`policy_name` 超過 63 bytes 時改為「前綴＋`_`＋sha256 前 8 碼」，不切斷 UTF-8 字元。理由：PostgreSQL 會靜默截斷，兩張長名稱的表可能得到同一個 policy 名稱，第二個 CREATE POLICY 失敗。
+  3. **提權還原為原值**：提權前以 `GET /auth/v1/user` 讀出 `user_metadata.role`，還原時寫回該值；讀不到（網路錯誤、非 200、格式不符）就不提權、不寫入；原值已是 `admin` 也不提權。原值只存在記憶體，不寫進 note、finding 或報告。理由：MS6 把 role 設成 null，若測試帳號原本有 role（例如 `editor`），ci 掃描後帳號狀態被改變。
+- 決定（維持為已知限制，在 USAGE.md 與清單揭露）：
+  4. **修補 SQL 一律使用 `db_schemas[0]`**：PostgREST 以裸名稱曝露物件，finding 的 target 不含 schema；多個曝露 schema 有同名物件時，正確的 schema 要靠 Accept-Profile 推斷，改動牽涉 M2／M3 的資料模型。絕大多數 Supabase 專案只曝露 `public`。修補 SQL 本來就要求人工審閱後才執行。
+  5. **函式 DDL 不含參數簽章**：`ALTER FUNCTION public.f SECURITY INVOKER;` 在函式有多載時會以「function name is not unique」失敗——失敗是安全的（不會改錯函式）。補上簽章需要 M4 另讀 `pg_proc`，沒有 DB 連線時仍無法提供。
+  6. **「表擁有者 role」的 JWT 不在 Critical 集合**（ADR-038 以 superuser／BYPASSRLS 定義，可驗證）。
+  7. **GitHub Action 對 `profile: audit` 的設定檔永遠不會失敗**（較嚴者勝，SPEC §2 只有 ci 有門檻）；USAGE.md 明寫 Action 要用 ci 設定檔。
+  8. **dev 的 M3 計時含植入、提權與清理**；runtime 指標以 audit 量測，不受影響。
+- 後果與風險：第 1 點讓「policy 給自訂角色、而 anon／authenticated 是該角色成員」的情況不會被 DROP（PostgreSQL 的 policy roles 可指定任意角色）；這種設定在 Supabase 罕見，修補 SQL 仍會建立新的 owner-scoped policy，使用者需人工檢查。第 3 點每個提權角色多一個 GET；Auth API 會合併 user_metadata，原本沒有 role 的帳號還原後是 `role: null`（不是不存在）。
+
+## ADR-052：USAGE.md doctest、lab 命令列入口與展示情境的設計
+- 日期：2026-11-06 · Milestone：MS7 · 相關：SPEC §9 Profile 端到端與展示情境、§11 紀錄與交付、ADR-035、ADR-043
+- 背景：`make acceptance` 會執行 USAGE.md 中每個 `<!-- doctest -->` bash block；MS7 審查重點是「照 USAGE.md 親手跑一次」。lab 的操作原本只有 Python 函式（`labctl`），從 shell 無法直接使用。
+- 考慮過的選項：
+  1. doctest 內嵌 `python -c "from lab._shared import labctl; …"`（缺點：人類照著打很難讀，也容易打錯）
+  2. 在 docs/ 放 shell script（缺點：等於繞過驗收閘門新增可執行程式）
+  3. 新增 `python -m lab._shared up|apply|env|sql|serve`（lab-dev ticket T-244，經驗收閘門；採用）
+- 決定：
+  1. 每個 profile 一個 doctest，皆在本機 lab 執行、可重複執行（每次先 `apply` 重設情境）：**dev → L04**（M1–M5，報告確認跨租戶讀取，且 `correlation: probe_only` 證明 splinter 沒報），**ci → L05**（跨租戶寫入 High → exit 1，產出 SARIF），**audit → L08**（唯讀；設定檔不寫 `supabase_url`，先示範 S4 拒絕 exit 3，再以 `--supabase-url` 確認；service_role key → Critical）。
+  2. 展示情境 L04（ADR-035）寫成第四個 doctest：splinter 沒報 → Confirmed → 遮罩的 curl → 修補 SQL → `python -m lab._shared sql` 套用 → 重掃沒有 Confirmed 漏洞。
+  3. 範例設定檔放在 `docs/examples/`（dev、ci、audit 各一），USAGE.md 逐欄說明；環境變數名稱 `RLSENTRY_ANON_KEY`、`RLSENTRY_DB_URL`、`RLS_A_PW`、`RLS_B_PW`（`contracts/lab.LAB_ENV_*`、`LAB_USERS`）。
+  4. dev 的前端以 `python -m lab._shared serve <情境> --port 8740` 在背景提供，只綁 127.0.0.1。
+- 理由：doctest 由 `make acceptance` 自動執行，人類照著做的就是被驗證過的同一組指令。
+- 後果與風險：doctest 需要 Docker 與 lab；在沒有 lab 的環境 `make acceptance` 會失敗（不會跳過）。port 8740 被占用時 dev 與 demo 的 doctest 會失敗。

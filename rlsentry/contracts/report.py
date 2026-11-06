@@ -84,6 +84,32 @@ def quote_ident(name: str) -> str:
     raise NotImplementedError
 
 
+POLICY_ROLES_FOR: dict[str, frozenset[str]] = {
+    "anon": frozenset({"anon", "public"}),
+    "user": frozenset({"authenticated", "public"}),
+}
+"""MS7 (ADR-051 #1): pg_policies.roles values that can grant access to an RLSentry role
+("anon" = Role.ANON; "user" = user_a/user_b, who sign in as the DB role authenticated).
+`public` is the pseudo-role PostgreSQL records for a policy without a TO clause."""
+
+PG_NAME_MAX_BYTES = 63
+"""PostgreSQL NAMEDATALEN - 1: longer identifiers are silently truncated by the server."""
+
+
+def policy_name(target: str, op: str, anon: bool) -> str:
+    """Contract only; implemented by rlsentry.report.fix_sql.policy_name. Pure (ADR-051 #2).
+
+    full = "rlsentry_" + target + "_" + op + "_" + ("anon" if anon else "user"). If
+    len(full.encode("utf-8")) <= PG_NAME_MAX_BYTES → full, unchanged. Otherwise
+    head + "_" + sha256(full.encode("utf-8")).hexdigest()[:8], where head is the longest
+    prefix of full whose UTF-8 encoding is at most PG_NAME_MAX_BYTES - 9 bytes (never splits
+    a character). Why: PostgreSQL truncates names at 63 bytes, so two long targets could get
+    the same policy name and the second CREATE POLICY would fail; the hash keeps names
+    distinct and deterministic. The result is quoted by the caller (quote_ident).
+    """
+    raise NotImplementedError
+
+
 def fix_sql(finding: Finding, ctx: FixContext) -> str | None:
     """Contract only; implemented by rlsentry.report.fix_sql.fix_sql. Pure (ADR-044).
 
@@ -106,13 +132,15 @@ def fix_sql(finding: Finding, ctx: FixContext) -> str | None:
         (by role) only.
       * else (table or unknown):
         "ALTER TABLE <rel> ENABLE ROW LEVEL SECURITY;";
-        for each p in ctx.policies (in order) with p.permissive and p.command in
-        (<OP>, "ALL"): "DROP POLICY <quote_ident(p.name)> ON <rel>;";
+        for each p in ctx.policies (in order) with p.permissive, p.command in
+        (<OP>, "ALL") and (MS7, ADR-051 #1) set(p.roles) & POLICY_ROLES_FOR[anon or user]
+        non-empty: "DROP POLICY <quote_ident(p.name)> ON <rel>;" (a policy that only applies
+        to other roles cannot have granted this finding's access, so it is left alone);
         when ctx.policies is empty: the comment line
         "-- 沒有 DB 連線（M4），無法列出既有 policy：請先移除此表上過寬的 permissive policy";
         then, unless no CREATE POLICY (see above):
-        'CREATE POLICY <quote_ident("rlsentry_" + target + "_" + op + "_" + ("anon" if
-        anon else "user"))> ON <rel> FOR <OP> <role clause> ' + by op:
+        'CREATE POLICY <quote_ident(policy_name(target, op, anon))> ON <rel> FOR <OP>
+        <role clause> ' + by op:
         SELECT/DELETE → "USING (<expr>);", INSERT → "WITH CHECK (<expr>);",
         UPDATE → "USING (<expr>) WITH CHECK (<expr>);".
         USER_METADATA_ESCALATION adds the comment line

@@ -747,15 +747,33 @@ async def escalate_user_metadata(client: SafeClientContract, supabase_url: str, 
     raise NotImplementedError
 
 
+async def read_user_metadata_role(client: SafeClientContract, supabase_url: str, anon_key: str,
+                                  token: str) -> tuple[bool, object]:
+    """Contract only; implemented by rlsentry.probe.metadata.read_user_metadata_role. Read only.
+
+    MS7 (ADR-051 #3): before escalating, remember the value the restore must put back.
+    `GET <supabase_url>/auth/v1/user` with apikey + Bearer token. Returns (True, value) when the
+    answer is 200 with a JSON object body whose "user_metadata" is a JSON object, missing or
+    null; value = user_metadata.get("role") (None when absent or null; any JSON value, e.g. a
+    string, number or object, is returned unchanged). Returns (False, None) on any
+    httpx.HTTPError, any status other than 200, a body that is not JSON or not an object, or a
+    "user_metadata" that is neither an object nor null. Never raises httpx.HTTPError. The value
+    is only kept in memory for the restore; it is never written to a note, finding or report.
+    """
+    raise NotImplementedError
+
+
 async def restore_user_metadata(client: SafeClientContract, supabase_url: str, anon_key: str,
-                                 token: str) -> bool:
+                                 token: str, original: object = None) -> bool:
     """Contract only; implemented by rlsentry.probe.metadata.restore_user_metadata. ⚠ writes.
 
-    `PUT <supabase_url>/auth/v1/user` with body {"data": {"role": None}}, clearing the role the
-    escalation set, so the probe leaves the test account as it found it (SPEC §5 M3 清理).
-    Returns True iff the PUT returned 200. Never raises httpx.HTTPError (a transport error returns
-    False): the caller must be able to report a failed restore instead of losing it (MS6 audit,
-    ADR-047). Known limit: the role is cleared to null, not set back to an earlier value.
+    `PUT <supabase_url>/auth/v1/user` with body {"data": {"role": original}}, putting back the
+    value read by read_user_metadata_role before the escalation, so the probe leaves the test
+    account as it found it (SPEC §5 M3 清理; MS7, ADR-051 #3). The default None keeps the MS6
+    call form (clear the role). Returns True iff the PUT returned 200. Never raises
+    httpx.HTTPError (a transport error returns False): the caller must be able to report a
+    failed restore instead of losing it (MS6 audit, ADR-047). Known limit: the Auth API merges
+    user_metadata, so a role that was absent before comes back as null, not absent.
     """
     raise NotImplementedError
 
@@ -829,6 +847,11 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
        re-measured here because the write probes that ran after the matrix was built may have
        changed which rows the role sees (e.g. an L05-style owner transfer of a canary the role
        created; ADR-042 補記). No candidate → nothing is written for this role.
+    2b. (MS7, ADR-051 #3) (ok, original) = read_user_metadata_role(client, ...,
+       sessions.tokens[role]). Not ok → note "<role>: user_metadata could not be read;
+       escalation skipped (nothing written)", next role. original == "admin" → note "<role>:
+       user_metadata.role is already admin; escalation skipped (nothing written)", next role
+       (the technique cannot show anything and the account must not be touched).
     3. (status, changed) = escalate_user_metadata(client, ..., sessions.tokens[role]).
        Not changed → note "<role>: user_metadata not changed (<status>)", next role.
        An httpx.HTTPError from it → note "<role>: escalation request failed (<exception class>)",
@@ -844,7 +867,8 @@ async def escalation_pass(client: SafeClientContract, supabase_url: str, anon_ke
        LoginFailed → note "<role>: re-login after escalation failed (<exc>)"; an httpx.HTTPError
        inside this try → note "<role>: escalation check failed (<exception class>)".
        finally: restore_user_metadata(client, ..., token2 if obtained else the original
-       token) — ALWAYS, so the test account is left as found (SPEC §5 M3 清理). A False return →
+       token, original) — ALWAYS, with the value read in step 2b, so the test account is left
+       as found (SPEC §5 M3 清理). A False return →
        note "<role>: user_metadata restore failed; the test account may still carry role=admin
        and must be cleared by hand" (ADR-047). escalation_pass itself never raises
        httpx.HTTPError.
