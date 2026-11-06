@@ -721,6 +721,7 @@ D2–D4 由 architect 決定並記錄於此。
 ### ADR-013 補記：MS7 交付時重新確認 D4（2026-11-06）
 - 確認：D4（Firebase Security Rules）維持「列為未來工作」。MS7 交付的合約、lab、ground truth 與 benchmark 全部以 Supabase／PostgREST 為前提；benchmark 指標只描述 Supabase lab，不推論到 Firebase。
 - 若日後支援：需要獨立的 lab（Firebase emulator）、以文件路徑為單位的 ground truth 格式與新的 ADR；不沿用 RowScope。
+- 更正：ADR-013 原文「D2（Playwright）仍待 MS5 決定」已過時；D2 已由 ADR-037（MS5）決定為不支援無頭瀏覽器。
 
 ## ADR-049：M4 改標 SECURITY_DEFINER_RPC_DATA 時保留較高的嚴重度（MS6 核准意見第 1 點，選項 B）
 - 日期：2026-11-06 · Milestone：MS7 · 相關：SPEC §5 M5 嚴重度表、FR-13、ADR-039、ADR-047「交人類決定」
@@ -775,3 +776,10 @@ D2–D4 由 architect 決定並記錄於此。
   4. dev 的前端以 `python -m lab._shared serve <情境> --port 8740` 在背景提供，只綁 127.0.0.1。
 - 理由：doctest 由 `make acceptance` 自動執行，人類照著做的就是被驗證過的同一組指令。
 - 後果與風險：doctest 需要 Docker 與 lab；在沒有 lab 的環境 `make acceptance` 會失敗（不會跳過）。port 8740 被占用時 dev 與 demo 的 doctest 會失敗。
+
+### ADR-051 補記：MS7 稽核 Part A 的 P2，列為已知限制（2026-11-06）
+- 稽核結論：MS7 的產品程式沒有 P0／P1。以下 P2 不修正，於 USAGE.md 與 MS7 清單揭露：
+  1. **DROP 範圍**：使用者 finding 會 DROP `TO public` 的 policy（它也服務 anon），新建的 policy 只有 `TO authenticated`；anon finding 會 DROP 同時涵蓋 anon 與 authenticated 的 policy，新建的只有 `TO anon`。套用後另一個角色原本合法的存取可能消失。修補 SQL 本來就要求人工審閱（ADR-044），這是可用性問題而非安全問題。
+  2. **嚴重度保證依賴合約常數**：`RELABEL_KEEPS_HIGHER_SEVERITY` 為 True 且 pipeline 不傳 `keep_higher`；有測試把關（`test_correlate_severity.py`、`test_ci_definer_severity.py`、holdout），沒有執行期的防護。
+  3. **M4 部分失敗**（MS6 既有）：`read_policies` 失敗時 M4 從 `modules` 移除，但 correlate 已完成的改標保留；不會降低嚴重度。
+  4. **lab 命令列入口**（測試基礎設施，非產品）：`serve --port` 未檢查範圍（被占用或超出範圍時以 traceback 結束）；`serve` 安裝的 SIGTERM／SIGINT handler 不還原（測試只以子程序呼叫 serve）；情境名稱直接進入 glob（只影響本機）；`env` 會把 lab 密碼印到 stdout（只有 lab 的值；doctest 以 `eval` 使用，不回顯）。

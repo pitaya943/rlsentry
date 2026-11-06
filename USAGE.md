@@ -96,7 +96,7 @@ sleep 1
 rm -rf /tmp/rlsentry-dev
 rlsentry scan --config docs/examples/rlsentry.dev.yaml --out /tmp/rlsentry-dev --format html,json; rc=$?
 kill $!
-test "$rc" -eq 0 && python3 -c "import json; r=json.load(open('/tmp/rlsentry-dev/rlsentry-report.json')); c=sorted((f['rule'], f['role'], f['severity']) for f in r['findings'] if f['evidence'] == 'confirmed'); assert r['modules'] == ['M1', 'M2', 'M3', 'M4', 'M5'] and c == [('CROSS_TENANT_READ', 'user_a', 'medium'), ('CROSS_TENANT_READ', 'user_b', 'medium')], c; print('dev OK', c)"
+test "$rc" -eq 0 && python3 -c "import json; r=json.load(open('/tmp/rlsentry-dev/rlsentry-report.json')); c=sorted((f['rule'], f['role'], f['severity'], f['correlation']) for f in r['findings'] if f['evidence'] == 'confirmed'); assert r['modules'] == ['M1', 'M2', 'M3', 'M4', 'M5'] and c == [('CROSS_TENANT_READ', 'user_a', 'medium', 'probe_only'), ('CROSS_TENANT_READ', 'user_b', 'medium', 'probe_only')], c; print('dev OK', c)"
 ```
 
 預期輸出（節錄）：`Confirmed: 2 (2 medium)`、`MEDIUM CROSS_TENANT_READ notes user_a select`、`MEDIUM CROSS_TENANT_READ notes user_b select`，最後一行 `dev OK …`。dev 沒有失敗門檻，所以有漏洞時 exit code 仍是 0；用瀏覽器開 `/tmp/rlsentry-dev/rlsentry-report.html` 看完整報告。
@@ -148,14 +148,15 @@ sleep 1
 rm -rf /tmp/rlsentry-demo /tmp/rlsentry-demo-fixed
 rlsentry scan --config docs/examples/rlsentry.dev.yaml --out /tmp/rlsentry-demo --format json
 python3 -c "import json; f=[x for x in json.load(open('/tmp/rlsentry-demo/rlsentry-report.json'))['findings'] if x['rule'] == 'CROSS_TENANT_READ' and x['role'] == 'user_b'][0]; print('correlation:', f['correlation']); print(f['probes'][0]['reason']); print(f['repro']); print(f['fix_sql'])"
-python3 -c "import json; print(next(x['fix_sql'] for x in json.load(open('/tmp/rlsentry-demo/rlsentry-report.json'))['findings'] if x['rule'] == 'CROSS_TENANT_READ'))" | python -m lab._shared sql
+python3 -c "import json; c=sorted((x['rule'], x['role'], x['correlation']) for x in json.load(open('/tmp/rlsentry-demo/rlsentry-report.json'))['findings'] if x['evidence'] == 'confirmed'); assert c == [('CROSS_TENANT_READ', 'user_a', 'probe_only'), ('CROSS_TENANT_READ', 'user_b', 'probe_only')], c; print('before fix:', c)"; before=$?
+python3 -c "import json; print(next(x['fix_sql'] for x in json.load(open('/tmp/rlsentry-demo/rlsentry-report.json'))['findings'] if x['rule'] == 'CROSS_TENANT_READ'))" | python -m lab._shared sql; fixed=$?
 rlsentry scan --config docs/examples/rlsentry.dev.yaml --out /tmp/rlsentry-demo-fixed --format json
 kill $!
-python3 -c "import json; r=json.load(open('/tmp/rlsentry-demo-fixed/rlsentry-report.json')); c=[(f['rule'], f['target'], f['role']) for f in r['findings'] if f['evidence'] == 'confirmed']; assert c == [], c; print('demo OK: no confirmed finding after the fix')"
+test "$before" -eq 0 && test "$fixed" -eq 0 && python3 -c "import json; r=json.load(open('/tmp/rlsentry-demo-fixed/rlsentry-report.json')); c=[(f['rule'], f['target'], f['role']) for f in r['findings'] if f['evidence'] == 'confirmed']; assert c == [], c; print('demo OK: no confirmed finding after the fix')"
 ```
 
 逐步說明：
-1. **splinter 沒報**：dev 範例有 `db_url_env`，所以 M4 跑了 splinter；finding 的 `correlation: probe_only` 表示 splinter 對 `notes` 沒有任何 SECURITY 類 lint。
+1. **splinter 沒報**：dev 範例有 `db_url_env`，所以 M4 跑了 splinter；finding 的 `correlation: probe_only` 表示 splinter 對 `notes` 沒有任何 SECURITY 類 lint（`before fix:` 那一行斷言兩個 Confirmed 都是 probe_only）。
 2. **Confirmed**：`reason` 寫出 user_b 以自己的登入看到了 user_a 的已知列（以主鍵計數，不下載資料內容）。
 3. **重現指令**：`repro` 是可直接執行的 curl，`apikey` 與 `Authorization` 已遮罩（`eyJhbG****…`）；重現時換成你自己的 anon key 與 user_b 的 access token。
 4. **修補 SQL**：DROP 過寬的 `notes_select`，建立 `auth.uid() = "owner_id"` 的 policy。RLSentry **絕不執行 SQL**；這裡由你（`lab._shared sql`）在 lab 中執行。
@@ -210,10 +211,10 @@ jobs:
 ```bash
 python -m lab._shared apply L05
 eval "$(python -m lab._shared env)"
-python3 -c "import asyncio; from rlsentry import run_scan; from rlsentry.policy.load import load_config; cfg = load_config(open('docs/examples/rlsentry.ci.yaml').read()); rep = asyncio.run(run_scan(cfg, confirmed_by='usage-doctest')); print(rep.profile.value, rep.modules, sorted({f.rule for f in rep.findings if f.evidence.value == 'confirmed'}))"
+python3 -c "import asyncio; from rlsentry import run_scan; from rlsentry.policy.load import load_config; cfg = load_config(open('docs/examples/rlsentry.ci.yaml').read()); rep = asyncio.run(run_scan(cfg, confirmed_by='usage-doctest')); got = (rep.profile.value, rep.modules, sorted({f.rule for f in rep.findings if f.evidence.value == 'confirmed'})); assert got == ('ci', ['M2', 'M3', 'M4', 'M5'], ['CROSS_TENANT_WRITE']), got; print(*got)"
 ```
 
-預期：`ci ['M2', 'M3', 'M4', 'M5'] ['CROSS_TENANT_WRITE']`。`run_scan` 回傳 `ScanReport`（Pydantic），可用 `rlsentry.report.json.render_json` 等函式輸出。
+預期（有斷言）：`ci ['M2', 'M3', 'M4', 'M5'] ['CROSS_TENANT_WRITE']`。`run_scan` 回傳 `ScanReport`（Pydantic），可用 `rlsentry.report.json.render_json` 等函式輸出。
 
 ## 8. 已知限制
 
