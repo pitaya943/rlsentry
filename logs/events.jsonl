@@ -1402,3 +1402,16 @@
 {"ts": "2026-11-06T06:01:05", "kind": "ticket_start", "ticket": "T-214", "agent": "probe-dev", "attempt": 1}
 {"ts": "2026-11-06T06:01:43", "kind": "ticket_start", "ticket": "T-218", "agent": "whitebox-dev", "attempt": 1}
 {"ts": "2026-11-06T06:02:20", "kind": "ticket_start", "ticket": "T-221", "agent": "whitebox-dev", "attempt": 1}
+{"ts": "2026-11-06T06:03:42", "kind": "dispatch", "id": "3b2cff8a", "agent": "probe-dev", "ticket": "T-214", "review": null, "body": "logs/messages/3b2cff8a-dispatch.json"}
+{"ts": "2026-11-06T06:03:43", "kind": "dispatch", "id": "03ec231f", "agent": "whitebox-dev", "ticket": "T-218", "review": null, "body": "logs/messages/03ec231f-dispatch.json"}
+{"ts": "2026-11-06T06:03:44", "kind": "dispatch", "id": "b24227d4", "agent": "whitebox-dev", "ticket": "T-221", "review": null, "body": "logs/messages/b24227d4-dispatch.json"}
+{"ts": "2026-11-06T06:03:55", "kind": "subagent_start", "id": "8fc93d0e", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:03:55", "kind": "report", "id": "31e25012", "agent": "probe-dev", "ticket": "T-214", "review": null, "body": "logs/messages/31e25012-report.json"}
+{"ts": "2026-11-06T06:03:56", "kind": "subagent_start", "id": "ed86558b", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:03:56", "kind": "report", "id": "6ff4bb82", "agent": "whitebox-dev", "ticket": "T-218", "review": null, "body": "logs/messages/6ff4bb82-report.json"}
+{"ts": "2026-11-06T06:03:57", "kind": "report", "id": "e323a379", "agent": "whitebox-dev", "ticket": "T-221", "review": null, "body": "logs/messages/e323a379-report.json"}
+{"ts": "2026-11-06T06:03:57", "kind": "subagent_start", "id": "2759f4e4", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:04:29", "kind": "subagent_stop", "id": "6e8a3718", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:04:54", "kind": "subagent_stop", "id": "58b23140", "agent": "whitebox-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:06:20", "kind": "subagent_stop", "id": "9a13b56f", "agent": "probe-dev", "ticket": null, "review": null}
+{"ts": "2026-11-06T06:09:36", "kind": "ticket_accepted", "ticket": "T-203", "commit": "fd7198300222f90d441a54a62b750bad7c346cb6", "files": ["tests/lab/test_scan_writes.py"]}
