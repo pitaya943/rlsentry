@@ -1417,3 +1417,4 @@
 {"ts": "2026-11-06T06:09:36", "kind": "ticket_accepted", "ticket": "T-203", "commit": "fd7198300222f90d441a54a62b750bad7c346cb6", "files": ["tests/lab/test_scan_writes.py"]}
 {"ts": "2026-11-06T06:10:37", "kind": "ticket_start", "ticket": "T-212", "agent": "probe-dev", "attempt": 3}
 {"ts": "2026-11-06T06:16:56", "kind": "ticket_accepted", "ticket": "T-212", "commit": "5eb90e397e4ab3ad9fed3933af033ead8a99f204", "files": ["rlsentry/rules/severity.py"]}
+{"ts": "2026-11-06T06:24:03", "kind": "ticket_accepted", "ticket": "T-214", "commit": "ea1a426c01af9d3f95fb266ba274599bd6d160b7", "files": ["rlsentry/probe/escalation.py", "rlsentry/probe/seed_pass.py"]}
