@@ -121,3 +121,38 @@
 - P2（列入 MS4-v1 第 5 段）：SECURITY DEFINER 警告會因任一角色有資料而全部被抑制；SECURITY_DEFINER_RPC_DATA 名稱套用於所有 RPC 越權讀取；splinter_status 寫死 public、DEFAULT_DB_SCHEMAS 尚未由設定傳入；read_policies 沒有 DB log 唯讀測試；runtime 沒有自動化測試（數字見 bench JSON）。
 - P2（不成立）：write.py 在 new_owner 為 None 時送出空字串 uuid —— 所有 INSERT plan 都有 new_owner。
 - 安全：P0 無；寫入閘門未變；M4 兩層唯讀、一律 rollback。上游 splinter 2026.09.1 的 sha256 與 vendored 檔相同（auditor 也獨立確認）。
+
+## MS5 M1 Recon（auditor，Base 93e03445d；只讀程式碼的審查，但 auditor 違反派工指示跑了完整測試含 lab：1051 passed）
+
+| 需求（宣稱者） | 真正檢查它的測試 | 狀態 |
+| --- | --- | --- |
+| FR-01 HTML＋script／modulepreload（T-184／T-186） | test_links.py::test_html_script_urls；test_fetch.py::test_crawl_order_and_scope | OK |
+| FR-01 延遲 chunk：Vite import、Next _buildManifest、webpack u()／e()（T-184／T-186） | test_links.py::test_js_chunk_urls_*、test_webpack_*；test_fetch.py::test_webpack_chunks_after_queue_drains；test_recon_fixtures.py::test_framework_lazy_chunks_scanned（三個真實建置） | OK |
+| FR-01 source map（註解、header、inline、index map）（T-185／T-186） | test_sourcemap.py；test_fetch.py::test_inline_map_and_header_map；test_links.py::test_source_map_url | OK |
+| FR-01／M1「存在 .map 時一併解析」但沒有任何東西指向 map | 無（ADR-036 #2：不盲猜 `<url>.map`） | P2：刻意偏離 SPEC 字面，交人類決定 |
+| FR-01 記錄掃描範圍（T-187） | test_recon_fixtures.py::test_framework_lazy_chunks_scanned、::test_cra_missing_map_is_listed_as_skipped；test_fetch.py；test_lab_frontends.py | OK |
+| FR-02 Supabase URL（hosted＋自訂網域）（T-183／T-187） | test_extract.py::test_supabase_hosts、::test_client_pairs_*；fixtures（cra 為自訂網域）；test_lab_frontends.py | OK |
+| FR-02 疑似 key、M1 第 5 步 entropy（T-183） | test_extract.py::test_generic_*、::test_sb_placeholder_filtered_by_entropy；fixtures 以完整 key 清單斷言（真實 bundle 無誤報） | OK |
+| M1 第 4 步 JWT 不驗簽，只留 role／ref／exp（T-182） | test_classify.py::test_decode_* | OK |
+| FR-03 service_role／sb_secret → Critical（T-182／T-187） | test_classify.py::test_findings_service_role_is_critical_anon_is_silent；fixtures（nextjs、vite）；test_lab_frontends.py L08 | OK（sb_secret 端到端只有單元測試，P2） |
+| FR-03 anon／sb_publishable 永不產生 finding（T-182／T-187） | test_classify.py::test_findings_only_publishable_gives_nothing；test_lab_frontends.py（15 個非 L08 情境 `findings == []`）；fixtures | OK |
+| FR-03 unverified → Configuration warning（T-182） | test_classify.py；cra、nextjs fixture | OK |
+| NFR-03 遮罩：key、finding、repr、skipped（T-187） | test_recon_masking.py；test_lab_frontends.py::test_l08_report_has_no_raw_key；test_classify.py | OK |
+| NFR-03 遮罩：`chunks_scanned`、`KeyFinding.source_file` | 稽核時無 | **P1 S1 → T-192／T-193 修正**（test_report_urls.py） |
+| Safety：只 GET、不帶憑證、同源、不跟隨轉址、上限（T-186） | test_fetch.py 多項 | OK（cookie 檢查為空轉：假網站不送 Set-Cookie，P2） |
+| serve_frontend：loopback、靜態、離開即關閉（T-188） | tests/labctl/test_serve_frontend.py | OK（「只允許 GET／HEAD」未測，stdlib 預設，P2） |
+| bench：key finding 不經 correlate（T-189） | tests/lab/test_bench_recon.py::test_l08_key_is_scored（Docker） | OK（無 Docker-free 單元測試） |
+| bench：runtime_s 只計 M2＋M3（T-189） | 無 | P2（程式正確：bench/run.py:46-53） |
+| bench：M2 使用 recon 抓到的 sources（T-189） | test_bench_recon.py::test_l12_bundle_inference_uses_recon_sources；test_recon_fixtures.py::test_sources_feed_bundle_inference | OK |
+| KeyFinding.label、ReconResult.chunks_skipped（T-180） | test_models.py::test_key_finding_label_is_restricted | OK |
+
+安全審查：
+- **S1（P1）**：同源且回 200 的 URL 原樣進入 `chunks_scanned` 與 `KeyFinding.source_file`（含 source map 的 source 名稱）→ T-192／T-193（`report_url`）。
+- S2（P2）：`mask_text` 只遮 JWT／sb_ 格式，query string 中的其他 token 不會被遮 → `report_url` 一律省略 query string。
+- S3（P2）：帶 userinfo 的 URL 通過同源，httpx 會送 `Authorization: Basic` → `same_origin` 拒絕 userinfo。
+- S4（P2，MS6 風險）：`supabase_url` 來自目標 bundle → PLAN 的 MS6 表（pipeline 送請求前必須經設定檔或使用者確認）。
+- S5（P2）：大檔先完整下載才檢查大小；重疊檢查為 O(literals × spans) → 已知限制。
+- S6（P2）：`KeyFinding` 不檢查 kind／label 一致、`masked` 是否遮罩 → T-192 加 validator。
+- 已確認：只送 `GET` 且無 header；同源檢查在上限檢查與請求之前；service_role → CRITICAL／CONFIRMED；bench 中 recon 在計時之前、只有 probe findings 經 correlate。
+- 過擬合疑慮：無依測試資料的特例；ENTROPY_MIN 依 fixture 量測；generic key 需要 key 語境名稱，壓縮後名稱無意義時會漏；URL 在執行期組出時 `supabase_url=None`（無測試覆蓋 None 路徑）；16 個 lab 前端形狀相同。
+- 交人類親手檢查：(1) S1 修正後，同源 200 URL 的 query 中的 key 不出現在報告；(2) bench/run.py 的計時與 correlate 順序；(3) `.map` 範圍決定（ADR-036 #2）。
