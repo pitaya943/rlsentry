@@ -1352,3 +1352,4 @@
 {"ts": "2026-11-06T03:30:57", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS5"}
 {"ts": "2026-11-06T03:31:42", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS5"}
 {"ts": "2026-11-06T03:41:08", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS5"}
+{"ts": "2026-11-06T03:59:20", "kind": "ticket_start", "ticket": "T-200", "agent": "architect", "attempt": 1}
