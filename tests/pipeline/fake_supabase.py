@@ -145,7 +145,7 @@ class FakeSupabase:
 
     @staticmethod
     def _sees(t: Table, uid: str | None, admin: bool, row: dict[str, object]) -> bool:
-        if who is None:
+        if uid is None:
             return t.anon_read
         return t.rls == "all" or (admin and t.admin_metadata) or row.get("owner_id") == uid
 
