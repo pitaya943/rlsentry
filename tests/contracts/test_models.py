@@ -57,7 +57,7 @@ def test_unknown_fields_are_rejected() -> None:
 
 
 def test_key_finding_kind_is_restricted() -> None:
-    KeyFinding(kind="publishable", label="jwt:anon", masked="eyJhbG…abcd", source_file="a.js")
+    KeyFinding(kind="publishable", label="jwt:anon", masked="eyJhbG****abcd", source_file="a.js")
     with pytest.raises(ValidationError):
         KeyFinding(kind="anon", label="jwt:anon", masked="x", source_file="a.js")
 
@@ -68,6 +68,19 @@ def test_key_finding_label_is_restricted() -> None:
     for bad in ("jwt:Service-Role", "eyJhbGciOi.raw", "anon", ""):
         with pytest.raises(ValidationError):
             KeyFinding(kind="secret", label=bad, masked="x", source_file="a.js")
+
+
+def test_key_finding_kind_matches_label_and_value_is_masked() -> None:
+    # MS5 audit S6: a service_role key can never be reported as publishable (or vice versa),
+    # and `masked` must actually be masked.
+    KeyFinding(kind="secret", label="sb_secret", masked="sb_sec****ab12", source_file="a.js")
+    KeyFinding(kind="unverified", label="jwt:authenticated", masked="****", source_file="a.js")
+    for kind, label, masked in [("publishable", "jwt:service_role", "eyJhbG****abcd"),
+                                ("secret", "jwt:anon", "eyJhbG****abcd"),
+                                ("unverified", "sb_secret", "sb_sec****ab12"),
+                                ("secret", "jwt:service_role", "eyJhbGciOiJIUzI1NiJ9.e30.sig")]:
+        with pytest.raises(ValidationError):
+            KeyFinding(kind=kind, label=label, masked=masked, source_file="a.js")
 
 
 def test_severity_rank_orders_review_lowest() -> None:
