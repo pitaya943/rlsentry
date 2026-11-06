@@ -47,6 +47,7 @@ class Table:
     insert_own: bool = True     # users may insert rows they own
     admin_metadata: bool = False   # L03: user_metadata.role = admin sees every row
     delete_own: bool = True        # owners may delete their rows (False: cleanup fails)
+    shared: frozenset[str] = frozenset()   # row ids every signed-in user can already see
 
 
 @dataclass
@@ -154,7 +155,8 @@ class FakeSupabase:
     def _sees(t: Table, uid: str | None, admin: bool, row: dict[str, object]) -> bool:
         if uid is None:
             return t.anon_read
-        return t.rls == "all" or (admin and t.admin_metadata) or row.get("owner_id") == uid
+        return (t.rls == "all" or (admin and t.admin_metadata) or row.get("owner_id") == uid
+                or str(row.get("id")) in t.shared)
 
     @staticmethod
     def _match(row: dict[str, object], params: list[tuple[str, str]]) -> bool:
