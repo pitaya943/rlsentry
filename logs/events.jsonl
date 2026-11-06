@@ -1488,3 +1488,5 @@
 {"ts": "2026-11-06T09:15:58", "kind": "stop_blocked", "attempt": 5, "state": "active", "milestone": "MS6"}
 {"ts": "2026-11-06T09:21:06", "kind": "acceptance_run", "scope": "MS6", "failed": []}
 {"ts": "2026-11-06T09:26:59", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS6"}
+{"ts": "2026-11-06T09:40:46", "kind": "guard_block", "agent": "architect", "tool": "Bash", "reason": "shell command appears to modify protected path harness"}
+{"ts": "2026-11-06T09:42:52", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS6"}
