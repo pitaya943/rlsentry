@@ -318,3 +318,15 @@ holdout 重加、各 ticket 驗收與稽核見 logs/events.jsonl（ticket_accept
 - benchmark（`docs/benchmark/MS5-bench.json`）：recall 30/32、precision 30/30、FPR 0/72、coverage 1.0、probe-only 2 類（不含 L08）；audit 16/16 情境寫入 0；runtime 5／20／50 張 7.5／28.5／70.7 s（未改 M2／M3）。
 - 必做變異 5 項全部實測會失敗（第 3 段）。
 - subagent tokens（約）：recon-dev 每張 17k–32k；lab-dev 15k；whitebox-dev 20k；auditor 93k。
+
+
+## MS6 M5 Report + 介面 + profiles（進行中）
+
+### Holdout（派工前紀錄，§2）
+| 檔案 | sha256 |
+| --- | --- |
+| rlsentry-holdout:MS6/test_holdout_ms6.py | 44e54f4050b3bc5d8fb1ffb3dd91e79cf562020f6f18d2bddfceac2d64ecd7f9 |
+
+### 派工前參考實測（architect，草稿程式未提交，`/tmp` 的獨立 worktree）
+- lab：L03 提權可偵測（user_a 讀 B 的列：提權前 0、提權並重新登入後 1、還原後 0）；C04 植入回 403（沒有 INSERT policy），所以 C04 在 dev 仍是 inconclusive（PLAN 原述不成立，ADR-042 #5）；高權限 role 實測集合（ADR-038）；L04 修補 SQL 套用後只剩 owner-scoped SELECT policy；合併讀取後 50 張表 50.6 s（ADR-040）。
+- 草稿參考實作跑全部可見測試與 holdout：派工前修正了 6 個測試本身的問題（helper 匯入 pipeline 造成 T-214 依賴 T-219、帳號 dict 與 TestUser list 撞名、提示測試的 RLS 設定矛盾、測試目標缺表、JSON 往返比對未考慮遮罩、rename 遺漏）。
