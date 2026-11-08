@@ -1553,3 +1553,5 @@
 {"ts": "2026-11-06T14:47:24", "kind": "acceptance_run", "scope": "MS7", "failed": []}
 {"ts": "2026-11-06T15:00:20", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS7"}
 {"ts": "2026-11-08T09:54:25", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS7"}
+{"ts": "2026-11-08T09:54:29", "kind": "subagent_stop", "id": "0f42836a", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-08T10:05:31", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS7"}
