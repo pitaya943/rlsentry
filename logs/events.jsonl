@@ -1563,3 +1563,6 @@
 {"ts": "2026-11-08T10:57:41", "kind": "subagent_stop", "id": "ee71bffc", "agent": "architect", "ticket": null, "review": null}
 {"ts": "2026-11-08T11:30:20", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS7"}
 {"ts": "2026-11-08T11:32:46", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS7"}
+{"ts": "2026-11-08T11:32:50", "kind": "subagent_stop", "id": "5ac8ef59", "agent": "architect", "ticket": null, "review": null}
+{"ts": "2026-11-08T11:53:00", "kind": "acceptance_run", "scope": "final", "failed": ["tests", "holdout", "safety invariants", "benchmark thresholds", "profile end-to-end", "USAGE.md doctests"]}
+{"ts": "2026-11-08T11:53:00", "kind": "stop_blocked", "attempt": 1, "state": "final acceptance failing", "milestone": null}
