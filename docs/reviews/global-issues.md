@@ -23,6 +23,7 @@
 | GI-13 | 低 | `rlsentry init` 的錯誤訊息、必要欄位與 RPC 草稿 | Auditor-PM 001 Q11 |
 | GI-14 | 低 | CI 中授權紀錄 `confirmed_by` 多為 unknown | Auditor-PM 001 Q13 |
 | GI-15 | 中 | 對外「audit 永遠不寫」未揭露登入造成的 GoTrue `auth.*` 寫入 | Auditor-PM 001 Q14 |
+| GI-16 | 中 | 擁有者轉移成功後，清理仍以原擁有者刪除，canary 殘留 | architect（Rival 004 交叉執行） |
 
 ## 明細
 
@@ -95,3 +96,9 @@
 ### GI-15 audit「不寫入」的對外說法不精確（中）
 - 證據：ADR-014 #2（GoTrue 的 `auth.*` 寫入不計入 NFR-01）；`docs/verification/traceability.md:12`；`USAGE.md:84` 只寫「永遠不寫（只送 GET／HEAD 與登入的 POST）」。
 - 建議：USAGE 與報告寫明「不經資料 API 寫入；登入會使 Auth 服務更新 last_sign_in_at、refresh token、audit log」。
+
+### GI-16 擁有者轉移後清理身分錯誤（中）
+- 證據：`rlsentry/probe/run.py:78-86`：work row 以 `owner=plan.work_owner`（actor）記入 canaries；轉移探測（`probe/write.py:74`，`transfer=True`）成功後，列的擁有者已變為另一位使用者，但記錄沒有更新。L05 的 DELETE policy 是 `USING (owner_id = auth.uid())`，原擁有者因此刪不掉，只回報 CLEANUP_FAILED。ADR-029 #8 的意圖是「每一筆 canary 由其擁有者 DELETE」。
+- 重現（architect 實測）：`python -m lab._shared apply L05`，以 dev 範例設定換成 L05 policy 掃描（rc=0）→ `public.projects` 由 2 列變為 4 列，多出的 2 列 name 以 `rlsentry_canary_` 開頭，`created_by` 為 A、`owner_id` 為 B，另一列相反。Rival 的模組 (2) 測試 `test_write_probes_leave_the_database_as_they_found_it[L05]` 對現有系統失敗（rlsentry-arena ed7a8a7，`public.projects` 變更）。
+- 影響：ci 對 preview DB 每次掃描殘留 2 列（與 GI-09／GI-10 的 L09 殘留同類）。
+- 建議：轉移成功後，把該 canary 的擁有者更新為新擁有者再清理；清理失敗時再以原擁有者嘗試一次。加 L05 lab 測試：掃描後列數回到 2。
