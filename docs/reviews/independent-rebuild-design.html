@@ -61,7 +61,7 @@ svg text{font-family:inherit}
 <p><strong>做什麼</strong>：開一個新的 repo，從「只寫問題與可觀察結果」的新規格出發，由彼此對立的多個 agent 全自動開發一個 RLSentry 的<strong>參考實作</strong>。人類只在開始（給問題與約束）與結束（讀報告）出現。</p>
 <p><strong>為什麼</strong>：現有系統經過約 50 個 ADR 的累積決策，早期一個不妥的決定會帶偏之後的選擇（路徑依賴）；規格本身規定了太多「做法」，其中幾項已被實測證明是錯的。參考實作讓這些被鎖住的選擇重新被看見。</p>
 <p><strong>不是什麼</strong>：不是嚴格的對照組（變因無法完全隔離），也不以「打敗現有系統」為目標。產出的價值在於<strong>設計差異的清單與證據</strong>。</p>
-<p><strong>關鍵設計</strong>：(1) 規格分四層，只固定約束、結果與最小介面；(2) 出題者與做題者、紅隊與 architect 互相對立，隔離靠 repo 權限而不是提示詞；(3) 所有主張由中立的 Judge 重跑驗證；(4) 先承諾後揭露的隱藏測試；(5) 每個關鍵設計決定至少兩個方案；(6) 先以小切片試點。</p>
+<p><strong>關鍵設計</strong>：(1) 規格分四層，只固定約束、結果與最小介面；(2) 出題者與做題者、紅隊與 architect 互相對立，隔離靠掛載範圍、試題加密與稽核（平台不強制 repo 隔離，見 §5 修訂）；(3) 所有主張由中立的 Judge 重跑驗證；(4) 先承諾後揭露的隱藏測試；(5) 每個關鍵設計決定至少兩個方案；(6) 先以小切片試點。</p>
 </div>
 
 <h2 id="s1">1. 為什麼要做：路徑依賴與過度 SDD</h2>
@@ -172,7 +172,8 @@ svg text{font-family:inherit}
 <div class="box vio"><strong>降低相關性</strong>：所有角色都由同一模型家族扮演時，「對立」的雙方可能有相同的盲點，這是此架構的天花板。建議至少讓 Red team 與 Examiner 使用和 Architect 不同的模型（例如 Architect 用 Opus、Red team 用 Sonnet），並給不同的角色設定。最終報告必須寫明各角色使用的模型。</div>
 
 <h2 id="s5">5. 資訊隔離</h2>
-<p>隔離靠 <strong>repo 權限</strong>，不靠提示詞。每個角色是獨立的雲端 session，只掛載它被允許的 repo（與 Rival 的 arena 隔離方式相同）。</p>
+<p>每個角色是獨立的雲端 session，只掛載它被允許的 repo（與 Rival 的 arena 隔離方式相同）。</p>
+<div class="box warn"><strong>修訂（2026-11-08，見 <code>rebuild-pilot-todos.html</code> H0）</strong>：Claude 的 GitHub 存取以人類帳號為單位，所有 session 共用；平台不會阻止一個 session 以 <code>add_repo</code> 或搜尋接觸其他已授權的 repo。因此隔離改為三層：(1) 只掛載被允許的 repo；(2) 隱藏試題加密存放，金鑰只在 Examiner／Judge 的雲端環境；(3) Integrity monitor 以 <code>list_events</code> 稽核越界存取。下表是「應該」的存取範圍，不是平台強制的範圍。</div>
 <div class="wrap"><table>
 <tr><th>repo／內容</th><th>Product</th><th>Critic</th><th>Examiner</th><th>Architect</th><th>Red team</th><th>Judge</th><th>Integrity</th><th>Comparator</th></tr>
 <tr><td><code>rb-spec</code>：素材包、SPEC、驗收情境</td><td class="y">寫</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td></tr>
