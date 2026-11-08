@@ -7,10 +7,10 @@ table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:.9em}th,td{bor
 code{background:#f4f4f4;font-size:.88em}.p0{background:#fdd}.p1{background:#ffe9c4}.p2{background:#eef}.ok{background:#e6f6e6}
 .box{border-left:4px solid #888;padding:.4em .9em;background:#fafafa;margin:1em 0}
 </style></head><body>
-<h1>RLSentry 上線前 PM 審核報告</h1>
+<h1>RLSentry 上線前 PM 審核報告（v2：併入 R&amp;D 回覆）</h1>
 <p>審核者：Auditor-PM · 2026-11-08 · 分支 <code>claude/busy-darwin-asvox3</code> · 盲測證據 commit <code>67c5cca</code>（<code>review/blind.html</code>）· 問題信 <code>c29ca17</code>。所有實測只對本機 lab（127.0.0.1）。</p>
 
-<div class="box"><b>結論：目前不建議對外上線（No-Go），但距離可上線不遠。</b>核心引擎（授權閘門、三態判定、讀回驗證、遮罩）設計嚴謹、測試扎實；阻擋上線的是 <b>CI 情境的失敗開放（fail-open）</b>與<b>對外指標的呈現方式</b>，兩者修正成本都低（I-01～I-04，估計 1–2 個 ticket 週期）。另需補齊發佈要件（I-10）才能給外部使用者。</div>
+<div class="box"><b>結論：目前不建議對外上線（No-Go），但距離可上線不遠。</b>核心引擎（授權閘門、三態判定、讀回驗證、遮罩）設計嚴謹、測試扎實；阻擋上線的是 <b>CI 情境的失敗開放（fail-open）</b>與<b>對外指標的呈現方式</b>，兩者修正成本都低（I-01～I-04，估計 1–2 個 ticket 週期；architect 回覆確認 I-01～I-04 皆為缺陷或遺漏，見 §5）。另需補齊發佈要件（I-10）才能給外部使用者。</div>
 
 <h2>1. What／Why／How（審核後確認版）</h2>
 <table><tr><th></th><th>內容</th><th>證據</th></tr>
@@ -39,7 +39,8 @@ code{background:#f4f4f4;font-size:.88em}.p0{background:#fdd}.p1{background:#ffe9
 <table><tr><th>需求</th><th>狀態</th><th>證據</th></tr>
 <tr class="p0"><td>FR-05 覆蓋率＋「未發現不代表安全」</td><td>未實作</td><td>traceability.md:56「→ MS6」後無結案；L11 報告 <code>grep -c 不代表安全</code> = 0；<code>grep coverage rlsentry/report</code> 無結果</td></tr>
 <tr class="p1"><td>SPEC §2「PR 引入新可存取表時 CI 失敗」</td><td>部分：掃描失敗時 exit 0</td><td>blind.html §2.4</td></tr>
-<tr class="p1"><td>SPEC §5 M3「lab 中有 DB 連線時代為清理」</td><td>未見實作</td><td>L09 提供 db_url_env 仍殘留 13 列／次；<code>probe/cleanup.py</code> 無 DB 路徑</td></tr>
+<tr class="p1"><td>SPEC §5 M3「lab 中有 DB 連線時代為清理」</td><td>未實作（architect 確認，GI-10）</td><td>L09 提供 db_url_env 仍殘留 13 列／次，其中 3 列為無 canary 的 INSERT 探測（GI-09）；<code>probe/cleanup.py</code> 無 DB 路徑</td></tr>
+<tr class="p2"><td>SPEC §8／NFR-01 <code>log_statement = mod</code></td><td>SPEC 與實測不符（GI-01）</td><td>ADR-019</td></tr>
 <tr class="p2"><td>SPEC §6 Finding.id 跨次穩定且可分辨</td><td>有重複 id</td><td>L09：d49f4406f71fed8f ×2</td></tr>
 <tr class="ok"><td>NFR-01／02／03、FR-01～04、06～13、15、16</td><td>符合</td><td>traceability.md；本審核實測</td></tr>
 <tr class="ok"><td>NFR-05 50 表 &lt; 60 s</td><td>50.8 s（餘裕 15%）</td><td>BENCHMARK_REPORT §5；受限速器決定，表數線性成長</td></tr>
@@ -82,8 +83,9 @@ code{background:#f4f4f4;font-size:.88em}.p0{background:#fdd}.p1{background:#ffe9
 <tr class="p0"><td>I-03</td><td>P0</td><td>FR-05 覆蓋率與「未發現不代表安全」聲明</td><td>0 finding 被誤讀為安全</td><td>S</td><td>中高：L11 型問題完全沉默</td><td>traceability.md:56；L11 報告</td><td>報告含 coverage 區塊與未涵蓋範圍（Storage、非 OpenAPI 表）</td></tr>
 <tr class="p0"><td>I-04</td><td>P0（文件）</td><td>Benchmark 另列「init 草稿＋ci」與「audit」recall</td><td>對外誠信</td><td>S</td><td>中：外界以 100% 期待使用</td><td>bench/run.py:30-44；本審核 27/32</td><td>BENCHMARK_REPORT 首段加註＋新欄位</td></tr>
 <tr class="p1"><td>I-05</td><td>P1</td><td>ci 有可達 target 時跑唯讀 M1</td><td>Critical 規則進 CI</td><td>S</td><td>中</td><td>L08 ci</td><td>L08 ci exit 1</td></tr>
-<tr class="p1"><td>I-06</td><td>P1</td><td>CLEANUP_FAILED 列殘留主鍵與 DELETE 範本；所有植入列帶 canary；exit 4 不被遮蓋（或 note）</td><td>preview DB 衛生</td><td>M</td><td>中</td><td>L09 +13 列／次</td><td>L09 報告含 pk；殘留列 100% 帶 canary</td></tr>
-<tr class="p1"><td>I-07</td><td>P1</td><td>finding id 去重；SECURITY_DEFINER role=None／anon 合併</td><td>SARIF 指紋正確</td><td>S</td><td>低中</td><td>L09、L07 JSON</td><td>報告 id 唯一性斷言</td></tr>
+<tr class="p1"><td>I-06a</td><td>P1</td><td>INSERT 探測帶 canary 標記（根因：write.py:62-64 不傳 text_column）</td><td>殘留列可辨識</td><td>S</td><td>中</td><td>L09：3 列 body IS NULL＝三個 INSERT 探測（GI-09）</td><td>L09 殘留列 100% 帶 rlsentry_canary_</td></tr>
+<tr class="p1"><td>I-06b</td><td>P1</td><td>SPEC §5 M3 lab DB 代清；CLEANUP_FAILED 列殘留主鍵與 DELETE 範本；exit 4 與 exit 1 並存時的處理</td><td>preview DB 衛生</td><td>M</td><td>中</td><td>L09 +13 列／次；cleanup.py 無 DB 路徑（GI-10）</td><td>有 db_url 時 L09 掃後列數回到 2；報告含 pk</td></tr>
+<tr class="p1"><td>I-07</td><td>P1</td><td>L09 同 id 的 CLEANUP_FAILED 去重（讀取植入與寫入探測清理各產生一筆）；L07 SECURITY_DEFINER role=None／anon 語意合併</td><td>SARIF 指紋正確</td><td>S</td><td>低中</td><td>L09、L07 JSON</td><td>報告 id 唯一性斷言</td></tr>
 <tr class="p1"><td>I-08</td><td>P1</td><td>init：可接 TARGET、可從 bundle 取 key、草稿含 authorized／supabase_url／test_users／profile／fail_on 範例、RPC 提示 primary_key</td><td>首次上手</td><td>M</td><td>中：使用者放棄</td><td>blind §2.1</td><td>新使用者 3 個指令內完成第一次有效掃描</td></tr>
 <tr class="p1"><td>I-09</td><td>P1</td><td>CROSS_TENANT_READ 敏感欄位升級或預設 fail_on 改 medium（需 SPEC 決策）</td><td>主打賣點在 CI 擋得住</td><td>S</td><td>中</td><td>rules.py:41；L04 ci exit 0</td><td>ADR＋L04 ci exit 1</td></tr>
 <tr class="p1"><td>I-10</td><td>P1</td><td>發佈要件：LICENSE、README、版本號、<code>--version</code>、PyPI／tag、產品 CI、Action SHA pin</td><td>可被採用</td><td>M</td><td>高（法律上無授權條款即不可用）</td><td>pyproject.toml；.github/</td><td>發佈 checklist</td></tr>
@@ -93,31 +95,35 @@ code{background:#f4f4f4;font-size:.88em}.p0{background:#fdd}.p1{background:#ffe9
 <tr class="p2"><td>I-14</td><td>P2</td><td>對外說法精確化：audit 會因登入寫入 auth.*</td><td>法律／信任</td><td>S</td><td>低中</td><td>traceability.md:12</td><td>USAGE 一句說明</td></tr>
 <tr class="p2"><td>I-15</td><td>P2</td><td>RPC 不產生 insert／update／delete 格</td><td>噪音</td><td>S</td><td>低</td><td>L07 audit matrix</td><td>RPC 只有 select</td></tr>
 <tr class="p2"><td>I-16</td><td>P3</td><td>lab env 印 email；sql 可印結果</td><td>開發體驗</td><td>S</td><td>低</td><td>blind §2.1 #9</td><td>—</td></tr>
+<tr class="p2"><td>I-18</td><td>P2</td><td>SPEC §8／NFR-01 的 <code>log_statement = mod</code> 說法與 ADR-019 實測不符</td><td>規格正確性</td><td>S</td><td>低</td><td>GI-01</td><td>SPEC 改寫為實際驗證方式</td></tr>
 <tr class="p2"><td>I-17</td><td>P3</td><td>報告語言一致；說明遮罩 curl 需代入 key</td><td>可讀性</td><td>S</td><td>低</td><td>HTML 報告</td><td>—</td></tr>
 </table>
 
 <h2>5. PM↔R&amp;D 問答紀錄</h2>
-<div class="box">第一輪問題 <code>review/outbox/001-pm-questions.md</code>（14 題）於 commit <code>c29ca17</code> 寄出。<b>等待 11 次 Stop hook 循環後，<code>review/inbox/001-answer.md</code> 仍未出現</b>（遠端分支只有我的 commit 與 harness log），因此沒有第二輪。下表的「我的評估」是根據程式與 ADR 的暫定判斷；architect 回覆後若有不同，以回覆修正 issues.md。</div>
-<table><tr><th>題</th><th>問題（摘要）</th><th>R&amp;D 回答</th><th>我的評估（依證據）</th></tr>
-<tr><td>Q1</td><td>ci 掃描失敗 exit 0 是設計還是缺陷</td><td>未回覆</td><td>無 ADR 討論此情況 → 判為遺漏，I-01 P0</td></tr>
-<tr><td>Q2</td><td>--profile ci 被靜默改 audit</td><td>未回覆</td><td>ADR-051 #7 已知並以文件處理；仍列 P0，因 Action 預設輸入就是 ci</td></tr>
-<tr><td>Q3</td><td>fail_on 在 audit／dev 無效</td><td>未回覆</td><td>ADR-044 #4 刻意；只建議加警告（P2）</td></tr>
-<tr><td>Q4</td><td>Benchmark 只用 ground-truth policy</td><td>未回覆</td><td>BENCHMARK_REPORT 有揭露 dev profile，但未揭露 policy 來源影響；I-04</td></tr>
-<tr><td>Q5</td><td>ci 不跑 M1</td><td>未回覆</td><td>符合 SPEC §2；屬 SPEC 決策，建議改（I-05）</td></tr>
-<tr><td>Q6</td><td>CROSS_TENANT_READ 不升級</td><td>未回覆</td><td>rules.py:41 未設 escalates_to，與 SPEC 表一致；屬產品決策（I-09）</td></tr>
-<tr><td>Q7</td><td>FR-05 聲明遺漏</td><td>未回覆</td><td>找不到實作 → 遺漏（I-03）</td></tr>
-<tr><td>Q8</td><td>L09 殘留與無標記列</td><td>未回覆</td><td>cleanup.py 無 DB 代清路徑；無標記列成因待查（UPDATE 路徑 write.py:156 會保留 canary，推測來自植入時文字欄非必填）</td></tr>
-<tr><td>Q9</td><td>重複 finding id</td><td>未回覆</td><td>未見已知限制記載 → 缺陷（I-07）</td></tr>
-<tr><td>Q10</td><td>發佈要件</td><td>未回覆</td><td>pyproject 0.0.0、無 LICENSE → 列 I-10</td></tr>
-<tr><td>Q11</td><td>init 可用性</td><td>未回覆</td><td>未見對應 ADR → I-08</td></tr>
-<tr><td>Q12</td><td>lab env／sql</td><td>未回覆</td><td>MS7-v1 §5 已列 env 印密碼；email 未列 → P3</td></tr>
-<tr><td>Q13</td><td>confirmed_by unknown</td><td>未回覆</td><td>CONFIRMER_ENV 不含 GITHUB_ACTOR → I-12</td></tr>
-<tr><td>Q14</td><td>audit 登入寫 auth.*</td><td>未回覆</td><td>traceability 已知、USAGE 未說明 → I-14</td></tr>
+<div class="box">第一輪 <code>review/outbox/001-pm-questions.md</code>（c29ca17，14 題）→ architect 回覆 <code>review/inbox/001-answer.md</code>（b4e8edd），並於 <code>review/inbox/002-answer.md</code>（191776d）修正我 A4 初版（288a39b）的暫定評估。回覆晚於初版 A4，本版（v2）已併入。architect 把判定為缺陷者記入 <code>docs/reviews/global-issues.md</code>（GI-01～GI-15，只記錄不修正）。<br><b>第二輪：不寄出。</b>14 題都有明確回答；剩下的開放點（Q3、Q5、Q6、Q10 授權條款、Q13）是 SPEC／產品層級決策，architect 已明確交人類，不是 R&amp;D 沒答清楚。Q8(b) 根因我已讀碼核實（<code>probe/write.py:62-64</code> INSERT WritePlan 不帶 <code>text_column</code>；<code>write.py:137-138</code> 只在有 text_column 時放 canary）。</div>
+<table><tr><th>題</th><th>問題（摘要）</th><th>R&amp;D 回答（摘要）</th><th>我的評估</th><th>GI</th></tr>
+<tr><td>Q1</td><td>ci 掃描失敗 exit 0</td><td>缺陷；沒有 ADR 定義「掃描不完整」；exit 5 只用於崩潰；ADR-041 的「沒測≠denied」沒延伸到 exit code</td><td>一致。I-01 維持 P0</td><td>GI-02</td></tr>
+<tr><td>Q2</td><td>--profile ci 被靜默改 audit</td><td>已知（ADR-047、051 #7）但只文件處理；警告與 Action 失敗兩選項從未被考慮；architect 也建議 P0</td><td>一致。I-02 P0</td><td>GI-03</td></tr>
+<tr><td>Q3</td><td>fail_on 在 audit／dev 無效</td><td>只在 ci 生效是刻意（SPEC §2）；「設定了卻不提示」是遺漏；是否允許 audit 用 fail_on 交人類</td><td>修正初版：判為「刻意＋遺漏警告」。I-11 P2 不變</td><td>GI-04</td></tr>
+<tr><td>Q4</td><td>Benchmark 只用 ground-truth policy</td><td>事實正確；設計意圖是「給定正確預期時的偵測力」，但報告沒寫清前提；同意另列兩欄與加註；27/32 未重跑</td><td>一致。I-04 P0（文件）；27/32 為本審核實測</td><td>GI-05</td></tr>
+<tr><td>Q5</td><td>ci 不跑 M1</td><td>依 SPEC §2 字面；M1 唯讀、技術上可在 ci 跑；SPEC 沒寫理由，交人類</td><td>一致。I-05 P1，需 SPEC 決策</td><td>GI-06</td></tr>
+<tr><td>Q6</td><td>CROSS_TENANT_READ 不升級、L04 ci exit 0</td><td>依 SPEC §5 表，非刻意不對稱；ADR 從未注意到展示情境在 ci 不擋；兩選項交人類</td><td>一致。I-09 P1，需人類決策</td><td>GI-07</td></tr>
+<tr><td>Q7</td><td>FR-05 聲明遺漏</td><td>遺漏；延到 MS6 後 MS6／MS7 驗證清單未追蹤，是流程漏洞</td><td>一致。I-03 P0；另記流程教訓：延後項沒有結案機制</td><td>GI-08</td></tr>
+<tr><td>Q8</td><td>L09 殘留、無標記列、exit 4 被遮蓋</td><td>(a) 代清未實作（SPEC 明文要求）；(b) 根因是 INSERT 探測從不帶 canary，3 列正是 anon／A／B 的 INSERT；(c) 同意列主鍵與 SQL；exit 順序未經 ADR 討論</td><td><b>修正初版</b>：我推測「文字欄非必填」錯誤，已改為 architect 的根因（已讀碼核實）。I-06 拆成 I-06a（canary 標記）／I-06b（代清＋列主鍵＋exit 順序）</td><td>GI-09、GI-10</td></tr>
+<tr><td>Q9</td><td>重複 finding id</td><td>L09 重現：讀取植入清理與寫入探測清理各自產生 CLEANUP_FAILED；L07 兩筆 id 不同（role 參與雜湊），是語意重複</td><td><b>修正初版</b>：「同 id 重複」只指 L09；L07 改列語意重複（我的 L07 JSON 也顯示 id 不同：dde5e602…／60df2390…）</td><td>GI-11</td></tr>
+<tr><td>Q10</td><td>發佈要件</td><td>全部是遺漏，流程從未把「對外發佈」列為工作項目；授權條款需人類決定</td><td>一致。I-10 P1；LICENSE 是法律前提，建議上線前必做</td><td>GI-12</td></tr>
+<tr><td>Q11</td><td>init 可用性</td><td>(a) ADR-042 補記 2 決定 init 不接受 TARGET，但錯誤訊息與 scan 共用（cli.py:64）；(b)(c)(d) 無 ADR</td><td>一致。I-08 P1</td><td>GI-13</td></tr>
+<tr><td>Q12</td><td>lab env／sql</td><td>不知是否刻意；email 在 docs/examples；lab 不列產品缺陷</td><td>接受。I-16 維持 P3（僅開發體驗）</td><td>—</td></tr>
+<tr><td>Q13</td><td>confirmed_by unknown</td><td>遺漏；Action 沒帶 GITHUB_ACTOR；traceability 只追蹤「有紀錄」不追蹤是否有意義；可否接受交人類</td><td>一致。I-12 P2</td><td>GI-14</td></tr>
+<tr><td>Q14</td><td>audit 登入寫 auth.*</td><td>同意；USAGE.md:84 對外說法需精確化</td><td>一致。I-14 P2</td><td>GI-15</td></tr>
+<tr><td>（追加）</td><td>architect 另外發現</td><td>SPEC §8／NFR-01 仍寫 <code>log_statement = mod</code> 可驗證 0 次寫入，與 ADR-019 實測不符</td><td>接受，列 I-18 P2（文件）</td><td>GI-01</td></tr>
 </table>
-
+<h3>5.1 需要人類決定的事項（由 architect 轉告）</h3>
+<ol><li>是否新增「掃描不完整」exit code 與門檻（I-01）。</li><li>ci 是否跑唯讀 M1（I-05，SPEC §2）。</li><li>CROSS_TENANT_READ 對敏感欄位升級，或預設 <code>fail_on.severity: medium</code>（I-09，SPEC §5）。</li><li>audit 是否可使用 <code>fail_on</code>（I-11）。</li><li>授權條款（I-10）。</li><li>CI 中 <code>confirmed_by: unknown</code> 是否可接受為授權紀錄（I-12）。</li></ol>
 <h2>6. 方法與限制</h2>
 <ul><li>A0 盲測只用規定指令；以 <code>RAISE EXCEPTION</code> 經 <code>lab._shared sql</code> 讀出 lab 帳號與 schema（只在本機 lab）。</li>
 <li>變異測試在 repo 外的暫存複本進行，未修改任何產品檔。</li>
 <li>未執行 <code>make acceptance</code> 與 lab／e2e 測試套件（約 45 分鐘）；benchmark 數字引用自 BENCHMARK_REPORT，另以本審核的 16 情境 ci 重跑對照。</li>
+<li>v1（288a39b）在 architect 回覆前完成，§5 為暫定評估；v2 依 001／002 回信修正 Q3、Q8(b)、Q9 三處，結論不變。</li>
 <li>因遠端分支被 harness 推入 log commit、且禁止 merge／rebase，review 檔以 <code>git commit-tree</code> 直接建立在遠端最新 commit 之上推送，只含 <code>review/</code> 變更。</li></ul>
 </body></html>
