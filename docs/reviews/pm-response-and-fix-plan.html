@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PM 審核回覆與修正方案</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1d1d1f;--muted:#5f6368;--line:#dcdcd8;--card:#ffffff;--accent:#2f5d8a;
+--p0:#b3261e;--p1:#b26a00;--p2:#3d6b2f;--p3:#5f6368;--code:#f1f1ee;--warn:#fff4e5;--ok:#eef6ec}
+@media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#e8e8e6;--muted:#a0a3a8;--line:#34353a;--card:#1e1f22;
+--accent:#8db7e0;--p0:#f2867f;--p1:#f0b45a;--p2:#9ccf8c;--p3:#a0a3a8;--code:#26272b;--warn:#3a2d17;--ok:#1f2e1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:1060px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.6rem;margin:.2em 0}h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;margin:1.6em 0 .4em}
+.meta{color:var(--muted);font-size:.9rem}
+code{background:var(--code);padding:.05em .35em;border-radius:4px;font-size:.88em}
+pre{background:var(--code);padding:10px 12px;border-radius:6px;overflow-x:auto;font-size:.85em}
+table{border-collapse:collapse;width:100%;margin:.6em 0;font-size:.9rem}
+th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+th{background:var(--code)}
+.wrap{overflow-x:auto}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;padding:0 .45em;border-radius:4px;border:1px solid currentColor}
+.p0{color:var(--p0)}.p1{color:var(--p1)}.p2{color:var(--p2)}.p3{color:var(--p3)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+.card h3{margin-top:.2em}
+.box{border-left:4px solid var(--accent);background:var(--card);padding:10px 14px;margin:12px 0}
+.warn{border-left-color:var(--p1);background:var(--warn)}
+.ok{border-left-color:var(--p2);background:var(--ok)}
+dl{display:grid;grid-template-columns:7.5em 1fr;gap:4px 12px;margin:.4em 0}
+dt{color:var(--muted);font-weight:600}dd{margin:0}
+nav ol{columns:2;font-size:.92rem}
+@media (max-width:640px){nav ol{columns:1}dl{grid-template-columns:1fr}dt{margin-top:.4em}}
+</style>
+</head>
+<body>
+<main>
+<h1>PM 審核回覆與修正方案</h1>
+<p class="meta">architect（R&amp;D）· 2026-11-08 · 依據：<code>review/report.html</code> v2、<code>review/issues.md</code> v2、<code>review/blind.html</code>（Auditor-PM）、<code>docs/reviews/global-issues.md</code>（GI-01～15）· 程式行號以 claude/busy-darwin-asvox3 的 c29ca17 為準 · 本文件只規劃，不修改任何產品檔</p>
+
+<nav class="box"><strong>目錄</strong>
+<ol>
+<li><a href="#s1">結論與修正範圍</a></li>
+<li><a href="#s2">對 PM 的逐項回覆</a></li>
+<li><a href="#s3">需要人類先決定的事</a></li>
+<li><a href="#s4">逐項修改設計（P0）</a></li>
+<li><a href="#s5">逐項修改設計（P1）</a></li>
+<li><a href="#s6">逐項修改設計（P2／P3）</a></li>
+<li><a href="#s7">執行計畫：流程、批次、ticket</a></li>
+<li><a href="#s8">驗收與回歸</a></li>
+<li><a href="#s9">最壞影響與回滾總表</a></li>
+<li><a href="#s10">附錄：對應表與證據索引</a></li>
+</ol></nav>
+
+<h2 id="s1">1. 結論與修正範圍</h2>
+<div class="box">
+<p><strong>R&amp;D 同意 PM 的 No-Go 結論。</strong>19 項（I-06 拆為 a／b）中 17 項 R&amp;D 判定為缺陷或遺漏，另 2 項（I-05、I-09）依 SPEC 字面實作，但 SPEC 本身需要修訂。沒有一項屬於「PM 誤解」。核心引擎（授權閘門、S4、三態判定、讀回驗證、遮罩）不需要改動；需要修的是<strong>「結果怎麼被使用」</strong>這一層：exit code、profile 解析、報告的覆蓋率聲明、清理與發佈。</p>
+<p>已有的旁證：Rival 的中立 conformance 協定交叉執行現有系統，dev 32/32、0/72、109/109，audit 16/16、0/30、51/51，16 情境 audit 0 次寫入（<code>arena/inbox/002-answer.md</code>）。偵測能力本身沒有問題；PM 指出的問題集中在 CI 與使用者路徑。</p>
+</div>
+<div class="wrap"><table>
+<tr><th>批次</th><th>內容</th><th>項目</th><th>估計 ticket</th></tr>
+<tr><td>W0</td><td>人類決策、SPEC／harness 修訂（凍結檔）</td><td>§3 的 8 個決策</td><td>—（人類）</td></tr>
+<tr><td>W1</td><td>P0：CI 可信、報告誠實</td><td>I-01、I-02、I-03、I-04（含 I-13、I-14 的報告部分）</td><td>5</td></tr>
+<tr><td>W2</td><td>P1：正確性與資料衛生</td><td>I-05、I-06a、I-06b、I-07、I-09、I-15</td><td>6</td></tr>
+<tr><td>W3</td><td>上線與可用性</td><td>I-08、I-10、I-11、I-12、I-16、I-17、I-18</td><td>6</td></tr>
+</table></div>
+<p>共約 17 張 ticket。W1 完成即可解除 PM 的 P0 阻擋；W3 的 I-10（LICENSE 等）是對外發佈的法律前提。</p>
+
+<h2 id="s2">2. 對 PM 的逐項回覆</h2>
+<p>「立場」欄：<strong>同意</strong>＝缺陷，照 PM 建議修；<strong>同意＋修正</strong>＝同意問題，但 PM 的驗收或建議需調整；<strong>交人類</strong>＝ SPEC 層級的產品決定，R&amp;D 附建議。</p>
+<div class="wrap"><table>
+<tr><th>#</th><th>優先</th><th>項目</th><th>立場</th><th>R&amp;D 補充（與 PM 不同之處）</th></tr>
+<tr><td>I-01</td><td><span class="tag p0">P0</span></td><td>ci fail-open</td><td>同意＋修正</td><td>PM 建議「新 code 5」與既有 <code>EXIT_ERROR = 5</code>（崩潰，<code>contracts/report.py:34</code>、USAGE §5）衝突。改用新的 <strong>6 = 掃描不完整</strong>。門檻交人類（D1）。</td></tr>
+<tr><td>I-02</td><td><span class="tag p0">P0</span></td><td><code>--profile ci</code> 被靜默改為 audit</td><td>同意＋修正</td><td>不改「較嚴者勝」本身：它防止 CLI 把 audit 放寬成可寫入的 dev（ADR-014 #4，安全性質）。改為「不一致時明示」＋「Action 要求一致」。</td></tr>
+<tr><td>I-03</td><td><span class="tag p0">P0</span></td><td>FR-05 覆蓋率與聲明</td><td>同意</td><td>另補流程修正：延後項目必須在目標 milestone 的驗證清單中有結案列（GI-08 的根因）。</td></tr>
+<tr><td>I-04</td><td><span class="tag p0">P0</span></td><td>benchmark 呈現</td><td>同意</td><td>27/32 由 PM 實測，R&amp;D 會在 W1 以新的 bench 模式重跑確認後才寫進報告。</td></tr>
+<tr><td>I-05</td><td><span class="tag p1">P1</span></td><td>ci 不跑 M1</td><td>交人類（D3）</td><td>建議採納：M1 只對同源發 GET，與 ci 的安全性質不衝突。</td></tr>
+<tr><td>I-06a</td><td><span class="tag p1">P1</span></td><td>INSERT 探測沒有 canary 標記</td><td>同意</td><td>根因 <code>probe/write.py:62-64</code>（PM v2 已採用）。</td></tr>
+<tr><td>I-06b</td><td><span class="tag p1">P1</span></td><td>DB 代清、殘留主鍵、exit 4 被遮蓋</td><td>同意＋修正</td><td>DB 代清會用到寫入權限，與 M4「唯讀連線」（ADR-032）衝突，必須是獨立、明示開啟、只限 lab 的路徑（D6）。exit code 不做位元組合，改以摘要與報告揭露。</td></tr>
+<tr><td>I-07</td><td><span class="tag p1">P1</span></td><td>重複 Finding.id</td><td>同意</td><td>L09 是同 id 重複；L07 是語意重複（id 不同），兩者修法不同。</td></tr>
+<tr><td>I-08</td><td><span class="tag p1">P1</span></td><td>init 可用性</td><td>同意</td><td>PM 的驗收「3 個指令內完成第一次有效掃描」採用。</td></tr>
+<tr><td>I-09</td><td><span class="tag p1">P1</span></td><td>跨租戶讀取嚴重度</td><td>交人類（D4）</td><td>只做「敏感欄位升級」無法讓 L04 在 ci 失敗（L04 的 <code>notes</code> 沒有敏感欄位），PM 的驗收「L04 ci exit 1」需要調整預設 <code>fail_on</code> 或基準嚴重度。</td></tr>
+<tr><td>I-10</td><td><span class="tag p1">P1</span></td><td>發佈要件</td><td>同意；授權條款交人類（D7）</td><td>產品 CI 以單元測試＋ruff＋mypy 為主；lab 測試需要 Docker，另設手動或排程 workflow。</td></tr>
+<tr><td>I-11</td><td><span class="tag p2">P2</span></td><td>fail_on 在 dev／audit 無效</td><td>同意（警告）；是否支援交人類（D5）</td><td>—</td></tr>
+<tr><td>I-12</td><td><span class="tag p2">P2</span></td><td>confirmed_by unknown</td><td>同意；可否接受交人類（D8）</td><td>—</td></tr>
+<tr><td>I-13</td><td><span class="tag p2">P2</span></td><td>終端摘要不顯示降級原因</td><td>同意</td><td>與 I-01 同一張 ticket：判斷「不完整」的資料就是摘要要印的資料。</td></tr>
+<tr><td>I-14</td><td><span class="tag p2">P2</span></td><td>audit 登入寫 <code>auth.*</code></td><td>同意</td><td>USAGE 與報告的授權區塊各一句。</td></tr>
+<tr><td>I-15</td><td><span class="tag p2">P2</span></td><td>RPC 產生寫入格</td><td>同意</td><td>ground truth 沒有 RPC 寫入案例，移除不影響計分分母。</td></tr>
+<tr><td>I-16</td><td><span class="tag p3">P3</span></td><td>lab env／sql</td><td>同意</td><td>只限 lab 的值（測試帳號），不違反 NFR-03。</td></tr>
+<tr><td>I-17</td><td><span class="tag p3">P3</span></td><td>報告語言與遮罩 curl 說明</td><td>同意</td><td>併入盲測 F12「RLS 已啟用時仍建議 ENABLE RLS」。</td></tr>
+<tr><td>I-18</td><td><span class="tag p2">P2</span></td><td>SPEC 的 log_statement 說法</td><td>同意</td><td>SPEC 為凍結檔，由人類修訂（D2）。</td></tr>
+</table></div>
+<p>PM 列為「已驗證為良好」的部分（授權閘門、S4、audit 寫入閘門、設定檔嚴格驗證、C01–C04 無誤報）R&amp;D 同意，本方案不碰這些路徑；每張 ticket 的回歸測試都包含它們。</p>
+
+<h2 id="s3">3. 需要人類先決定的事</h2>
+<p>前 6 項是 PM 轉交的產品決策；D2（流程）與 D6（DB 代清）是 R&amp;D 規劃時發現、必須由人類決定的事。每項附 R&amp;D 建議與理由。</p>
+<div class="wrap"><table>
+<tr><th>#</th><th>決定</th><th>選項</th><th>R&amp;D 建議與理由</th><th>影響的項目</th></tr>
+<tr><td>D1</td><td>「掃描不完整」的判準與門檻</td><td>(a) 只看硬性條件：0 個 target、設定的測試帳號登入失敗或密碼變數缺失、API 不可達、anon key 被拒；(b) 再加 not_tested／inconclusive 比例門檻</td><td><strong>(a) 為預設，(b) 為選填設定</strong>（<code>fail_on.max_inconclusive_ratio</code>，預設不設）。合法的 inconclusive（C03 空表、C04 無資料者）很常見，預設比例門檻會造成誤失敗。</td><td>I-01、I-13</td></tr>
+<tr><td>D2</td><td>修正走哪條流程</td><td>(a) SPEC §16 第 6 點：各 milestone 開 reopen ticket，之後的 milestone 全部重新鎖定（MS3 起要重新核准 5 個 milestone）；(b) 在 <code>harness/milestones.yaml</code> 新增 MS8「上線修正」並重新凍結</td><td><strong>(b)</strong>。修正橫跨 MS3–MS7，走 (a) 要重新核准 5 次；(b) 一次核准，且保留 MS0–MS7 的核准紀錄。需要人類修改凍結檔並重打 <code>harness-frozen</code> tag。</td><td>全部</td></tr>
+<tr><td>D3</td><td>ci 是否跑唯讀 M1</td><td>(a) 跑，target 不可達時只記 note；(b) 跑，不可達算「不完整」；(c) 不跑，文件明示</td><td><strong>(a)</strong>。service_role key 外洩是 Critical，而 M1 只對同源發 GET。CI 環境常常沒有可達的前端，算成「不完整」會讓多數 CI 失敗。</td><td>I-05、SPEC §2</td></tr>
+<tr><td>D4</td><td>跨租戶讀取在 ci 是否擋下</td><td>(a) CROSS_TENANT_READ 遇敏感欄位升為 high；(b) ci 預設 <code>fail_on.severity: medium</code>；(c) CROSS_TENANT_READ 基準改 high（改 SPEC §5 表）</td><td><strong>(a)＋(b)</strong>。BOLA 是 OWASP API Security Top 10 第 1 名；CI 的目的是擋回歸，Confirmed 的跨租戶讀取在 CI 中不應通過。(b) 只改預設門檻、不動嚴重度分類，使用者仍可調回 high；(a) 讓嚴重度與 anon 讀取的升級規則對稱。</td><td>I-09、SPEC §5 M5、§2</td></tr>
+<tr><td>D5</td><td>audit 能否使用 <code>fail_on</code></td><td>(a) 只警告；(b) 允許（排程稽核）</td><td><strong>先 (a)</strong>。(b) 改變 SPEC §2「audit 不設門檻」，可在上線後依使用者需求再開。</td><td>I-11</td></tr>
+<tr><td>D6</td><td>是否實作 DB 代清（SPEC §5 M3 明文）</td><td>(a) 實作：獨立的 <code>cleanup_db_url_env</code>，只限 localhost、只刪本次建立的主鍵；(b) 不實作，修改 SPEC 並以「殘留主鍵＋DELETE 範本」取代</td><td><strong>(a)，但範圍限 lab</strong>。與 M4 唯讀連線分開，避免把 M4 的 DB URL 變成寫入憑證。遠端 preview DB 只提供 (b) 的報告資訊。</td><td>I-06b</td></tr>
+<tr><td>D7</td><td>授權條款</td><td>MIT、Apache-2.0、其他</td><td>R&amp;D 不建議特定條款；Apache-2.0 含專利授權與 NOTICE 要求，MIT 最簡短。這是法律決定。</td><td>I-10</td></tr>
+<tr><td>D8</td><td>CI 中 <code>confirmed_by: unknown</code> 可否接受</td><td>(a) 接受但加警告 note；(b) audit 時拒絕執行</td><td><strong>(a)</strong>，加上 Action 自動帶入 <code>GITHUB_ACTOR</code>／repo，unknown 只會出現在非 GitHub 的 CI。</td><td>I-12</td></tr>
+</table></div>
+<div class="box warn">凍結檔的修改（SPEC §2、§5 M5、§8／NFR-01、<code>harness/milestones.yaml</code>）只能由人類進行並重新凍結；R&amp;D 會在 W0 提供逐段的修改草稿，不自行修改。</div>
+
+<h2 id="s4">4. 逐項修改設計（P0）</h2>
+<p>每張卡片：目標行為 → 修改位置 → 設計選擇（含不採用的替代方案）→ 測試與驗收 → 最壞影響與回滾。合約（<code>rlsentry/contracts/</code>）與測試由 architect 撰寫，實作由 implementer 依 ticket 完成（SPEC §16）。</p>
+
+<div class="card">
+<h3><span class="tag p0">P0</span> I-01＋I-13　ci 在掃描不完整時失敗，並在終端說明原因</h3>
+<dl>
+<dt>目標行為</dt><dd>ci 遇到 D1(a) 的任一條件時 exit 6，終端摘要列出原因；dev／audit 仍 exit 0，但同樣印出原因。</dd>
+<dt>修改位置</dt><dd>
+<code>contracts/report.py</code>：新增 <code>EXIT_INCOMPLETE = 6</code>；<br>
+<code>contracts/models.py</code>：<code>ScanReport</code> 增 <code>incomplete: list[IncompleteReason]</code>（<code>kind</code>：<code>no_targets</code>／<code>login_failed</code>／<code>password_env_missing</code>／<code>api_unreachable</code>／<code>anon_key_rejected</code>，附 role 與計數，不含訊息原文）；<br>
+<code>pipeline.py</code>（<code>run_scan</code>）：M2 之後判斷 0 target；<code>build_sessions</code> 之後判斷登入失敗；以矩陣 reason 統計 transport error 與 401；<br>
+<code>report/exit_code.py</code>：ci 的順序改為 1（findings）＞ 6（不完整）＞ 4（清理失敗）＞ 0；<br>
+<code>cli.py</code>（<code>_summary</code>）：新增 <code>incomplete:</code> 與 <code>not tested: N cells (top reasons)</code> 兩行；<br>
+<code>ScanConfig.fail_on</code>：選填 <code>incomplete: bool = true</code>、<code>max_inconclusive_ratio: float | None</code>（D1(b)）；<br>
+USAGE §5 exit code 表、HTML／JSON／SARIF 呈現。</dd>
+<dt>設計選擇</dt><dd>exit 1 優先於 6：已證實的漏洞比「不確定」更需要處理。不採用「不完整就拋例外 → exit 5」：5 代表程式崩潰，不完整時報告仍然有價值，必須照常寫出。不採用預設比例門檻（見 D1）。</dd>
+<dt>測試</dt><dd>單元：<code>exit_code</code> 的優先順序表（1／6／4／0 的組合）、每種 <code>IncompleteReason</code> 的判斷。e2e（lab）：L01＋ci，三種情況各一（<code>supabase_url: http://127.0.0.1:1</code>、兩個密碼錯誤、L11 的 0 target）→ exit 6；C03＋ci 的合法 inconclusive → 不得 exit 6。</dd>
+<dt>驗收</dt><dd>PM 的三個重現指令全部 exit 6；benchmark 指標不變。</dd>
+<dt>最壞影響</dt><dd>原本「綠燈」的 CI 開始失敗（這是目的），也可能誤判合法情況，例如專案真的沒有任何表，或使用者故意不提供測試帳號。後者不算不完整：只有<strong>設定了</strong>帳號卻登入失敗才算。回滾：使用者可設 <code>fail_on.incomplete: false</code>；程式層面 revert 這張 ticket，exit code 6 的使用者以外不受影響。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p0">P0</span> I-02　profile 不一致時明示，Action 要求一致</h3>
+<dl>
+<dt>目標行為</dt><dd>CLI <code>--profile</code> 與實際生效的 profile 不同時，stderr 印一行警告，報告 notes 也記一筆；新增 <code>--require-profile</code>，不一致時 exit 2。GitHub Action 一律帶 <code>--require-profile</code>。</dd>
+<dt>修改位置</dt><dd><code>pipeline.py:48-54</code>（<code>stricter_profile</code> 回傳是否被覆蓋）、<code>cli.py</code>（警告與新選項）、<code>action/action.yml</code>（加旗標）、USAGE §2、§6。</dd>
+<dt>設計選擇</dt><dd>保留「較嚴者勝」。替代方案「CLI 優先」會讓 <code>--profile dev</code> 把 audit 設定檔變成可寫入的掃描，破壞「audit 的唯讀不可被覆寫」（SPEC §5 Safety）。另一個替代方案是「設定檔省略 profile 時由 CLI 決定」，但它改變 ADR-010 的預設唯讀，風險較高，所以不採用。</dd>
+<dt>測試</dt><dd>單元：三種組合的警告與 exit 2。e2e：設定檔無 profile＋<code>--profile ci --require-profile</code> → exit 2，訊息指出要在設定檔寫 <code>profile: ci</code>。</dd>
+<dt>最壞影響</dt><dd>已在用 Action 而設定檔省略 profile 的使用者，升級後 CI 會以 exit 2 失敗。這正是要暴露的錯誤設定，訊息會說明修法。回滾：Action 輸入新增 <code>require-profile: "false"</code> 的逃生口。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p0">P0</span> I-03（含 I-14、I-17 的報告文字）　覆蓋率區塊與「未發現不代表安全」</h3>
+<dl>
+<dt>目標行為</dt><dd>每份報告都有覆蓋率區塊：探索來源（OpenAPI 是否可用；各 target 的 <code>discovered_by</code>／<code>confidence</code>；policy 列出但找不到的表）、矩陣統計（依 role × op 的 allowed／denied／inconclusive／not_tested 計數）、<strong>未涵蓋面向</strong>的固定清單（Storage、Edge Functions、未曝露的 schema、Realtime），以及固定聲明「未發現不代表安全」。</dd>
+<dt>修改位置</dt><dd><code>contracts/models.py</code>：<code>ScanReport.coverage: Coverage</code>（ADR）；<code>pipeline.py</code> 組裝；<code>report/html.py</code> 置頂區塊；<code>report/json.py</code> 自動帶出；<code>report/sarif.py</code> 放 <code>run.properties</code>；<code>cli.py</code> 摘要一行 <code>coverage: X/Y cells tested; not covered: storage, edge functions</code>；授權區塊加 I-14 的一句：「audit 不經資料 API 寫入；以測試帳號登入會使 Auth 服務更新登入時間與 refresh token」。</dd>
+<dt>設計選擇</dt><dd>覆蓋率由已存在的 <code>discovery</code> 與 <code>matrix</code> 計算，不新增網路請求。未涵蓋清單寫成合約常數，而不是動態偵測：Storage 是 P2，不偵測就不能宣稱「有偵測到才列」。</dd>
+<dt>測試</dt><dd>單元：<code>Coverage</code> 由固定矩陣算出的數字。lab：L11 報告含「未發現不代表安全」且未涵蓋清單有 Storage；L12 報告列出 <code>audit_log</code> 為 policy／unknown。</dd>
+<dt>最壞影響</dt><dd>JSON 多一個欄位。依結構解析的使用者（例如 Rival 的 adapter）不受影響；只有以嚴格 schema 驗證報告的使用者需要更新。回滾：revert；不影響判定。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p0">P0</span> I-04　benchmark 揭露前提並另列使用者路徑</h3>
+<dl>
+<dt>目標行為</dt><dd>BENCHMARK_REPORT 首段寫明「主表指標以 ground-truth policy、dev profile 量測，代表給定正確預期權限時的偵測能力」；另列兩欄：「init 草稿＋ci」與「ground-truth policy＋audit」，各附原始數量。</dd>
+<dt>修改位置</dt><dd><code>bench/run.py</code>：新增 <code>--policy-source {ground_truth,init}</code>（init 模式先呼叫 <code>run_init</code> 產生草稿，再照原設定掃描）與 <code>--profile</code>；<code>bench/score.py</code> 不變（計分規則不動）；BENCHMARK_REPORT.md。</dd>
+<dt>設計選擇</dt><dd>不改計分，只增加量測條件，避免「改規則讓數字變好看」的疑慮。I-05、I-08 修完後 init＋ci 的 recall 預期會上升，報告要分別列出修正前與修正後的數字。</dd>
+<dt>測試</dt><dd>bench 的單元測試：兩種 policy 來源產生的設定差異；實跑三欄各一次，數字寫入報告並附指令。</dd>
+<dt>最壞影響</dt><dd>對外數字變低（PM 實測 27/32）。這是誠實揭露，不是退步。回滾：無需要。</dd>
+</dl>
+</div>
+
+<h2 id="s5">5. 逐項修改設計（P1）</h2>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> I-05　ci 執行唯讀 M1（依 D3）</h3>
+<dl>
+<dt>修改</dt><dd><code>contracts/pipeline.py:40-44</code> 的 <code>MODULES_BY_PROFILE[CI]</code> 加入 M1；<code>pipeline.py</code> 在 ci 中 M1 失敗（target 不可達）時記 note、繼續；S4 端點確認照舊（ci 原本就要求 <code>supabase_url</code>）；USAGE §3 表格與 SPEC §2（人類修訂）。</dd>
+<dt>測試</dt><dd>L08＋ci → SECRET_KEY_IN_BUNDLE、exit 1；target 指向不可達埠 → note、exit 依其他條件。</dd>
+<dt>最壞影響</dt><dd>ci 多一次抓 bundle 的時間（同源 GET，受 5 rps 限速）；前端是私有網路時只會留下 note。回滾：把 M1 從 ci 的模組表移除。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> I-06a　INSERT 探測帶 canary 標記</h3>
+<dl>
+<dt>修改</dt><dd><code>probe/write.py:62-64</code>：INSERT 的 <code>WritePlan</code> 也帶 <code>text_column</code>；沒有可寫文字欄的表，INSERT 探測照送，但把主鍵記入 <code>CLEANUP_FAILED</code> 的殘留清單（見 I-06b），讓殘留仍然可追蹤。</dd>
+<dt>測試</dt><dd>單元：<code>plan_writes</code> 的 INSERT plan 含 text_column；lab：L09 掃描後所有新增列的 <code>body</code> 以 <code>rlsentry_canary_</code> 開頭。</dd>
+<dt>最壞影響</dt><dd>文字欄有 CHECK 或長度限制時，帶標記的 INSERT 可能變成 400，判定為 inconclusive。這會讓覆蓋下降，但不會誤判（ADR-029 補記 2 #1 的狀態分類）。回滾：revert。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> I-06b　清理可操作：殘留主鍵、DELETE 範本、lab 代清（依 D6）</h3>
+<dl>
+<dt>修改</dt><dd>
+(1) <code>probe/diff.py:55</code>：<code>CLEANUP_FAILED</code> 附殘留主鍵清單（NFR-03 允許主鍵）與 <code>fix_sql</code>：<code>DELETE FROM &lt;schema&gt;.&lt;table&gt; WHERE &lt;pk&gt; IN (…)</code>（只產生、不執行）；<br>
+(2) 新設定 <code>cleanup_db_url_env</code>：只在 dev／ci、只在 localhost 時，以獨立連線刪除<strong>本次掃描記錄的主鍵</strong>，刪後以 SELECT 確認；結果寫入 notes；<br>
+(3) 摘要加一行 <code>leftover canary rows: N (see report)</code>。即使 exit 1 蓋過 exit 4，終端與 SARIF 仍看得到殘留。</dd>
+<dt>設計選擇</dt><dd>不重用 M4 的 <code>db_url_env</code>：M4 的設計是唯讀角色（ADR-032），把它變成寫入憑證會擴大權限。只用「本次記錄的主鍵」，不用 <code>LIKE 'rlsentry_canary_%'</code>：後者可能刪到上一次掃描或他人留下的列，也無法涵蓋沒有文字欄的表。不採用 exit code 位元組合（例如 1|4）：CI 系統普遍只判斷是否為 0，組合值只會增加理解成本。</dd>
+<dt>測試</dt><dd>單元：殘留清單與 SQL 模板（識別字經 <code>quote_ident</code>）；safety：非 localhost 時代清不執行（MockTransport／psycopg mock 計數為 0）。lab：L09＋<code>cleanup_db_url_env</code> 掃描後，<code>public.feedback</code> 列數回到 2。</dd>
+<dt>最壞影響</dt><dd>這是唯一新增的 DB 寫入路徑。程式錯誤時最壞會刪到不是本次建立的列。防線：只限 localhost、只限記錄的主鍵、單一交易、刪除列數必須等於清單長度，否則 ROLLBACK。回滾：不設 <code>cleanup_db_url_env</code> 即完全停用。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> I-07　Finding.id 唯一</h3>
+<dl>
+<dt>修改</dt><dd><code>pipeline.py</code> 合併 <code>m3 + cleanup</code> 後，依 <code>Finding.id</code> 合併重複項（probes 與殘留主鍵取聯集）；L07 的 <code>SECURITY_DEFINER_EXECUTABLE</code>：同一物件已有 role 特定的 finding 時，不再輸出 role=None 的那一筆（在 <code>whitebox/correlate.py</code> 處理，ADR-039 的抑制規則延伸）。報告層加執行期斷言：id 重複就在 notes 記錄並合併，不讓 SARIF 出現重複指紋。</dd>
+<dt>測試</dt><dd>不變式測試：所有 lab 情境的報告 <code>len(ids) == len(set(ids))</code>；L09 的 CLEANUP_FAILED 每位擁有者一筆。</dd>
+<dt>最壞影響</dt><dd>合併錯誤可能藏掉不同的問題。id 的雜湊含 target、role、op、rule，同 id 就是同一格同一規則，風險低。回滾：revert。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> I-09　跨租戶讀取在 ci 擋下（依 D4）</h3>
+<dl>
+<dt>修改</dt><dd>(a) <code>contracts/rules.py</code>：CROSS_TENANT_READ 設 <code>escalates_to=HIGH</code>（敏感欄位）；(b) <code>contracts/policy.py</code> 的 <code>FailOn</code> 預設，依 profile 決定：ci 為 <code>{confirmed, medium}</code>。(b) 需要 SPEC §2 的「Confirmed 且 ≥ high」由人類修訂，並寫 ADR。</dd>
+<dt>測試</dt><dd>L04＋ci → exit 1；C01–C04＋ci → exit 0（不得因門檻下降而誤擋）；<code>rules/severity.py</code> 的升級單元測試。</dd>
+<dt>最壞影響</dt><dd>原本只會 exit 0 的 Medium（例如使用者經 SECURITY DEFINER RPC 的讀取）也會讓 CI 失敗。這些都是 Confirmed 的資料外洩，屬於預期行為。回滾：使用者在設定檔寫 <code>fail_on: {severity: high}</code>。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p2">P2</span> I-15　RPC 只產生 select 格</h3>
+<dl>
+<dt>修改</dt><dd><code>probe/run.py</code>：<code>kind == "rpc"</code> 的 target 不建立 insert／update／delete 的 ProbeResult（ADR-007：RPC 以 Op.SELECT 表示）；覆蓋率計算同步。</dd>
+<dt>測試</dt><dd>L07 矩陣中 RPC 只有 select 格；bench 分母不變（ground truth 沒有 RPC 寫入案例）。</dd>
+<dt>最壞影響</dt><dd>依賴「RPC 寫入格 = not_tested」的使用者報表會少幾列。回滾：revert。</dd>
+</dl>
+</div>
+
+<h2 id="s6">6. 逐項修改設計（P2／P3 與發佈）</h2>
+<div class="wrap"><table>
+<tr><th>#</th><th>修改</th><th>測試／驗收</th><th>最壞影響與回滾</th></tr>
+<tr><td>I-08 <span class="tag p1">P1</span></td><td><code>cli.py</code> 的 <code>init</code>：(1) 接受 TARGET，沒有設定檔時以 TARGET 建立最小設定；(2) 沒有 <code>anon_key_env</code> 時以 M1（同源 GET）從 bundle 取 anon key，與 scan 一致；(3) 錯誤訊息依指令區分（修正 <code>cli.py:64</code>）；(4) <code>policy/init.py</code> 草稿含完整表頭：<code>authorized: false  # 確認授權後改為 true</code>、<code>profile</code>、<code>supabase_url</code>、<code>test_users</code>（密碼只寫變數名）、<code>fail_on</code>；RPC 項目加 <code>primary_key</code> 的 TODO 與候選欄位（<code>policy/init.py:21-23</code>）；(5) <code>--help</code> 指向 USAGE §2。</td><td>新使用者路徑：<code>rlsentry init URL --out x.yaml</code> → 編輯 → <code>rlsentry scan -c x.yaml</code>，3 個指令完成 L01 的有效掃描（e2e）。草稿通過 <code>ScanConfig</code> 驗證（TODO 以註解呈現）。</td><td>草稿的 <code>authorized: false</code> 讓使用者必須主動確認，維持 NFR-02。init 多了 M1 的網路請求（只有 GET）。回滾：revert。</td></tr>
+<tr><td>I-10 <span class="tag p1">P1</span></td><td>LICENSE（D7）；產品 <code>README.md</code>（安裝、30 秒範例、連到 USAGE）；版本：<code>pyproject.toml</code> 設 0.1.0，<code>TOOL_VERSION</code> 改由 <code>importlib.metadata</code> 讀取；<code>rlsentry --version</code>；CHANGELOG.md、SECURITY.md（漏洞通報管道）；<code>.github/workflows/ci.yml</code>：push／PR 跑 ruff、mypy、單元測試（不需 Docker）；lab 測試另設 <code>workflow_dispatch</code>；<code>action/action.yml</code> 的第三方 action 改以 commit SHA 固定，安裝改為固定版本（tag 或 PyPI）。</td><td>發佈清單逐項打勾；<code>rlsentry --version</code> 與報告 <code>tool_version</code> 一致；CI workflow 在 PR 上實際執行一次。</td><td>改以 SHA 固定後，第三方 action 不會自動更新，需要定期更新流程。發佈到 PyPI 後無法撤回已發佈的版本號（只能 yank）。是否上 PyPI 可延後。</td></tr>
+<tr><td>I-11 <span class="tag p2">P2</span></td><td>以 Pydantic 的 <code>model_fields_set</code> 判斷使用者是否<strong>明示</strong>設定 <code>fail_on</code>；非 ci 時印警告並記 note（D5(a)）。</td><td>單元：明示與預設兩種情況。</td><td>只多警告。回滾：revert。</td></tr>
+<tr><td>I-12 <span class="tag p2">P2</span></td><td><code>contracts/pipeline.py:52</code> 的 <code>CONFIRMER_ENV</code> 加 <code>GITHUB_ACTOR</code>；Action 設 <code>RLSENTRY_CONFIRMED_BY="${GITHUB_ACTOR}@${GITHUB_REPOSITORY}"</code>（經 <code>env:</code> 傳入，維持 ADR-044 #7 的防注入做法）；仍為 unknown 時加 note（D8(a)）。</td><td>單元：環境變數優先序；Action 的設定檔層面檢查。</td><td>授權紀錄出現 GitHub 帳號名稱（非機密，且本來就在 CI log）。回滾：revert。</td></tr>
+<tr><td>I-16 <span class="tag p3">P3</span></td><td><code>lab/_shared</code>：<code>env</code> 印出 <code>LAB_USERS</code> 的 email；<code>sql --print</code> 輸出查詢結果（lab-dev ticket）。</td><td>lab 工具的單元測試。</td><td>只影響本機 lab。回滾：revert。</td></tr>
+<tr><td>I-17 <span class="tag p3">P3</span></td><td>HTML 報告的欄位標籤統一為繁體中文（JSON 鍵維持英文，這是格式）；Repro 區塊加說明「key 已遮罩，執行前以環境變數代入」；<code>report/fix_sql.py</code>：有 M4 資料且 RLS 已啟用時，不產生 <code>ENABLE ROW LEVEL SECURITY</code>（盲測 F12）。</td><td>HTML 快照測試；L04 修補 SQL 不含 ENABLE RLS（RLS 已開）。</td><td>只影響呈現。回滾：revert。</td></tr>
+<tr><td>I-18 <span class="tag p2">P2</span></td><td>SPEC §8 與 NFR-01 的驗收方式改寫為「authenticator 記錄全部語句，以語句內容判斷寫入」（人類修訂凍結檔，D2 一併處理）；同步更新 arena 的 <code>kit/LAB_FACTS.md</code>（人類決定是否在競賽結束後）。</td><td>文件檢查。</td><td>無。</td></tr>
+</table></div>
+
+<h2 id="s7">7. 執行計畫：流程、批次、ticket</h2>
+<h3>7.1 流程（依 D2(b)）</h3>
+<ol>
+<li>人類：決定 D1–D8；修訂 SPEC §2、§5 M5、§8／NFR-01；在 <code>harness/milestones.yaml</code> 新增 MS8；重打凍結 tag。</li>
+<li>architect：寫 ADR（I-01 exit 6 與判準、I-02 require-profile、I-03 Coverage 模型、I-06b 代清的安全邊界、I-09 門檻、I-05 模組表）；更新合約；寫測試與 holdout；建立 ticket。</li>
+<li>implementer：依 ticket 實作，經 <code>harness/tickets.py accept</code> 合併（範圍檢查、作弊檢查、回歸）。</li>
+<li>auditor 審查 MS8 → 驗證清單 <code>docs/verification/MS8-v1.md</code>（第一項為獨立驗證，並把 PM 的 18 項列為逐項結案表）→ 人類核准。</li>
+<li>重跑 benchmark 三欄與 Rival 的 conformance（中立的回歸檢查）→ fast-forward main。</li>
+</ol>
+
+<h3>7.2 ticket 草案</h3>
+<div class="wrap"><table>
+<tr><th>批次</th><th>ticket</th><th>項目</th><th>主要路徑</th><th>依賴</th></tr>
+<tr><td>W1</td><td>A 掃描完整性與 exit 6</td><td>I-01、I-13</td><td>contracts/report.py、models.py、pipeline.py、report/exit_code.py、cli.py</td><td>D1</td></tr>
+<tr><td>W1</td><td>B profile 明示與 require-profile</td><td>I-02</td><td>pipeline.py、cli.py、action/action.yml</td><td>—</td></tr>
+<tr><td>W1</td><td>C 覆蓋率模型與計算</td><td>I-03</td><td>contracts/models.py、pipeline.py</td><td>—</td></tr>
+<tr><td>W1</td><td>D 覆蓋率呈現與授權說明</td><td>I-03、I-14</td><td>report/html.py、json.py、sarif.py、cli.py、USAGE.md</td><td>C</td></tr>
+<tr><td>W1</td><td>E bench 量測模式與報告</td><td>I-04</td><td>bench/run.py、BENCHMARK_REPORT.md</td><td>—（W2 後再跑一次）</td></tr>
+<tr><td>W2</td><td>F ci 執行 M1</td><td>I-05</td><td>contracts/pipeline.py、pipeline.py</td><td>D3</td></tr>
+<tr><td>W2</td><td>G INSERT 帶 canary</td><td>I-06a</td><td>probe/write.py</td><td>—</td></tr>
+<tr><td>W2</td><td>H 殘留主鍵與 DELETE 範本</td><td>I-06b(1)(3)</td><td>probe/diff.py、report/、cli.py</td><td>G</td></tr>
+<tr><td>W2</td><td>I lab 代清</td><td>I-06b(2)</td><td>新模組 probe/db_cleanup.py、pipeline.py、contracts/policy.py</td><td>D6、H</td></tr>
+<tr><td>W2</td><td>J Finding.id 唯一與語意去重</td><td>I-07</td><td>pipeline.py、whitebox/correlate.py</td><td>H</td></tr>
+<tr><td>W2</td><td>K 嚴重度升級與 ci 門檻</td><td>I-09</td><td>contracts/rules.py、contracts/policy.py</td><td>D4</td></tr>
+<tr><td>W2</td><td>L RPC 只有 select 格</td><td>I-15</td><td>probe/run.py</td><td>C（覆蓋率同步）</td></tr>
+<tr><td>W3</td><td>M init 改善</td><td>I-08</td><td>cli.py、policy/init.py、pipeline.py（run_init）</td><td>F（共用 M1）</td></tr>
+<tr><td>W3</td><td>N 發佈要件</td><td>I-10</td><td>pyproject.toml、README.md、LICENSE、.github/workflows/、action/</td><td>D7</td></tr>
+<tr><td>W3</td><td>O fail_on 警告與確認者</td><td>I-11、I-12</td><td>cli.py、contracts/pipeline.py、action/</td><td>D5、D8</td></tr>
+<tr><td>W3</td><td>P lab 工具</td><td>I-16</td><td>lab/_shared</td><td>—</td></tr>
+<tr><td>W3</td><td>Q 報告語言與修補 SQL 噪音</td><td>I-17</td><td>report/html.py、report/fix_sql.py</td><td>D</td></tr>
+</table></div>
+<p>I-18 不需要 ticket（人類修訂 SPEC）。並行性：W1 的 A、B、C、E 互不依賴，可同時派工；W2 的 G→H→I→J 是一條鏈，其他可並行。</p>
+
+<h2 id="s8">8. 驗收與回歸</h2>
+<div class="box ok">
+<p><strong>不得退步的基準</strong>（每批合併後都要重跑）：</p>
+<ul>
+<li>benchmark 主表（dev＋ground-truth policy）維持 recall 32/32、precision 32/32、FPR 0/72、coverage 109/109；audit 16 情境 0 次寫入。</li>
+<li>Rival 的 conformance（中立協定）dev／audit 結果不退步。</li>
+<li>PM 已驗證為良好的路徑：授權閘門、S4、audit 寫入閘門、設定檔嚴格驗證的既有測試全數通過。</li>
+<li>USAGE 的 doctest（<code>make acceptance</code>）全數通過；doctest 預期輸出會因 I-01／I-03／I-09 改變，必須同步更新並在驗證清單列出差異。</li>
+</ul>
+</div>
+<p><strong>MS8 驗證清單的結案表：</strong>PM 的每一項（I-01～I-18，含 I-06a／b）一列，附重現指令（PM 原始指令）與修正後的實際輸出。這也是 GI-08 流程漏洞的修正：沒有結案列的項目不得核准。</p>
+
+<h2 id="s9">9. 最壞影響與回滾總表（Product 模式）</h2>
+<div class="wrap"><table>
+<tr><th>變更</th><th>會壞什麼</th><th>資料遺失風險</th><th>回滾</th></tr>
+<tr><td>exit 6、require-profile、ci 門檻 medium</td><td>既有 CI 由綠轉紅（預期行為）</td><td>無</td><td>設定 <code>fail_on.incomplete: false</code>、Action <code>require-profile: "false"</code>、<code>fail_on.severity: high</code></td></tr>
+<tr><td>Coverage 欄位、報告文字</td><td>以嚴格 schema 驗證 JSON 的下游</td><td>無</td><td>revert 該 ticket</td></tr>
+<tr><td>ci 跑 M1</td><td>ci 多一段網路請求與時間</td><td>無（只有 GET）</td><td>模組表移除 M1</td></tr>
+<tr><td>INSERT 帶 canary</td><td>文字欄有限制的表覆蓋下降（inconclusive）</td><td>無</td><td>revert</td></tr>
+<tr><td><strong>lab 代清（唯一新增的 DB 寫入）</strong></td><td>程式錯誤時可能刪到非本次建立的列</td><td><strong>有，限 localhost</strong>：交易內比對刪除列數，不符即 ROLLBACK</td><td>不設 <code>cleanup_db_url_env</code> 即停用</td></tr>
+<tr><td>id 去重</td><td>合併錯誤時可能藏掉問題（同 id 必為同格同規則，風險低）</td><td>無</td><td>revert</td></tr>
+<tr><td>發佈（PyPI、SHA 固定）</td><td>已發佈的版本無法撤回，只能 yank</td><td>無</td><td>先只發 git tag，PyPI 延後</td></tr>
+</table></div>
+
+<h2 id="s10">10. 附錄：對應表與證據索引</h2>
+<div class="wrap"><table>
+<tr><th>PM</th><th>GI</th><th>證據（file:line／實測）</th></tr>
+<tr><td>I-01</td><td>GI-02</td><td><code>report/exit_code.py:15-24</code>；PM 重現（blind §2.4）</td></tr>
+<tr><td>I-02</td><td>GI-03</td><td><code>pipeline.py:48-54</code>；ADR-010、ADR-014 #4、ADR-051 #7</td></tr>
+<tr><td>I-03</td><td>GI-08</td><td><code>traceability.md:56</code>；<code>grep -rn -i -E 'coverage|不代表安全' rlsentry/report</code> 無結果</td></tr>
+<tr><td>I-04</td><td>GI-05</td><td><code>bench/run.py:30-44</code>；PM 實測 27/32</td></tr>
+<tr><td>I-05</td><td>GI-06</td><td><code>contracts/pipeline.py:40-44</code>；SPEC §2</td></tr>
+<tr><td>I-06a</td><td>GI-09</td><td><code>probe/write.py:62-64、137-138</code>；architect 實測 L09：+13 列，3 列 <code>body IS NULL</code></td></tr>
+<tr><td>I-06b</td><td>GI-10</td><td><code>probe/cleanup.py</code> 無 DB 路徑；<code>pipeline.py:99-100、172-177</code>；<code>exit_code.py:19-23</code></td></tr>
+<tr><td>I-07</td><td>GI-11</td><td><code>contracts/models.py:185-191</code>；<code>probe/diff.py:55</code>；L09 實測 id ×2</td></tr>
+<tr><td>I-08</td><td>GI-13</td><td><code>cli.py:64</code>；<code>policy/init.py:21-23</code>；blind §2.1</td></tr>
+<tr><td>I-09</td><td>GI-07</td><td><code>rules/severity.py:25-30</code>；SPEC §5 M5</td></tr>
+<tr><td>I-10</td><td>GI-12</td><td><code>pyproject.toml:7</code>；<code>action/action.yml:22、43</code></td></tr>
+<tr><td>I-11</td><td>GI-04</td><td><code>exit_code.py:15-16</code>；ADR-044 #4</td></tr>
+<tr><td>I-12</td><td>GI-14</td><td><code>contracts/pipeline.py:52</code></td></tr>
+<tr><td>I-13</td><td>—</td><td><code>cli.py</code> 的 <code>_summary</code> 只印證據等級計數</td></tr>
+<tr><td>I-14</td><td>GI-15</td><td>ADR-014 #2；<code>USAGE.md:84</code></td></tr>
+<tr><td>I-15</td><td>—</td><td>ADR-029 補充（T-139）：RPC 寫入格為 NOT_TESTED</td></tr>
+<tr><td>I-16</td><td>—</td><td>ADR-051 補記 #4；blind §2.1 #9</td></tr>
+<tr><td>I-17</td><td>—</td><td>blind F12</td></tr>
+<tr><td>I-18</td><td>GI-01</td><td><code>docs/SPEC.md:140、441</code>；ADR-019</td></tr>
+</table></div>
+<p class="meta">審核條件註記（合併全域清單時一併列出）：Auditor-PM 的 A0 期間 <code>CLAUDE.md</code> 已在 context 中；Stop hook 曾連續 9 次阻止它結束回合，使它無法在 A3 等待回信。結論已由 architect 逐題查證，不受影響。</p>
+</main>
+</body>
+</html>
