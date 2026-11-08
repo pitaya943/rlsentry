@@ -289,7 +289,7 @@
     <tr><td>MS4</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>whitebox（splinter、pg_policies、correlate）、bench、OpenAPI 型別植入</td><td>第一次完整計分：recall 29/32、precision 29/29、FPR 0/72；probe-only 2 類</td></tr>
     <tr><td>MS5</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>recon/*（fetch、links、sourcemap、extract、classify、run）、labctl.serve_frontend、bench 接上 M1</td><td>從網址出發找到 Supabase URL 與 key；service_role → Critical、anon 不報；recall 30/32</td></tr>
     <tr><td>MS6</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>pipeline.run_scan、safety/endpoint（S4）、report/*（JSON、HTML、SARIF、修補 SQL、exit code）、CLI、GitHub Action、L03 提權與 dev／ci 讀取植入</td><td>一個指令跑完全部；recall 32/32、precision 32/32、FPR 0/72；50 張表 50.8 s（達標）</td></tr>
-    <tr><td>MS7</td><td><i class="dot" style="background:var(--todo)"></i>等待審查</td><td>整合與交付：USAGE.md（dev／ci／audit／demo／init／Python API 共 6 個 doctest）、lab 命令列入口、MS6 核准意見第 1 點（改標保留較高嚴重度）、ADR-047 三項修正</td><td>recall 32/32、precision 32/32、FPR 0/72、coverage 109/109；50 張表 50.8 s；6 個 doctest 在 lab 實跑</td></tr>
+    <tr><td>MS7</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>整合與交付：USAGE.md（dev／ci／audit／demo／init／Python API 共 6 個 doctest）、lab 命令列入口、MS6 核准意見第 1 點（改標保留較高嚴重度）、ADR-047 三項修正</td><td>recall 32/32、precision 32/32、FPR 0/72、coverage 109/109；50 張表 50.8 s；6 個 doctest 在 lab 實跑</td></tr>
   </table>
 </section>
 
