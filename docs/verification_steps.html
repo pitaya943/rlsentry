@@ -125,15 +125,17 @@ git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'
 
 <div class="step">
 <h3>步驟 4.5　Codespaces 準備 <span class="tag t-cs">Codespaces</span></h3>
-<p>以下指令與 <code>.github/workflows/verify-milestone.yml</code>（Actions 用的、你控制的安裝步驟）一致，所以 Codespaces 與 Actions 裝的是同一套。每份清單第 3 段開頭的「Codespaces 準備」只會補充該 milestone 的特例，其餘照這裡做。</p>
+<p>以下指令除了 Supabase CLI 的安裝方式（第 3 點，固定 v3.0.0）之外，與 <code>.github/workflows/verify-milestone.yml</code>（Actions 用的、你控制的安裝步驟）一致。每份清單第 3 段開頭的「Codespaces 準備」只會補充該 milestone 的特例，其餘照這裡做。</p>
 <ol>
   <li>GitHub repo → Code → Codespaces → 在 <code>claude/busy-darwin-asvox3</code> 建立一個新的 Codespace（它本身就是一個含 Docker 的 Linux 容器）。</li>
   <li><b>安裝 Python 專案與開發相依套件</b>（含 pytest、ruff、mypy、httpx 等；定義在 <code>pyproject.toml</code> 的 <code>[dev]</code>）：
 <pre>cd /workspaces/rlsentry          # Codespace 內的 repo 路徑
 pip install -e ".[dev]"</pre></li>
-  <li><b>安裝 Supabase CLI</b>（與 workflow 同一行；lab 以它啟動本機 Supabase）：
-<pre>curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | sudo tar -xz -C /usr/local/bin supabase && supabase --version</pre>
-    需要與 CI 完全相同的版本時，把 <code>latest/download</code> 換成 <code>download/v&lt;版本&gt;</code>（版本以 Actions log 的 <code>supabase --version</code> 為準）。</li>
+  <li><b>安裝 Supabase CLI</b>（固定版本 v3.0.0，與 lab 實測相同；lab 以它啟動本機 Supabase；MS7 核准意見第 3 點）。先下載到檔案（Codespace 內建已登入的 <code>gh</code>）：
+<pre>gh release download v3.0.0 -R supabase/cli -p "supabase_linux_amd64.tar.gz" -D /tmp --clobber</pre>
+    再解壓並確認版本（預期印出 <code>3.0.0</code>）：
+<pre>sudo tar -xzf /tmp/supabase_linux_amd64.tar.gz -C /usr/local/bin supabase &amp;&amp; supabase --version</pre>
+    不再用 <code>latest</code> 直接 pipe 給 tar：GitHub 回 504 時那種寫法只會留下難懂的 gzip 錯誤，而且 <code>latest</code> 之後可能不是 3.0.0。第一步若回 504，是 GitHub 的檔案伺服器暫時故障，等幾分鐘重跑即可。<code>uname -m</code> 為 <code>aarch64</code> 時把兩處 <code>amd64</code> 換成 <code>arm64</code>。注意：<code>.github/workflows/verify-milestone.yml</code> 仍以 <code>latest</code> 安裝（本次只依核准意見改這份文件）；Actions 的版本以其 log 的 <code>supabase --version</code> 為準。</li>
   <li><b>確認 Docker 可用</b>（Codespaces 通常已內建；若 <code>docker info</code> 失敗，依 CLAUDE.md 啟動）：
 <pre>docker info &gt;/dev/null 2>&amp;1 || (sudo dockerd &gt;/tmp/dockerd.log 2>&amp;1 &amp;); sleep 5; docker info &gt;/dev/null 2>&amp;1 &amp;&amp; echo DOCKER_OK</pre></li>
   <li><b>啟動本機 Supabase lab</b>（第一次會拉映像，約數分鐘；需要 Docker 的測試都靠它）：
