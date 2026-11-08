@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>RLSentry 上線前 PM 審核報告</title>
+<style>
+body{font-family:system-ui,"Noto Sans TC",sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;line-height:1.6;color:#222}
+h1{border-bottom:3px solid #333}h2{border-bottom:1px solid #aaa;margin-top:2em}
+table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:.9em}th,td{border:1px solid #bbb;padding:.35em .5em;vertical-align:top;text-align:left}th{background:#eee}
+code{background:#f4f4f4;font-size:.88em}.p0{background:#fdd}.p1{background:#ffe9c4}.p2{background:#eef}.ok{background:#e6f6e6}
+.box{border-left:4px solid #888;padding:.4em .9em;background:#fafafa;margin:1em 0}
+</style></head><body>
+<h1>RLSentry 上線前 PM 審核報告</h1>
+<p>審核者：Auditor-PM · 2026-11-08 · 分支 <code>claude/busy-darwin-asvox3</code> · 盲測證據 commit <code>67c5cca</code>（<code>review/blind.html</code>）· 問題信 <code>c29ca17</code>。所有實測只對本機 lab（127.0.0.1）。</p>
+
+<div class="box"><b>結論：目前不建議對外上線（No-Go），但距離可上線不遠。</b>核心引擎（授權閘門、三態判定、讀回驗證、遮罩）設計嚴謹、測試扎實；阻擋上線的是 <b>CI 情境的失敗開放（fail-open）</b>與<b>對外指標的呈現方式</b>，兩者修正成本都低（I-01～I-04，估計 1–2 個 ticket 週期）。另需補齊發佈要件（I-10）才能給外部使用者。</div>
+
+<h2>1. What／Why／How（審核後確認版）</h2>
+<table><tr><th></th><th>內容</th><th>證據</th></tr>
+<tr><td>What</td><td>Supabase 授權的動態驗證 CLI：以 anon、user_a、user_b 三種身分對每張表／view／RPC 實際發出請求，與使用者宣告的 expected policy 差分，輸出有證據等級與嚴重度的 finding、遮罩 curl、修補 SQL；JSON／HTML／SARIF；三種 profile（dev／ci／audit）；GitHub Action；Python API；16 情境 lab benchmark。</td><td>SPEC §1、§3；<code>rlsentry/cli.py</code>；<code>action/action.yml</code></td></tr>
+<tr><td>Why</td><td>Supabase 前端以公開 anon key 直連 PostgREST，RLS 是唯一防線；既有工具（splinter／Advisor）只看設定、且需 DB 權限。RLSentry 以「已知擁有者的列」證明「實際看得到」，並在證據不足時誠實回報 inconclusive。</td><td>SPEC §1 Why；BENCHMARK_REPORT §4（L02、L04 為 probe-only）</td></tr>
+<tr><td>How</td><td>授權閘門 → M1 bundle 偵察（dev／audit）→ S4 端點確認 → M2 OpenAPI → 登入、dev／ci 植入 canary → M3 存取矩陣（讀：已知主鍵單一 GET；寫：canary＋讀回）→ L03 提權 → 清理 → M4 splinter 交叉比對（選配）→ M5 報告與 exit code。所有請求經 <code>safety/</code> 單一出口。</td><td>ADR-042 #1；<code>safety/mode.py</code></td></tr>
+</table>
+
+<h2>2. 盲測推論與真實設計的落差</h2>
+<table><tr><th>盲測推論／摩擦</th><th>真實設計</th><th>判讀</th></tr>
+<tr><td>profile 預設 audit、CLI 只能收緊</td><td>正確，ADR-010、ADR-014 #4；USAGE §2、§6 有寫</td><td class="p1">設計正確但只靠文件防呆；CLI 不警告（I-02）</td></tr>
+<tr><td>fail_on 只在 ci 生效</td><td>正確，ADR-044 #4、USAGE §2 表</td><td class="p2">文件有寫，執行期不警告（I-11）</td></tr>
+<tr><td>設定檔欄位只能靠錯誤訊息猜</td><td>USAGE §2 有完整欄位表，<code>docs/examples/</code> 有三份範例</td><td class="p1">文件存在但不可發現：CLI help、init 草稿、錯誤訊息都不指向它（I-08）</td></tr>
+<tr><td>L07 RPC 只得 low／inconclusive</td><td>benchmark 中為 confirmed，因 ground-truth policy 提供 RPC 的 <code>primary_key: [id]</code></td><td class="p0">使用者走 init 草稿得不到同樣結果（I-04）</td></tr>
+<tr><td>L12 找不到 diary_entries</td><td>需 M1 bundle 推測或 policy 列出；ci 不跑 M1、init 草稿為空</td><td class="p1">ci 路徑必漏（I-04、I-05）</td></tr>
+<tr><td>L11 Storage 無輸出</td><td>P2 刻意不做（SPEC §8；USAGE §8）</td><td class="p0">刻意可接受，但報告沒有「未涵蓋」聲明 → FR-05 缺漏（I-03）</td></tr>
+<tr><td>L04 跨租戶讀取 ci exit 0</td><td>SPEC §5：跨租戶讀取 = Medium，fail_on 預設 ≥ high</td><td class="p1">符合 SPEC，但展示情境在 CI 不擋（I-09）</td></tr>
+<tr><td>F14：stdout 關閉時報告不寫出</td><td>錯誤推論：dev 預設只寫 HTML</td><td class="ok">撤回</td></tr>
+<tr><td>lab env 不給 email</td><td>email 在 <code>docs/examples/*.yaml</code></td><td class="p2">小摩擦（I-16）</td></tr>
+</table>
+
+<h2>3. PM 審核（每項附證據）</h2>
+<h3>3.1 產品定位與目標使用者</h3>
+<p>定位清楚、差異化強（「Advisor 告訴你設定長什麼樣，RLSentry 證明攻擊者實際能存取什麼」）。三個 persona 中，<b>團隊 CI</b> 是最大的潛在使用量，也是目前最弱的一環（§3.4）。獨立開發者路徑的主要障礙是首次設定（init 草稿不完整，I-08）。</p>
+<h3>3.2 需求追溯（SPEC ↔ 實作 ↔ 測試）</h3>
+<table><tr><th>需求</th><th>狀態</th><th>證據</th></tr>
+<tr class="p0"><td>FR-05 覆蓋率＋「未發現不代表安全」</td><td>未實作</td><td>traceability.md:56「→ MS6」後無結案；L11 報告 <code>grep -c 不代表安全</code> = 0；<code>grep coverage rlsentry/report</code> 無結果</td></tr>
+<tr class="p1"><td>SPEC §2「PR 引入新可存取表時 CI 失敗」</td><td>部分：掃描失敗時 exit 0</td><td>blind.html §2.4</td></tr>
+<tr class="p1"><td>SPEC §5 M3「lab 中有 DB 連線時代為清理」</td><td>未見實作</td><td>L09 提供 db_url_env 仍殘留 13 列／次；<code>probe/cleanup.py</code> 無 DB 路徑</td></tr>
+<tr class="p2"><td>SPEC §6 Finding.id 跨次穩定且可分辨</td><td>有重複 id</td><td>L09：d49f4406f71fed8f ×2</td></tr>
+<tr class="ok"><td>NFR-01／02／03、FR-01～04、06～13、15、16</td><td>符合</td><td>traceability.md；本審核實測</td></tr>
+<tr class="ok"><td>NFR-05 50 表 &lt; 60 s</td><td>50.8 s（餘裕 15%）</td><td>BENCHMARK_REPORT §5；受限速器決定，表數線性成長</td></tr>
+</table>
+<h3>3.3 品質：測試是否真的能抓錯、指標是否誠實</h3>
+<ul>
+<li><b>單元測試強</b>：985 passed（15 s）。我在暫存複本做 6 個變異（exit code 門檻 off-by-one、CLI profile 永遠勝出、遮罩多洩 4 字元、audit 可寫、CLEANUP exit 關閉、敏感欄位不升級），<b>全部被抓到</b>。</li>
+<li><b>Benchmark 誠實但呈現偏樂觀</b>：報告明寫原始數量與「不推論到所有專案」，值得肯定。但指標只在 dev＋手寫 ground-truth policy 下量測（<code>bench/run.py:30-44</code>）。我以使用者真實路徑（init 草稿＋ci＋DB URL）重跑 16 情境：<b>recall 27/32 = 84%</b>（低於 NFR-06 的 95%），漏 L07-V1..V3、L08-V1、L12-V1；<b>0 個 confirmed 誤報</b>（C01–C04 乾淨）。</li>
+<li><b>過度貼合 lab 的跡象</b>：每情境只有一種漏洞、表名與欄位都是 <code>owner_id</code> 慣例；L07 依賴 policy 提示 RPC 主鍵。精確度在真實 schema（複合主鍵、多租戶 <code>org_id</code>）上未經驗證。</li>
+</ul>
+<h3>3.4 CI、GitHub Action 與維運</h3>
+<table><tr><th>問題</th><th>證據</th></tr>
+<tr class="p0"><td>ci 下 Supabase 不通／登入全失敗／0 target → exit 0</td><td><code>report/exit_code.py:15-25</code> 只看 findings；blind.html §2.4</td></tr>
+<tr class="p0"><td>Action 預設輸入 <code>profile: ci</code>，但設定檔省略 profile 時實際為 audit → 永不失敗，且不警告</td><td><code>action/action.yml</code>；<code>pipeline.py:48-54</code>；USAGE §6 僅文字提醒</td></tr>
+<tr class="p1"><td>ci 不跑 M1 → service_role 外洩在 CI 不可見</td><td>L08 ci：0 findings；SPEC §2 表</td></tr>
+<tr class="p1"><td>preview DB 每次掃描殘留資料，報告不列主鍵；3 列無 canary 標記無法追蹤；有 ≥high 時 exit 4 被 exit 1 遮蓋</td><td>L09 實測 N=2→15；CLEANUP_FAILED JSON 無 probes／repro</td></tr>
+<tr class="p1"><td>無產品 CI（push／PR 時的測試、ruff、mypy）；Action 未自我測試；第三方 action 以 tag 固定</td><td><code>.github/workflows/</code> 只有手動 verify-milestone</td></tr>
+</table>
+<h3>3.5 安全、法律與營運風險</h3>
+<ul>
+<li class="ok">授權閘門、S4 端點確認（惡意 bundle 無法把密碼導去他處）、寫入閘門單一出口、遮罩：實測與程式審查皆良好（<code>safety/mode.py</code>、ADR-043）。</li>
+<li>audit 的密碼登入會讓 GoTrue 寫入 <code>auth.*</code>（traceability.md:12）；對外宣稱「audit 絕不寫入」需精確化為「不經 PostgREST 寫入資料表」（I-14）。</li>
+<li><code>confirmed_by</code> 在 CI／容器多為 <code>unknown</code>（<code>pipeline.py:62-67</code>），作為授權紀錄偏弱（I-12）。</li>
+<li>L03 提權會改測試帳號 metadata，中斷時可能殘留 admin（ADR-042 後果）；只應用於專用測試帳號——USAGE 有寫。</li>
+<li>報告 curl 含主鍵值；以 email 為主鍵的表會出現個資（USAGE §8 已揭露）。</li>
+</ul>
+<h3>3.6 失敗模式與錯誤訊息</h3>
+<p>設定類錯誤一流（YAML 行列號、欄位路徑、未知欄位、--format 錯誤、CLI 與設定衝突均 exit 2／3）。執行期降級（登入失敗、env 缺失、401）只寫在 matrix 的 reason，終端摘要不顯示（I-13）。<code>init</code> 錯誤訊息提「pass a TARGET」但 init 無此參數（I-08）。</p>
+<h3>3.7 文件</h3>
+<p>USAGE.md 精簡、doctest 可執行、限制揭露完整。缺：產品 README（只有 README_HARNESS.md）、LICENSE、CHANGELOG、SECURITY.md；CLI help 未指向 USAGE；報告欄位英文、標題中文混雜。</p>
+<h3>3.8 效能與成本</h3>
+<p>audit 無 M4：1–2.4 s／情境；ci＋M4：5–18 s；50 表 audit 50.8 s。時間由 rps 5 與每表 5 個請求決定（ADR-040），表數或角色增加時線性成長；100 表以上的專案會超過 60 s 目標——建議文件化 <code>rate_limit_rps</code> 調整指引。依賴少（6 個），無付費服務。</p>
+<h3>3.9 上線準備度（給外部使用者還缺什麼）</h3>
+<ol><li>I-01、I-02、I-03 修正（CI 可信）；</li><li>I-04 指標重新呈現；</li><li>I-10 發佈要件（LICENSE、README、版本、PyPI 或固定 tag、產品 CI）；</li><li>I-06 殘留資料可清理；</li><li>I-08 init 產出可直接使用的完整設定。</li></ol>
+
+<h2>4. 排序後的優化清單</h2>
+<table><tr><th>#</th><th>優先</th><th>項目</th><th>影響</th><th>成本</th><th>風險（不修）</th><th>證據</th><th>建議驗收</th></tr>
+<tr class="p0"><td>I-01</td><td>P0</td><td>ci fail-open（Supabase 不通／登入全失敗／0 target → exit 0）</td><td>CI 失去意義</td><td>S</td><td>高：一個過期 secret 就讓授權回歸永遠綠燈</td><td>exit_code.py:15-25；blind §2.4</td><td>三種情況各一個 e2e，exit = 新 code（例 5）</td></tr>
+<tr class="p0"><td>I-02</td><td>P0</td><td><code>--profile ci</code> 被設定檔預設 audit 靜默覆蓋</td><td>Action 最常見配置永不失敗</td><td>S</td><td>高</td><td>pipeline.py:48-54；policy.py:110</td><td>不一致時印警告；Action 在實際 profile ≠ 輸入時失敗</td></tr>
+<tr class="p0"><td>I-03</td><td>P0</td><td>FR-05 覆蓋率與「未發現不代表安全」聲明</td><td>0 finding 被誤讀為安全</td><td>S</td><td>中高：L11 型問題完全沉默</td><td>traceability.md:56；L11 報告</td><td>報告含 coverage 區塊與未涵蓋範圍（Storage、非 OpenAPI 表）</td></tr>
+<tr class="p0"><td>I-04</td><td>P0（文件）</td><td>Benchmark 另列「init 草稿＋ci」與「audit」recall</td><td>對外誠信</td><td>S</td><td>中：外界以 100% 期待使用</td><td>bench/run.py:30-44；本審核 27/32</td><td>BENCHMARK_REPORT 首段加註＋新欄位</td></tr>
+<tr class="p1"><td>I-05</td><td>P1</td><td>ci 有可達 target 時跑唯讀 M1</td><td>Critical 規則進 CI</td><td>S</td><td>中</td><td>L08 ci</td><td>L08 ci exit 1</td></tr>
+<tr class="p1"><td>I-06</td><td>P1</td><td>CLEANUP_FAILED 列殘留主鍵與 DELETE 範本；所有植入列帶 canary；exit 4 不被遮蓋（或 note）</td><td>preview DB 衛生</td><td>M</td><td>中</td><td>L09 +13 列／次</td><td>L09 報告含 pk；殘留列 100% 帶 canary</td></tr>
+<tr class="p1"><td>I-07</td><td>P1</td><td>finding id 去重；SECURITY_DEFINER role=None／anon 合併</td><td>SARIF 指紋正確</td><td>S</td><td>低中</td><td>L09、L07 JSON</td><td>報告 id 唯一性斷言</td></tr>
+<tr class="p1"><td>I-08</td><td>P1</td><td>init：可接 TARGET、可從 bundle 取 key、草稿含 authorized／supabase_url／test_users／profile／fail_on 範例、RPC 提示 primary_key</td><td>首次上手</td><td>M</td><td>中：使用者放棄</td><td>blind §2.1</td><td>新使用者 3 個指令內完成第一次有效掃描</td></tr>
+<tr class="p1"><td>I-09</td><td>P1</td><td>CROSS_TENANT_READ 敏感欄位升級或預設 fail_on 改 medium（需 SPEC 決策）</td><td>主打賣點在 CI 擋得住</td><td>S</td><td>中</td><td>rules.py:41；L04 ci exit 0</td><td>ADR＋L04 ci exit 1</td></tr>
+<tr class="p1"><td>I-10</td><td>P1</td><td>發佈要件：LICENSE、README、版本號、<code>--version</code>、PyPI／tag、產品 CI、Action SHA pin</td><td>可被採用</td><td>M</td><td>高（法律上無授權條款即不可用）</td><td>pyproject.toml；.github/</td><td>發佈 checklist</td></tr>
+<tr class="p2"><td>I-11</td><td>P2</td><td>fail_on 在 audit／dev 無效時警告</td><td>排程稽核</td><td>S</td><td>低</td><td>exit_code.py:15</td><td>警告訊息測試</td></tr>
+<tr class="p2"><td>I-12</td><td>P2</td><td>confirmed_by 加 GITHUB_ACTOR／repo</td><td>授權紀錄</td><td>S</td><td>低</td><td>pipeline.py:62-67</td><td>Action 報告非 unknown</td></tr>
+<tr class="p2"><td>I-13</td><td>P2</td><td>終端摘要列 not_tested／inconclusive 原因與數量</td><td>誤讀</td><td>S</td><td>低</td><td>blind §2.4</td><td>登入失敗時摘要可見</td></tr>
+<tr class="p2"><td>I-14</td><td>P2</td><td>對外說法精確化：audit 會因登入寫入 auth.*</td><td>法律／信任</td><td>S</td><td>低中</td><td>traceability.md:12</td><td>USAGE 一句說明</td></tr>
+<tr class="p2"><td>I-15</td><td>P2</td><td>RPC 不產生 insert／update／delete 格</td><td>噪音</td><td>S</td><td>低</td><td>L07 audit matrix</td><td>RPC 只有 select</td></tr>
+<tr class="p2"><td>I-16</td><td>P3</td><td>lab env 印 email；sql 可印結果</td><td>開發體驗</td><td>S</td><td>低</td><td>blind §2.1 #9</td><td>—</td></tr>
+<tr class="p2"><td>I-17</td><td>P3</td><td>報告語言一致；說明遮罩 curl 需代入 key</td><td>可讀性</td><td>S</td><td>低</td><td>HTML 報告</td><td>—</td></tr>
+</table>
+
+<h2>5. PM↔R&amp;D 問答紀錄</h2>
+<div class="box">第一輪問題 <code>review/outbox/001-pm-questions.md</code>（14 題）於 commit <code>c29ca17</code> 寄出。<b>等待 11 次 Stop hook 循環後，<code>review/inbox/001-answer.md</code> 仍未出現</b>（遠端分支只有我的 commit 與 harness log），因此沒有第二輪。下表的「我的評估」是根據程式與 ADR 的暫定判斷；architect 回覆後若有不同，以回覆修正 issues.md。</div>
+<table><tr><th>題</th><th>問題（摘要）</th><th>R&amp;D 回答</th><th>我的評估（依證據）</th></tr>
+<tr><td>Q1</td><td>ci 掃描失敗 exit 0 是設計還是缺陷</td><td>未回覆</td><td>無 ADR 討論此情況 → 判為遺漏，I-01 P0</td></tr>
+<tr><td>Q2</td><td>--profile ci 被靜默改 audit</td><td>未回覆</td><td>ADR-051 #7 已知並以文件處理；仍列 P0，因 Action 預設輸入就是 ci</td></tr>
+<tr><td>Q3</td><td>fail_on 在 audit／dev 無效</td><td>未回覆</td><td>ADR-044 #4 刻意；只建議加警告（P2）</td></tr>
+<tr><td>Q4</td><td>Benchmark 只用 ground-truth policy</td><td>未回覆</td><td>BENCHMARK_REPORT 有揭露 dev profile，但未揭露 policy 來源影響；I-04</td></tr>
+<tr><td>Q5</td><td>ci 不跑 M1</td><td>未回覆</td><td>符合 SPEC §2；屬 SPEC 決策，建議改（I-05）</td></tr>
+<tr><td>Q6</td><td>CROSS_TENANT_READ 不升級</td><td>未回覆</td><td>rules.py:41 未設 escalates_to，與 SPEC 表一致；屬產品決策（I-09）</td></tr>
+<tr><td>Q7</td><td>FR-05 聲明遺漏</td><td>未回覆</td><td>找不到實作 → 遺漏（I-03）</td></tr>
+<tr><td>Q8</td><td>L09 殘留與無標記列</td><td>未回覆</td><td>cleanup.py 無 DB 代清路徑；無標記列成因待查（UPDATE 路徑 write.py:156 會保留 canary，推測來自植入時文字欄非必填）</td></tr>
+<tr><td>Q9</td><td>重複 finding id</td><td>未回覆</td><td>未見已知限制記載 → 缺陷（I-07）</td></tr>
+<tr><td>Q10</td><td>發佈要件</td><td>未回覆</td><td>pyproject 0.0.0、無 LICENSE → 列 I-10</td></tr>
+<tr><td>Q11</td><td>init 可用性</td><td>未回覆</td><td>未見對應 ADR → I-08</td></tr>
+<tr><td>Q12</td><td>lab env／sql</td><td>未回覆</td><td>MS7-v1 §5 已列 env 印密碼；email 未列 → P3</td></tr>
+<tr><td>Q13</td><td>confirmed_by unknown</td><td>未回覆</td><td>CONFIRMER_ENV 不含 GITHUB_ACTOR → I-12</td></tr>
+<tr><td>Q14</td><td>audit 登入寫 auth.*</td><td>未回覆</td><td>traceability 已知、USAGE 未說明 → I-14</td></tr>
+</table>
+
+<h2>6. 方法與限制</h2>
+<ul><li>A0 盲測只用規定指令；以 <code>RAISE EXCEPTION</code> 經 <code>lab._shared sql</code> 讀出 lab 帳號與 schema（只在本機 lab）。</li>
+<li>變異測試在 repo 外的暫存複本進行，未修改任何產品檔。</li>
+<li>未執行 <code>make acceptance</code> 與 lab／e2e 測試套件（約 45 分鐘）；benchmark 數字引用自 BENCHMARK_REPORT，另以本審核的 16 情境 ci 重跑對照。</li>
+<li>因遠端分支被 harness 推入 log commit、且禁止 merge／rebase，review 檔以 <code>git commit-tree</code> 直接建立在遠端最新 commit 之上推送，只含 <code>review/</code> 變更。</li></ul>
+</body></html>
