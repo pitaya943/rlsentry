@@ -1552,3 +1552,4 @@
 {"ts": "2026-11-06T14:20:40", "kind": "acceptance_run", "scope": "final", "failed": []}
 {"ts": "2026-11-06T14:47:24", "kind": "acceptance_run", "scope": "MS7", "failed": []}
 {"ts": "2026-11-06T15:00:20", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS7"}
+{"ts": "2026-11-08T09:54:25", "kind": "stop_allowed", "reason": "awaiting_human", "milestone": "MS7"}
