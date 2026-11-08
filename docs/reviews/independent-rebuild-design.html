@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>獨立重建設計書</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1d1d1f;--muted:#5f6368;--line:#dcdcd8;--card:#ffffff;--accent:#2f5d8a;
+--red:#b3261e;--amber:#b26a00;--green:#3d6b2f;--code:#f1f1ee;--warn:#fff4e5;--ok:#eef6ec;--vio:#6b4fa3;--viobg:#f3eefb}
+@media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#e8e8e6;--muted:#a0a3a8;--line:#34353a;--card:#1e1f22;
+--accent:#8db7e0;--red:#f2867f;--amber:#f0b45a;--green:#9ccf8c;--code:#26272b;--warn:#3a2d17;--ok:#1f2e1c;--vio:#b9a3e8;--viobg:#2a2436}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:1060px;margin:0 auto;padding:24px 16px 72px}
+h1{font-size:1.65rem;margin:.2em 0}h2{font-size:1.28rem;margin:2.4em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--line)}
+h3{font-size:1.06rem;margin:1.5em 0 .4em}
+.meta{color:var(--muted);font-size:.9rem}
+code{background:var(--code);padding:.05em .35em;border-radius:4px;font-size:.88em}
+pre{background:var(--code);padding:10px 12px;border-radius:6px;overflow-x:auto;font-size:.84em;line-height:1.5}
+table{border-collapse:collapse;width:100%;margin:.6em 0;font-size:.89rem}
+th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+th{background:var(--code)}
+.wrap{overflow-x:auto}
+.box{border-left:4px solid var(--accent);background:var(--card);padding:10px 14px;margin:12px 0}
+.warn{border-left-color:var(--amber);background:var(--warn)}
+.ok{border-left-color:var(--green);background:var(--ok)}
+.vio{border-left-color:var(--vio);background:var(--viobg)}
+.y{color:var(--green);font-weight:600}.n{color:var(--red);font-weight:600}.p{color:var(--amber);font-weight:600}
+nav ol{columns:2;font-size:.92rem;margin:.3em 0}
+@media (max-width:640px){nav ol{columns:1}}
+svg text{font-family:inherit}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;margin:12px 0;overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>獨立重建設計書</h1>
+<p class="meta">對立式多 agent、全自動開發 RLSentry 的參考實作 · architect（Management session）· 2026-11-08 · 狀態：設計提案，尚未執行 · 依據：本 session 與人類的討論（決策紀錄見 §13）、Rival／Auditor-PM 實驗的觀察</p>
+
+<nav class="box"><strong>目錄</strong>
+<ol>
+<li><a href="#s0">摘要</a></li>
+<li><a href="#s1">為什麼要做：路徑依賴與過度 SDD</a></li>
+<li><a href="#s2">目標、非目標、成功判準</a></li>
+<li><a href="#s3">新規格的定義：四層、只寫結果</a></li>
+<li><a href="#s4">角色與對立架構</a></li>
+<li><a href="#s5">資訊隔離</a></li>
+<li><a href="#s6">開發流程（P0–P6）</a></li>
+<li><a href="#s7">TDD、SDD、BDD 各管什麼</a></li>
+<li><a href="#s8">誠信、安全與法律</a></li>
+<li><a href="#s9">收斂、爭議與停止條件</a></li>
+<li><a href="#s10">風險、限制與最壞影響</a></li>
+<li><a href="#s11">試點計畫與成本</a></li>
+<li><a href="#s12">與現有系統比較的方法</a></li>
+<li><a href="#s13">決策紀錄與待決事項</a></li>
+<li><a href="#s14">附錄：初始檔案與角色提示詞大綱</a></li>
+</ol></nav>
+
+<h2 id="s0">0. 摘要</h2>
+<div class="box">
+<p><strong>做什麼</strong>：開一個新的 repo，從「只寫問題與可觀察結果」的新規格出發，由彼此對立的多個 agent 全自動開發一個 RLSentry 的<strong>參考實作</strong>。人類只在開始（給問題與約束）與結束（讀報告）出現。</p>
+<p><strong>為什麼</strong>：現有系統經過約 50 個 ADR 的累積決策，早期一個不妥的決定會帶偏之後的選擇（路徑依賴）；規格本身規定了太多「做法」，其中幾項已被實測證明是錯的。參考實作讓這些被鎖住的選擇重新被看見。</p>
+<p><strong>不是什麼</strong>：不是嚴格的對照組（變因無法完全隔離），也不以「打敗現有系統」為目標。產出的價值在於<strong>設計差異的清單與證據</strong>。</p>
+<p><strong>關鍵設計</strong>：(1) 規格分四層，只固定約束、結果與最小介面；(2) 出題者與做題者、紅隊與 architect 互相對立，隔離靠 repo 權限而不是提示詞；(3) 所有主張由中立的 Judge 重跑驗證；(4) 先承諾後揭露的隱藏測試；(5) 每個關鍵設計決定至少兩個方案；(6) 先以小切片試點。</p>
+</div>
+
+<h2 id="s1">1. 為什麼要做：路徑依賴與過度 SDD</h2>
+<p>以下是本專案中可以指認的證據。它們說明了「從現有系統修正」為什麼可能不夠：</p>
+<div class="wrap"><table>
+<tr><th>現象</th><th>證據</th><th>對重建設計的啟示</th></tr>
+<tr><td>規格規定了做法，而做法是錯的</td><td>SPEC §8／NFR-01 規定以 <code>log_statement = mod</code> 驗證 0 次寫入；實測證明它記不到 PostgREST 的寫入（ADR-019，GI-01）</td><td>規格只寫「必須能獨立證明 audit 沒有寫入」，驗證方法由實作者提出、紅隊挑戰</td></tr>
+<tr><td>規格規定的方法被效能需求推翻</td><td>SPEC §5 M3 規定讀取用 <code>HEAD + count</code>；為了達成 NFR-05 改為只取主鍵的 GET（ADR-040）</td><td>規格寫效能目標與「不下載資料內容」的約束，不寫 HTTP 方法</td></tr>
+<tr><td>需求藏在別的需求裡而漏做</td><td>FR-05 的「未發現不代表安全」延到 MS6 後無人結案（GI-08）</td><td>每條需求都是獨立、可自動驗證的情境；沒有驗收情境的需求不得存在</td></tr>
+<tr><td>解法塑造了問題的提法</td><td>修正方案的 D1–D8 都是從現有系統的形狀推導（exit 6、<code>cleanup_db_url_env</code>…）</td><td>不把 spec-revision-proposal 當新規格；只把問題「現象」交給新團隊</td></tr>
+<tr><td>流程機制干擾判斷</td><td>Auditor-PM 被 Stop hook 連續阻擋 9 次，未等回覆即交付 A4</td><td>停止與等待規則要為每個角色分別設計</td></tr>
+<tr><td>安全機制使模組缺席</td><td>Rival 的寫入探測實作被安全分類器中斷（arena 004）</td><td>「被擋下」必須是一級事件：明列、計入報告、不得悄悄省略</td></tr>
+</table></div>
+<div class="box vio"><strong>核心假設</strong>：如果一個沒看過現有系統的團隊，只依問題與結果做出系統，那麼它與現有系統的差異，大部分反映的是「現有系統被早期決定鎖住的地方」或「規格寫不清楚的地方」。這兩種都是可優化的線索。這個假設的限制見 §10。</div>
+
+<h2 id="s2">2. 目標、非目標、成功判準</h2>
+<div class="wrap"><table>
+<tr><th>類別</th><th>內容</th></tr>
+<tr><td>目標</td><td>(1) 產出一個能通過同一套 conformance 協定與 lab 的參考實作；(2) 產出它的設計決策紀錄（每個關鍵決定含被否決的方案）；(3) 產出與現有系統的設計差異清單，每項附可重現證據。</td></tr>
+<tr><td>非目標</td><td>取代現有系統；在指標上勝出；證明某個 agent 架構優越；對外發佈。</td></tr>
+<tr><td>成功判準</td><td>(a) 全部 lab 情境跑完並附原始數量（包含失敗與未實作項）；(b) 隱藏測試已揭露並計分；(c) 紅隊報告與修正紀錄完整；(d) 最終比較報告至少列出 N 個設計差異，各自標為「現有系統可借鏡／參考實作較差／取捨不同」；(e) 整個過程沒有違反 §8 的任何硬規則。</td></tr>
+<tr><td>失敗但仍有價值</td><td>沒做完也有用：卡住的地方本身就是「規格不清楚」或「流程設計有缺陷」的證據，會寫入最終報告。</td></tr>
+</table></div>
+
+<h2 id="s3">3. 新規格的定義：四層、只寫結果</h2>
+<h3>3.1 四層結構</h3>
+<div class="wrap"><table>
+<tr><th>層</th><th>寫什麼</th><th>不寫什麼</th><th>誰能改</th></tr>
+<tr><td>L1 問題與威脅模型</td><td>使用者是誰、他們要回答什麼問題；攻擊者能做什麼（anon key、兩個帳號、自改 metadata）；<strong>工具本身也是攻擊目標</strong>（惡意 bundle、惡意 OpenAPI 名稱、惡意回應）</td><td>任何解法、模組名稱</td><td>Product（開始前凍結）</td></tr>
+<tr><td>L2 硬約束</td><td>法律與授權（未授權不得送出任何請求）；只能連線 localhost、PyPI、GitHub；不保存資料內容；唯讀模式不得對資料寫入；不使用找到的高權限 key；可識別的流量與限速</td><td>如何實作這些約束</td><td>只有人類</td></tr>
+<tr><td>L3 可觀察的結果</td><td>以「給定／當／則」寫的驗收情境（由 ground truth 產生，見 §7）；指標的定義與量測條件；失敗時的對外行為（例如「掃描未完成時 CI 不得通過」）</td><td>指標要用什麼技術達成</td><td>Product 提議、Judge 核可</td></tr>
+<tr><td>L4 固定介面</td><td>輸入：預期權限的設定檔格式（為了兩邊吃同一份輸入）。輸出：計分所需的最小報告欄位（finding 的 target／role／op／rule／evidence，格子的 outcome）</td><td>CLI 指令細節、報告其他欄位、檔案結構</td><td>只有人類（影響可比性）</td></tr>
+</table></div>
+
+<h3>3.2 把已知問題轉成「結果需求」</h3>
+<p>Auditor-PM 與交叉執行發現的問題，只以「現象與期望結果」的形式進入新規格，不帶現有系統的解法、檔名或編號：</p>
+<div class="wrap"><table>
+<tr><th>來源（不交給新團隊）</th><th>新規格中的寫法（交給新團隊）</th></tr>
+<tr><td>I-01／GI-02 ci fail-open、exit 6</td><td>「掃描未能完成必要的測試時，CI 模式不得以成功結束，且必須說明原因。」</td></tr>
+<tr><td>I-02／GI-03 profile 被靜默覆蓋</td><td>「使用者要求的執行模式與實際執行的模式不同時，必須讓使用者知道；要求 CI 模式卻無法以 CI 模式執行時，不得產生看似通過的結果。唯讀模式不得因任何旗標變成可寫入。」</td></tr>
+<tr><td>I-03／GI-08 覆蓋率聲明</td><td>「每份報告必須說明這次測了什麼、沒測什麼，以及『未發現不代表安全』。」</td></tr>
+<tr><td>I-06／GI-09、GI-10、GI-16 殘留</td><td>「寫入測試結束後，目標資料庫必須回到測試前的狀態；做不到時必須列出殘留物的位置與清除方法。」</td></tr>
+<tr><td>I-07／GI-11 重複 id</td><td>「同一份報告中，同一個問題只出現一次；問題的識別碼跨次掃描穩定。」</td></tr>
+<tr><td>I-09／GI-07 跨租戶讀取在 CI 不擋</td><td>（開放題，列為 P3 必須比較方案的決定）「已證實的跨租戶資料讀取，在 CI 中應如何處理？」</td></tr>
+<tr><td>GI-01 驗證方法錯誤</td><td>「唯讀模式沒有寫入，必須能以不依賴工具自身宣稱的方式獨立驗證。」</td></tr>
+<tr><td>A-01 not_tested 未定義</td><td>「每個測試格子的結果，必須能區分『判定安全』『判定不安全』『無法判定』『沒有測』，後兩者附原因。」</td></tr>
+<tr><td>A-06 工具自身的威脅</td><td>併入 L1 威脅模型。</td></tr>
+</table></div>
+
+<h3>3.3 清理規則：什麼可以交給新團隊</h3>
+<div class="wrap"><table>
+<tr><th>可以給</th><th>不可以給</th></tr>
+<tr><td>問題陳述、使用者故事（改寫為結果）、法律約束；lab 的 migration／seed／前端與 ground truth（作為可見的驗收情境）；Supabase、PostgREST、GoTrue 的公開文件；§3.2 右欄的結果需求</td><td>現有系統的程式碼、測試、合約、ADR、benchmark 報告、USAGE；現有 SPEC 中的做法描述（模組切法、HTTP 方法、驗證方法）；spec-revision-proposal、修正方案、global-issues 原文；任何 file:line 或 ADR／GI 編號</td></tr>
+</table></div>
+<div class="box warn"><strong>注意 kit 的污染</strong>：Rival 拿到的 <code>kit/REQUIREMENTS.md</code> 就是 SPEC §0–§9 原文，裡面有大量做法描述（例如 M1–M5、HEAD count、<code>log_statement</code>），expected.yaml 的註解也引用了 ADR 與合約檔名。重建用的材料必須重新清理，不能直接沿用 kit。</div>
+
+<h3>3.4 誰來寫新規格</h3>
+<ol>
+<li><strong>素材準備（architect，也就是本 session）</strong>：只做機械性的清理與匯集，產出「素材包」。不替新規格做任何取捨。architect 已深受現有系統影響，這是刻意限制的角色。</li>
+<li><strong>撰寫（全新的 Product agent）</strong>：只讀素材包，依四層結構寫規格。</li>
+<li><strong>挑戰（Spec critic agent）</strong>：專門找規格中的歧義、無法驗證的條文、偷偷規定做法的條文、與 L2 衝突之處。</li>
+<li><strong>核可（Judge）</strong>：依書面規則判定每條質疑；L2 與 L4 的任何變更都要停下來交人類。</li>
+</ol>
+
+<h2 id="s4">4. 角色與對立架構</h2>
+<div class="fig">
+<svg viewBox="0 0 900 360" width="100%" role="img" aria-label="角色與對立關係圖">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--muted)">
+<rect x="20" y="20" width="200" height="60" rx="8"/><rect x="350" y="20" width="200" height="60" rx="8"/><rect x="680" y="20" width="200" height="60" rx="8"/>
+<rect x="20" y="150" width="200" height="60" rx="8"/><rect x="350" y="150" width="200" height="60" rx="8" style="color:var(--accent)" stroke-width="2.4"/><rect x="680" y="150" width="200" height="60" rx="8"/>
+<rect x="185" y="280" width="200" height="60" rx="8"/><rect x="515" y="280" width="200" height="60" rx="8"/>
+</g>
+<g font-size="14" text-anchor="middle" fill="var(--fg)">
+<text x="120" y="47">Product</text><text x="120" y="67" font-size="12" fill="var(--muted)">規格 L1–L4</text>
+<text x="450" y="47">Spec critic</text><text x="450" y="67" font-size="12" fill="var(--muted)">攻擊規格</text>
+<text x="780" y="47">Examiner</text><text x="780" y="67" font-size="12" fill="var(--muted)">出題（隱藏測試）</text>
+<text x="120" y="177">Red team</text><text x="120" y="197" font-size="12" fill="var(--muted)">攻擊系統</text>
+<text x="450" y="177">Architect＋Implementers</text><text x="450" y="197" font-size="12" fill="var(--muted)">做題</text>
+<text x="780" y="177">Judge</text><text x="780" y="197" font-size="12" fill="var(--muted)">重跑、裁決、否決</text>
+<text x="285" y="307">Integrity monitor</text><text x="285" y="327" font-size="12" fill="var(--muted)">誠信與預算</text>
+<text x="615" y="307">Comparator</text><text x="615" y="327" font-size="12" fill="var(--muted)">最後才看現有系統</text>
+</g>
+<g stroke-width="1.6" fill="none">
+<line x1="348" y1="50" x2="222" y2="50" stroke="var(--red)" marker-end="url(#ar)" style="color:var(--red)"/>
+<line x1="780" y1="80" x2="560" y2="160" stroke="var(--red)" marker-end="url(#ar)" style="color:var(--red)"/>
+<line x1="220" y1="180" x2="348" y2="180" stroke="var(--red)" marker-end="url(#ar)" style="color:var(--red)"/>
+<line x1="680" y1="180" x2="552" y2="180" stroke="var(--accent)" marker-end="url(#ar)" style="color:var(--accent)"/>
+<line x1="120" y1="80" x2="380" y2="150" stroke="var(--muted)" marker-end="url(#ar)" style="color:var(--muted)"/>
+</g>
+<g font-size="11.5" fill="var(--muted)">
+<text x="232" y="42">質疑</text><text x="660" y="112">隱藏測試（承諾後揭露）</text><text x="236" y="172">攻擊</text><text x="566" y="172">重跑、否決</text><text x="200" y="125">規格</text>
+</g>
+</svg>
+<p class="meta">紅色箭頭＝對立（一方的工作是找另一方的錯）；藍色＝裁決；灰色＝交付。</p>
+</div>
+<div class="wrap"><table>
+<tr><th>角色</th><th>核心任務</th><th>對立對象</th><th>交付物</th><th>不得做的事</th></tr>
+<tr><td>Product</td><td>寫 L1–L4 規格與驗收情境</td><td>Spec critic</td><td>SPEC、驗收情境</td><td>規定做法；看實作</td></tr>
+<tr><td>Spec critic</td><td>找規格的歧義、不可驗證、偷渡做法</td><td>Product</td><td>質疑清單</td><td>改寫規格</td></tr>
+<tr><td>Examiner</td><td>寫隱藏測試與新 lab 情境（變形：不同命名、複合主鍵、組織層級多租戶、惡意 bundle）</td><td>Architect</td><td>隱藏測試（先交雜湊值）</td><td>看實作細節；在揭露前修改題目</td></tr>
+<tr><td>Architect＋Implementers</td><td>設計（每個關鍵決定至少兩案）、依 TDD 實作</td><td>Examiner、Red team</td><td>系統、ADR、測試</td><td>讀隱藏測試；改弱測試；自行宣告通過</td></tr>
+<tr><td>Red team</td><td>找漏報、誤報、安全違規、被改弱的測試；挑戰設計方案</td><td>Architect</td><td>攻擊報告，每項附重現方式</td><td>修改系統</td></tr>
+<tr><td>Judge</td><td>重跑每個主張；依書面規則裁決；有否決權</td><td>中立</td><td>裁決紀錄、關卡結論</td><td>寫程式、出題</td></tr>
+<tr><td>Integrity monitor</td><td>盯測試是否被改弱、skip、預算、紀錄完整性</td><td>中立</td><td>誠信報告</td><td>參與設計</td></tr>
+<tr><td>Comparator</td><td>最後階段才接觸現有系統，以 conformance 協定交叉執行並寫差異清單</td><td>中立</td><td>比較報告</td><td>把現有系統資訊傳回開發中的角色</td></tr>
+</table></div>
+<div class="box vio"><strong>降低相關性</strong>：所有角色都由同一模型家族扮演時，「對立」的雙方可能有相同的盲點，這是此架構的天花板。建議至少讓 Red team 與 Examiner 使用和 Architect 不同的模型（例如 Architect 用 Opus、Red team 用 Sonnet），並給不同的角色設定。最終報告必須寫明各角色使用的模型。</div>
+
+<h2 id="s5">5. 資訊隔離</h2>
+<p>隔離靠 <strong>repo 權限</strong>，不靠提示詞。每個角色是獨立的雲端 session，只掛載它被允許的 repo（與 Rival 的 arena 隔離方式相同）。</p>
+<div class="wrap"><table>
+<tr><th>repo／內容</th><th>Product</th><th>Critic</th><th>Examiner</th><th>Architect</th><th>Red team</th><th>Judge</th><th>Integrity</th><th>Comparator</th></tr>
+<tr><td><code>rb-spec</code>：素材包、SPEC、驗收情境</td><td class="y">寫</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td></tr>
+<tr><td><code>rb-system</code>：實作、ADR、可見測試</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="y">寫</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td></tr>
+<tr><td><code>rb-exam</code>：隱藏測試、新情境</td><td class="n">—</td><td class="n">—</td><td class="y">寫</td><td class="n">—</td><td class="n">—</td><td class="y">讀</td><td class="p">雜湊</td><td class="y">讀</td></tr>
+<tr><td><code>rb-redteam</code>：攻擊報告、攻擊用情境</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="p">只讀報告</td><td class="y">寫</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td></tr>
+<tr><td><code>rb-judge</code>：裁決、關卡、信箱</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">讀</td><td class="y">寫</td><td class="y">讀</td><td class="y">讀</td></tr>
+<tr><td>現有系統（rlsentry）</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="y">讀（P6 才加入）</td></tr>
+</table></div>
+<p>Architect 只讀得到紅隊的「報告」，看不到紅隊的工具與攻擊用情境；紅隊發現的問題變成可見測試時，由 Judge 轉寫成情境再放進 <code>rb-system</code>，避免 Architect 針對特定攻擊特製。</p>
+<p><strong>信箱協定</strong>：沿用本專案的 outbox／inbox 模式，但集中在 <code>rb-judge</code>：每封信有編號、寄件者、收件者；所有主張必須附可重現的指令與輸出（commit sha、測試名稱）；Judge 重跑後才算數。</p>
+
+<h2 id="s6">6. 開發流程（P0–P6）</h2>
+<div class="wrap"><table>
+<tr><th>階段</th><th>做什麼</th><th>關卡（Judge 判定）</th></tr>
+<tr><td>P0 準備（人類）</td><td>建立 5 個 repo 與權限；設定雲端環境的網路白名單；給 L1 問題陳述與 L2 約束；設定預算上限與模型分配</td><td>人類確認一次後離開</td></tr>
+<tr><td>P1 規格</td><td>architect（本 session）產出素材包 → Product 寫 SPEC → Critic 質疑 → 最多 3 輪</td><td>每條 L3 需求至少有一個可自動執行的驗收情境；沒有偷渡做法</td></tr>
+<tr><td>P2 出題</td><td>Examiner 寫隱藏測試與新情境，提交 <code>sha256</code> 到 <code>rb-judge</code>；可見驗收情境由 ground truth 自動產生</td><td>雜湊值已登記；隱藏情境經 Judge 在 lab 驗證成立（如同本 session 對 R4 的審查）</td></tr>
+<tr><td>P3 設計</td><td>Architect 對每個關鍵決定（清單見 §13）提出至少兩個方案，含取捨與失效條件；Red team 逐一攻擊</td><td>Judge 選定並寫 ADR，被否決的方案保留在 ADR 中</td></tr>
+<tr><td>P4 實作（每個切片重複）</td><td>TDD：紅（證據存檔）→ 綠 → 空系統與變異證據；Integrity 檢查；Red team 攻擊回合；問題轉成測試</td><td>Judge 重跑：紅燈在紅 commit 失敗、綠燈通過、變異被抓到、紅隊無未處理的高嚴重度問題</td></tr>
+<tr><td>P5 揭露</td><td>Examiner 公開隱藏測試，Judge 驗證雜湊相符後執行</td><td>結果照實計入，不得事後修改系統再重跑同一份隱藏測試（可修，但另計）</td></tr>
+<tr><td>P6 比較</td><td>Comparator 第一次接觸現有系統：以同一套 conformance 協定交叉執行，並閱讀兩邊的 ADR 寫設計差異清單</td><td>每項差異附可重現證據與分類（§12）</td></tr>
+</table></div>
+
+<h2 id="s7">7. TDD、SDD、BDD 各管什麼</h2>
+<div class="wrap"><table>
+<tr><th>方法</th><th>層級</th><th>誰寫</th><th>具體做法</th><th>避免</th></tr>
+<tr><td>SDD（規格驅動）</td><td>系統的「為什麼」與約束</td><td>Product</td><td>L1–L4，凍結後才能開始 P3</td><td>規格寫做法（本專案的過度 SDD）</td></tr>
+<tr><td>BDD（行為驅動）</td><td>可觀察結果</td><td>由 ground truth 自動產生，Examiner 補隱藏情境</td><td>每個 expected.yaml 案例轉成一個「給定（情境與身分）／當（以某 profile 掃描）／則（某格的結果與 finding）」；L3 的行為需求（例如 CI 不完整不得通過）各寫成情境</td><td>手寫第二份與 ground truth 重複的情境</td></tr>
+<tr><td>TDD（測試驅動）</td><td>模組與函式</td><td>Implementers</td><td>紅 → 綠 → 重構；紅燈證據存檔；空系統與變異作為防假證據</td><td>只為了覆蓋率而寫的測試</td></tr>
+</table></div>
+<p>三者的分工：BDD 情境是「驗收」，由出題方擁有；TDD 測試是「設計工具」，由做題方擁有。做題方不能修改 BDD 情境，只能透過 Judge 提出質疑。</p>
+
+<h2 id="s8">8. 誠信、安全與法律</h2>
+<div class="wrap"><table>
+<tr><th>規則</th><th>執行方式（不靠 agent 自律）</th></tr>
+<tr><td>只能連線 localhost、PyPI、GitHub</td><td>雲端環境的網路白名單強制執行；Red team 的「惡意 bundle 導向外部主機」攻擊只能指向 localhost 的假主機</td></tr>
+<tr><td>只掃描本機 lab</td><td>L2 約束＋紅隊專門測試「是否會對未授權主機送出請求」</td></tr>
+<tr><td>不得改弱測試、不得加 skip／xfail／忽略註解</td><td>Integrity monitor 每次合併前比對測試差異；BDD 與隱藏測試不在 Architect 可寫的 repo</td></tr>
+<tr><td>不保存真實資料</td><td>lab 只有合成資料；紅隊檢查輸出中是否出現 seed 內容（沿用 Rival 的測試做法）</td></tr>
+<tr><td>出題後不得改題</td><td>先承諾後揭露（雜湊）</td></tr>
+<tr><td>被安全機制擋下</td><td>當作一級事件：停止該項、刪除不完整的檔案、寫入 <code>rb-judge</code>，最終報告列為「未實作」；不得換句話說重試或以其他角色代寫。</td></tr>
+</table></div>
+<div class="box warn"><strong>預期會發生</strong>：本 session 中 Rival 的寫入探測被安全分類器擋下。參考實作很可能在同一處（寫入探測、L3 提權）遇到相同情況。這不是失敗，但最終比較中寫入相關的項目將無法比較，報告必須照實呈現。</div>
+
+<h2 id="s9">9. 收斂、爭議與停止條件</h2>
+<div class="wrap"><table>
+<tr><th>情況</th><th>規則</th></tr>
+<tr><td>Architect 與 Red team 爭執</td><td>Red team 必須附可重現的失敗；Judge 重跑。重現成立 → 必須處理；不成立 → 駁回。</td></tr>
+<tr><td>規格歧義</td><td>Judge 依 L1 的意圖裁決並寫入裁決紀錄；若涉及 L2 或 L4 → 暫停該項，留給人類在結束時決定。</td></tr>
+<tr><td>僵持（同一問題 3 輪沒有進展）</td><td>採較保守的選項（不寫入、不判定為安全），記錄後繼續。</td></tr>
+<tr><td>紅隊回合</td><td>每個切片最多 3 輪；連續 2 輪沒有新的高嚴重度問題 → 該切片收斂。</td></tr>
+<tr><td>停止條件</td><td>(a) 全部切片收斂且隱藏測試已揭露；或 (b) 預算用完；或 (c) 同一阻礙連續 5 次失敗。任何停止都產出最終報告。</td></tr>
+<tr><td>agent 等待</td><td>每個角色的等待與結束規則分開設計，不共用 Stop hook，避免 Auditor-PM 被連續阻擋的情況。</td></tr>
+</table></div>
+
+<h2 id="s10">10. 風險、限制與最壞影響</h2>
+<div class="wrap"><table>
+<tr><th>風險</th><th>為什麼會發生</th><th>緩解</th><th>殘餘影響</th></tr>
+<tr><td>對立失效（相關性）</td><td>同一模型家族有相同盲點；也可能互相附和</td><td>不同模型、不同角色設定；Judge 只看證據不看論述</td><td>無法消除，報告揭露</td></tr>
+<tr><td>過度擬合 lab</td><td>可見情境只有 16 個</td><td>Examiner 的隱藏變形情境（命名、主鍵、多租戶型態不同）</td><td>仍只代表 lab，不推論到真實專案</td></tr>
+<tr><td>規格被「隱性污染」</td><td>素材包由受現有系統影響的 architect 準備；lab 本身也反映現有系統的設計觀</td><td>清理規則（§3.3）；Critic 專找做法描述</td><td>lab 情境的選擇無法去偏，報告揭露</td></tr>
+<tr><td>寫入相關功能缺席</td><td>安全分類器（§8）</td><td>一級事件處理</td><td>寫入相關比較缺項</td></tr>
+<tr><td>自動化失控（循環、空轉）</td><td>長時間自主、多 session</td><td>預算上限、輪數上限、停止條件、Integrity 監督</td><td>可能提前停止</td></tr>
+<tr><td>成本超出預期</td><td>8 個角色、多輪</td><td>先試點（§11）；預算上限由人類在 P0 設定</td><td>可控</td></tr>
+<tr><td>結論被誤讀</td><td>參考實作的數字被當成「勝負」</td><td>比較報告以設計差異為主體，指標只附原始數量</td><td>—</td></tr>
+</table></div>
+<div class="box"><strong>最壞影響與回滾</strong>：這個實驗在獨立的 repo 與 lab 中進行，不碰現有系統的任何分支，也不對外部主機送出請求。最壞情況是花掉預算卻沒有可用的比較結果。回滾就是封存這些 repo，現有系統完全不受影響。唯一共享的資源是本機 lab，實驗期間不得與現有系統的驗收同時執行。</div>
+
+<h2 id="s11">11. 試點計畫與成本</h2>
+<h3>11.1 試點範圍</h3>
+<p>選一個能測到整套機制、又不涉及寫入探測的切片：<strong>讀取探測＋報告＋CI 結果語意</strong>。情境：L02、L04、L10、L12、C01–C04，再加上 Examiner 的 4 個隱藏變形。這個切片同時涵蓋本專案最主要的問題（fail-open、覆蓋率聲明、id 唯一、未發現不代表安全）。</p>
+<h3>11.2 試點的成功條件（決定是否擴大）</h3>
+<ul>
+<li>隔離有效：事後檢查各 session 的紀錄，沒有角色讀到不該讀的 repo。</li>
+<li>對立有效：紅隊至少找到 1 個被 Judge 判定成立的問題；隱藏測試至少有 1 項是可見測試沒有涵蓋的。</li>
+<li>不靠人收斂：沒有任何一步需要人類介入。</li>
+<li>成本在預算內，且每個切片的成本可以外推到全系統。</li>
+</ul>
+<h3>11.3 成本粗估（只供規劃，未經量測）</h3>
+<div class="wrap"><table>
+<tr><th>參考點（本專案實際觀察）</th><th>數字</th></tr>
+<tr><td>MS7 開發 session（約 2 天、含多次驗收）</td><td>約 33 美元（get_session 的 cost_usd）</td></tr>
+<tr><td>Auditor-PM 全程（A0–A4）</td><td>約 5.7 美元</td></tr>
+</table></div>
+<p>假設試點有 8 個角色，每個角色的成本介於 Auditor-PM 與 MS7 之間，試點粗估為 <strong>50–250 美元</strong>，全系統約為試點的 3–6 倍。這只是數量級的估計：實際成本主要取決於紅隊的輪數與 implementer 的重試次數，試點的實測值才是可靠的依據。</p>
+
+<h2 id="s12">12. 與現有系統比較的方法</h2>
+<ol>
+<li><strong>同一套量測</strong>：Rival 的 conformance 協定（已驗證對兩邊公平，arena 002-answer）＋同一個 lab 控制器＋同一份設定檔。</li>
+<li><strong>逐模組結果</strong>：recall、precision、FPR、coverage、inconclusive、判定率、audit 寫入、runtime（CLI 牆鐘），附原始數量。</li>
+<li><strong>設計差異清單</strong>（主體）：Comparator 讀兩邊的 ADR 與報告，每項差異分類為：
+<ul><li><strong>現有系統可借鏡</strong>：參考實作的做法較好，附證據；</li>
+<li><strong>參考實作較差</strong>：現有系統的選擇被證實較好；</li>
+<li><strong>取捨不同</strong>：兩者各有適用條件；</li>
+<li><strong>規格造成</strong>：差異來自新舊規格不同，而非設計好壞。</li></ul></li>
+<li><strong>與既有清單對照</strong>：把差異清單與 global-issues、Auditor-PM 清單、Rival 的發現交叉比對，標出「新發現」與「重複印證」。</li>
+</ol>
+
+<h2 id="s13">13. 決策紀錄與待決事項</h2>
+<h3>13.1 決策紀錄（人類的回答與 architect 的建議答案）</h3>
+<div class="wrap"><table>
+<tr><th></th><th>人類</th><th>architect 建議</th><th>差異</th></tr>
+<tr><td>Q1 做什麼、為什麼</td><td>參考實作。現有系統的早期決定若不妥，後續選擇都跟著偏移，所以不應以 spec-revision-proposal 為新規格。</td><td>同意；目的是對同一問題重新取樣設計空間，降低路徑依賴。</td><td>一致</td></tr>
+<tr><td>Q2 為何選此法</td><td>只修特定層級或引用現有系統，可能已受「趕快交付」偏誤影響；第一優先不應是快速開發（待確認原文「步」是否為「不」）。</td><td>大致同意；但重建一次也只是一個樣本，關鍵決定需要多方案比較（§6 P3）。</td><td>architect 補充「單一樣本」</td></tr>
+<tr><td>Q3 何時會壞</td><td>給太多現有系統資訊會造成偏誤。</td><td>同意；另有模型相關性、lab 過度擬合、安全機制造成的缺項（§10）。</td><td>architect 補充三項</td></tr>
+<tr><td>Q4 學到什麼</td><td>缺乏全局思考；過度 SDD，規格要求過細反而產生偏誤。</td><td>同意，證據是規格規定的做法被實測推翻（ADR-019、ADR-040）。</td><td>一致</td></tr>
+</table></div>
+<p>本設計書的「事後」四個問題，待人類讀完後再進行。</p>
+
+<h3>13.2 待人類決定</h3>
+<div class="wrap"><table>
+<tr><th>#</th><th>決定</th><th>architect 建議</th></tr>
+<tr><td>1</td><td>是否先做試點</td><td>是（§11）</td></tr>
+<tr><td>2</td><td>預算上限</td><td>試點 250 美元；全系統依試點實測再定</td></tr>
+<tr><td>3</td><td>各角色的模型</td><td>Architect／Implementers 一種模型，Red team／Examiner 另一種</td></tr>
+<tr><td>4</td><td>16 個 lab 情境是否全部對 Architect 可見</td><td>可見（作為 BDD 驗收）；另以隱藏變形情境對抗過度擬合</td></tr>
+<tr><td>5</td><td>L2 約束與 L4 介面的最終文字</td><td>由人類在 P0 核定（只有這兩層需要人類）</td></tr>
+<tr><td>6</td><td>repo 的建立與權限設定</td><td>人類在 P0 進行（agent 不能為自己建立權限）</td></tr>
+</table></div>
+
+<h3>13.3 P3 必須比較方案的關鍵決定（給 Architect 的最低清單）</h3>
+<ol>
+<li>讀取探測如何判定「看得到不該看的列」（計數或主鍵集合；已知列從哪裡來）</li>
+<li>格子結果的語意（違規與否，或存取與否；見 arena 003 的語意分歧）</li>
+<li>寫入探測與清理策略（若未被擋下）</li>
+<li>唯讀模式「沒有寫入」的獨立驗證方法</li>
+<li>CI 的失敗語意（不完整、達門檻、殘留同時成立時）</li>
+<li>報告的覆蓋率與「沒測什麼」如何呈現</li>
+<li>探索：OpenAPI 受限時如何找到目標</li>
+<li>工具自身的安全邊界（端點確認、同源、輸出跳脫）</li>
+</ol>
+
+<h2 id="s14">14. 附錄：初始檔案與角色提示詞大綱</h2>
+<h3>14.1 <code>rb-spec</code> 初始內容（P0／P1）</h3>
+<pre>rb-spec/
+├── PROBLEM.md            L1：問題、使用者、威脅模型（人類核定）
+├── CONSTRAINTS.md        L2：硬約束（人類核定，凍結）
+├── INTERFACE.md          L4：設定檔格式、計分所需的最小報告欄位（人類核定，凍結）
+├── materials/            architect 產出的素材包（已清理）
+│   ├── outcomes.md       §3.2 右欄的結果需求
+│   └── platform-notes.md Supabase／PostgREST／GoTrue 公開行為摘要（附官方文件連結）
+├── lab/                  情境（migration／seed／frontend／expected.yaml，註解已清除 ADR 與檔名）
+└── SPEC.md               P1 由 Product 撰寫</pre>
+<h3>14.2 角色提示詞大綱（每個角色一個獨立 session）</h3>
+<div class="wrap"><table>
+<tr><th>角色</th><th>提示詞重點</th></tr>
+<tr><td>Product</td><td>只寫問題與可觀察結果；每條結果必須能寫成自動驗收情境；禁止規定做法；L2、L4 不可修改。</td></tr>
+<tr><td>Spec critic</td><td>你的成功在於找到規格中的歧義、不可驗證條文、偷渡的做法；每項附具體改寫建議；不得自行修改規格。</td></tr>
+<tr><td>Examiner</td><td>你的成功在於找到系統會答錯的情境；情境必須在 lab 中可驗證成立；先提交雜湊；不得在揭露前修改。</td></tr>
+<tr><td>Architect</td><td>每個關鍵決定提出至少兩個方案與失效條件；依 TDD；所有主張附可重現證據；不得讀隱藏測試、不得改弱測試。</td></tr>
+<tr><td>Red team</td><td>你的成功在於讓系統失敗：漏報、誤報、對未授權主機送出請求、唯讀模式寫入、洩漏 key、測試被改弱；每項附重現方式；只對 localhost。</td></tr>
+<tr><td>Judge</td><td>只依證據裁決；重跑每個主張；依 §9 的書面規則；涉及 L2／L4 時暫停並記錄。</td></tr>
+<tr><td>Integrity monitor</td><td>每次合併前比對測試差異、skip、忽略註解；追蹤預算與輪數；違規即通知 Judge。</td></tr>
+<tr><td>Comparator</td><td>P6 才啟動；以 conformance 協定交叉執行；寫設計差異清單並分類；不得把現有系統資訊回傳給其他角色。</td></tr>
+</table></div>
+<p class="meta">相關文件：<code>docs/reviews/spec-revision-proposal.html</code>（不作為新規格，只作為 architect 準備素材包時判斷「哪些是現象」的參考）、<code>docs/reviews/global-issues.md</code>、rlsentry-arena 的 <code>arena/conformance/PROTOCOL.md</code>。</p>
+</main>
+</body>
+</html>
