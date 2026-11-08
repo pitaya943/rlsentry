@@ -1,0 +1,11 @@
+milestone: MS7
+checklist: docs/verification/MS7-v1.md
+checklist_sha256: 34c7285c834a8a388a2623437e820dd19b8d21e22fae5a64b330aa95c4a46690
+decision: approve
+reviewer: Kuei
+date: 2026-11-08 19:44
+notes: |
+  MS7 核准。以下意見請在下一個 session 開始時處理，並套用到之後每一個 milestone。
+    1. 接受以 holdout.py add 更新 3 個因已核准行為變更而過時的 holdout（MS2 ×2、MS6 ×1；ADR-053），不 reopen MS2／MS6。之後每個 milestone 派工前的參考實測必須跑所有 milestone 的 holdout，不只本 milestone。
+    2. 接受修補 SQL 的 DROP 範圍（TO public 或同時涵蓋 anon 與 authenticated 的 policy 被刪除，新 policy 只給該 finding 的角色）維持為已知限制（ADR-051 補記 #1），並在 USAGE.md 已知限制中保留說明。
+    3. 核准後只改 docs/verification_steps.html 步驟 4.5（不動程式）：Supabase CLI 改以固定版本安裝 gh release download v3.0.0 -R supabase/cli -p "supabase_linux_amd64.tar.gz" -D /tmp --clobber，再 sudo tar -xzf /tmp/supabase_linux_amd64.tar.gz -C /usr/local/bin supabase && supabase --version（預期 3.0.0），不再以 latest 直接 pipe 給 tar；以單獨一個 commit 推送，我在 fast-forward main 之前確認。
