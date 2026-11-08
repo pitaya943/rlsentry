@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>RLSentry 盲測報告（階段 A0）</title>
+<style>
+body{font-family:system-ui,"Noto Sans TC",sans-serif;max-width:1050px;margin:2em auto;padding:0 1em;line-height:1.6;color:#222}
+h1{border-bottom:3px solid #333}h2{border-bottom:1px solid #aaa;margin-top:2em}
+table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:.92em}th,td{border:1px solid #bbb;padding:.35em .5em;vertical-align:top;text-align:left}th{background:#eee}
+code,pre{background:#f4f4f4;font-size:.88em}pre{padding:.6em;overflow-x:auto}
+.sev-h{background:#fdd}.sev-m{background:#ffe9c4}.sev-l{background:#eef}
+.note{border-left:4px solid #888;padding:.3em .8em;background:#fafafa}
+</style></head><body>
+<h1>RLSentry 盲測報告（階段 A0）</h1>
+<p>審核者：Auditor-PM。日期：2026-11-08。分支 <code>claude/busy-darwin-asvox3</code>。</p>
+<div class="note">本階段只使用：<code>pip install -e ".[dev]"</code>、<code>rlsentry --help</code> 與子指令 <code>--help</code>、在本機 lab 實際執行 <code>rlsentry</code>、<code>python -m lab._shared</code>（up/apply/env/serve/sql）、Makefile target 名稱、指令輸出／報告檔／exit code。<b>未讀</b>任何 .md、docs/、*.html 文件、原始碼、測試或 git log。所有連線都在 127.0.0.1。</div>
+
+<h2>1. 推論：What / Why / How</h2>
+<h3>What（功能）</h3>
+<ul>
+<li>CLI <code>rlsentry</code>，兩個子指令：<code>scan</code>（掃描並寫報告）與 <code>init</code>（從 PostgREST OpenAPI 產生 policy 草稿，只送 GET）。</li>
+<li>五個模組（報告 <code>modules</code> 欄位）：
+ <b>M1</b> 前端 bundle 偵察（抓 HTML/JS chunk，找 Supabase URL 與金鑰，金鑰遮罩後回報；L08 抓到 <code>jwt:service_role</code> → <code>SECRET_KEY_IN_BUNDLE</code> critical）；
+ <b>M2</b> schema 發現（OpenAPI，失敗時退回 bundle 推論，標 <code>confidence: inferred</code>）；
+ <b>M3</b> 存取矩陣（target × role{anon,user_a,user_b} × op{select,insert,update,delete}，每格 outcome = allowed/denied/inconclusive/not_tested）；
+ <b>M4</b> 白箱（需要 <code>db_url_env</code>，直接連 DB 讀 policy／SECURITY DEFINER 等，產生 lint 與修補 SQL）；
+ <b>M5</b> 報告／判定（findings 分三種證據等級 confirmed/suspected/config_warning × 五級嚴重度）。</li>
+<li>三個 profile：<code>dev</code>、<code>ci</code>、<code>audit</code>。觀察到：audit 唯讀（寫入格全部 not_tested，note 引用 NFR-01）；dev/ci 會真的 seed、寫入、讀回驗證、再清理；ci 不掃 bundle（M1 skipped）；只有 ci 會以 exit 1 讓 pipeline 失敗；預設輸出 dev=html、ci=json+sarif、audit=html+json。</li>
+<li>報告格式：JSON、自包含 HTML（含可重現 curl，金鑰遮罩）、SARIF 2.1.0（error/warning 等級，位置指向 <code>rlsentry.yaml</code>）。</li>
+<li>每個 finding 附 Fix SQL（中文註解：「RLSentry 不會執行任何 SQL」）與 Supabase 文件連結。</li>
+<li>Lab：本機 Supabase（docker，port 54321/54322），16 個情境 L01–L12（推測為有漏洞）、C01–C04（推測為乾淨對照組）。</li>
+</ul>
+<h3>Why（推論的存在理由）</h3>
+<ul>
+<li>Supabase 前端直接持有 anon key 連 PostgREST，授權完全依賴 Postgres RLS；RLS 寫錯（忘記開、policy 過寬、用 <code>user_metadata</code> 判斷、SECURITY DEFINER 函式繞過）就是資料外洩。RLSentry 從「攻擊者角度」用 anon 與兩個測試帳號實測，而不是只讀 policy 文字。</li>
+<li>以「已知列」(known rows) 判斷：只有證明讀到「不該看到的特定列」才說 confirmed；沒有已知列時誠實回報 inconclusive 而非「安全」（finding 標題：「無已知資料列可判定，不代表安全」）。這是降低誤報、提高可信度的設計。</li>
+<li>法律／安全：強制 <code>--i-own-this-target</code> 或 <code>authorized: true</code>；bundle 指向的 Supabase URL 必須明確確認；audit 預設唯讀。</li>
+</ul>
+<h3>How（流程推論）</h3>
+<ol>
+<li>載入 <code>rlsentry.yaml</code>（pydantic 嚴格驗證，未知欄位一律拒絕）→ 授權確認 → 決定 profile（CLI 與設定檔取「較嚴格者」，嚴格度 audit &gt; ci &gt; dev）。</li>
+<li>M1 抓 bundle → 找 URL/金鑰 → 若與確認的 supabase_url 不同則拒絕或加 note。</li>
+<li>M2 讀 <code>/rest/v1/</code> OpenAPI 列出 table/view/rpc。</li>
+<li>M3 以 GoTrue 密碼登入 test_users 取得 JWT；以使用者 A 的列作為 B 的「範圍外已知列」，用 <code>id=in.(...)</code> 精準查詢；dev/ci 會 seed 並在結束後清理（失敗時 <code>CLEANUP_FAILED</code>）。</li>
+<li>M4（有 DB URL 時）讀 catalog 做 lint 並與黑箱結果 correlation。</li>
+<li>M5 依 policy（tables: select/insert/update/delete × anon/user：deny / own_rows_only…）判定 finding，寫報告，ci 依 fail_on 決定 exit code。</li>
+</ol>
+
+<h2>2. 實測紀錄</h2>
+<h3>2.1 首次使用路徑（L01）</h3>
+<table><tr><th>#</th><th>指令</th><th>結果 / exit</th></tr>
+<tr><td>1</td><td><code>rlsentry --version</code></td><td>「No such option: --version」exit 2</td></tr>
+<tr><td>2</td><td><code>rlsentry scan http://127.0.0.1:8101/</code></td><td>要求 <code>--i-own-this-target</code>，exit 3（好）</td></tr>
+<tr><td>3</td><td>加 <code>--i-own-this-target</code></td><td>「bundle points at http://127.0.0.1:54321; add supabase_url … or pass --supabase-url」exit 3（好，訊息可直接照做）</td></tr>
+<tr><td>4</td><td>加 <code>--supabase-url</code></td><td>1 秒完成；只有 1 個 suspected（INCONCLUSIVE_CELL），profile=audit，exit 0。新使用者會誤以為「沒問題」。</td></tr>
+<tr><td>5</td><td><code>rlsentry init</code></td><td>「config file not found: rlsentry.yaml; pass --config or a TARGET」exit 2；但 <code>init</code> <b>不接受 TARGET</b>（加了得到 “unexpected extra argument”）。雞生蛋問題。</td></tr>
+<tr><td>6</td><td>手寫 <code>target:</code> 後 init</td><td>「anon_key_env is not set or empty」— 但 scan 自己就從 bundle 找到 anon key，init 卻不會。</td></tr>
+<tr><td>7</td><td>補 <code>anon_key_env</code></td><td>產生 <code>rlsentry.draft.yaml</code>：只有 <code>target</code> 與 <code>tables</code>，<b>沒有</b> test_users、supabase_url、authorized、profile、fail_on 的範例。</td></tr>
+<tr><td>8</td><td>猜欄位</td><td>靠 pydantic 錯誤訊息逐一試出：<code>profile, authorized, supabase_url, anon_key_env, db_url_env, write_hosts, test_users[{name,email,password_env}], fail_on{severity,evidence}, tables</code>。約 50 次嘗試。</td></tr>
+<tr><td>9</td><td>測試帳號 email</td><td><code>lab._shared env</code> 只給密碼不給 email；<code>lab._shared sql</code> 只印 ok、不印查詢結果。最後用 <code>RAISE EXCEPTION</code> 把 email 從錯誤訊息帶出來（a@test.dev / b@test.dev）。</td></tr>
+<tr><td>10</td><td>完整設定 audit</td><td>3 confirmed（1 critical ANON_READ, 2 medium CROSS_TENANT_READ）<b>exit 0</b></td></tr>
+</table>
+
+<h3>2.2 Profile 與 exit code（L01 有 critical）</h3>
+<table><tr><th>設定</th><th>實際 profile</th><th>exit</th></tr>
+<tr><td>設定檔無 profile + <code>--profile dev</code></td><td>audit</td><td>0</td></tr>
+<tr class="sev-h"><td>設定檔無 profile + <code>--profile ci</code></td><td><b>audit</b>（無任何警告）</td><td><b>0</b></td></tr>
+<tr><td><code>profile: ci</code></td><td>ci</td><td>1</td></tr>
+<tr><td><code>profile: ci</code> + <code>--profile dev</code></td><td>ci</td><td>1</td></tr>
+<tr><td><code>profile: dev</code></td><td>dev（12 confirmed，含 ANON_WRITE）</td><td>0</td></tr>
+<tr class="sev-h"><td>audit + <code>fail_on: {severity: high}</code></td><td>audit</td><td><b>0</b>（fail_on 被靜默忽略）</td></tr>
+</table>
+
+<h3>2.3 全 16 情境（profile: ci，含 db_url_env 故 M4 執行；policy 用 init 草稿）</h3>
+<table><tr><th>情境</th><th>exit</th><th>耗時(s)</th><th>findings</th><th>盲測判讀</th></tr>
+<tr><td>L01</td><td>1</td><td>13.7</td><td>4 critical（ANON_READ/WRITE）、6 high、2 medium</td><td>RLS 全開</td></tr>
+<tr><td>L02</td><td>1</td><td>12.6</td><td>ANON_READ high、CROSS_TENANT_READ×2</td><td>只有讀外洩</td></tr>
+<tr><td>L03</td><td>1</td><td>8.5</td><td>USER_METADATA_ESCALATION×2 high</td><td>policy 依 user_metadata</td></tr>
+<tr class="sev-m"><td>L04</td><td><b>0</b></td><td>12.5</td><td>CROSS_TENANT_READ×2 <b>confirmed medium</b></td><td>確認的跨租戶讀取在 ci 預設不會讓 CI 失敗</td></tr>
+<tr><td>L05</td><td>1</td><td>15.7</td><td>CROSS_TENANT_WRITE update×2；CLEANUP_FAILED×2</td><td>清理失敗：資料殘留風險</td></tr>
+<tr><td>L06</td><td>1</td><td>16.4</td><td>view <code>invoice_summary</code> 外洩；seed HTTP 400</td><td>view 繞過 RLS</td></tr>
+<tr class="sev-m"><td>L07</td><td>0</td><td>12.7</td><td>SECURITY_DEFINER_EXECUTABLE low×4、INCONCLUSIVE×6</td><td>RPC 只有 low/review，未能 confirmed；RPC 卻產生 insert/update/delete 格；同一函式 role=None 與 anon 重複</td></tr>
+<tr class="sev-h"><td>L08</td><td>0</td><td>15.7</td><td>ci：無；audit：SECRET_KEY_IN_BUNDLE critical，但 <b>exit 0</b></td><td>service_role 金鑰外洩：ci 不掃 bundle → 永遠抓不到；audit 抓到但不失敗</td></tr>
+<tr><td>L09</td><td>1</td><td>17.0</td><td>ANON_WRITE insert、CROSS_TENANT_WRITE insert；CLEANUP_FAILED×4（兩兩重複）</td><td>只能 insert 的表；重複 finding</td></tr>
+<tr><td>L10</td><td>0</td><td>18.1</td><td>SENSITIVE_COLUMN_PUBLIC review</td><td>公開檔案表含敏感欄位</td></tr>
+<tr class="sev-h"><td>L11</td><td>0</td><td>1.0</td><td><b>無 target、無 finding</b></td><td>以 sql 偵查：public 無表，storage bucket <code>private-docs</code> 為 public=true。RLSentry 完全沒回報，也沒說「什麼都沒測到」</td></tr>
+<tr class="sev-m"><td>L12</td><td>0</td><td>1.0</td><td>LINT_ONLY audit_log low</td><td>public 有 <code>diary_entries</code> 但未被發現</td></tr>
+<tr><td>C01–C02</td><td>0</td><td>15.7/18.1</td><td>無</td><td>乾淨對照組，無誤報</td></tr>
+<tr><td>C03</td><td>0</td><td>4.6</td><td>INCONCLUSIVE×3（seed 403）</td><td>唯讀公告表，誠實回報無法判定</td></tr>
+<tr><td>C04</td><td>0</td><td>6.9</td><td>INCONCLUSIVE×1</td><td></td></tr>
+</table>
+<p>耗時：不含 M4 的 audit 約 1–2.4 秒；ci + M4 約 5–18 秒／情境；lab <code>up</code> 首次 54 秒。</p>
+
+<h3>2.4 失敗模式（L01）</h3>
+<table><tr><th>情境</th><th>行為</th><th>exit</th></tr>
+<tr class="sev-h"><td>ci + Supabase 連不上（supabase_url=127.0.0.1:1）</td><td>OpenAPI 失敗→退回 bundle 推論；所有格 inconclusive；報告照寫</td><td><b>0</b></td></tr>
+<tr class="sev-h"><td>ci + 兩個測試帳號密碼都錯</td><td>user 格 not_tested「login failed: HTTP 400」；stdout 沒有任何警告</td><td><b>0</b></td></tr>
+<tr><td>密碼 env 未設</td><td>not_tested「RLS_B_PW is not set」，stdout 無警告</td><td>0</td></tr>
+<tr><td>anon key 錯</td><td>anon 格 inconclusive（HTTP 401）</td><td>0</td></tr>
+<tr><td>target 連不上（audit）</td><td>chunks_skipped（transport error），仍繼續 OpenAPI 掃描</td><td>0</td></tr>
+<tr><td>YAML 錯、未知欄位、錯誤 format</td><td>精準一行錯誤（行列號、欄位名）</td><td>2</td></tr>
+<tr><td>CLI 與設定檔 target / supabase_url 不同</td><td>「disagree」/「differ」</td><td>3 / 2</td></tr>
+<tr><td><code>rlsentry scan | head</code></td><td>SIGPIPE 後報告檔沒有寫出（先印摘要、後寫檔）</td><td>—</td></tr>
+</table>
+
+<h2>3. 新使用者摩擦點（依嚴重度）</h2>
+<table><tr><th>#</th><th>嚴重度</th><th>摩擦點</th><th>證據</th></tr>
+<tr class="sev-h"><td>F1</td><td>高</td><td><code>--profile ci</code> 在設定檔未寫 profile 時被靜默升級為 audit，有 critical 也 exit 0。CI 使用者最可能這樣寫。</td><td>2.2 表</td></tr>
+<tr class="sev-h"><td>F2</td><td>高</td><td>CI 失敗開放（fail-open）：Supabase 不通、登入全失敗、0 個 target，都 exit 0。</td><td>2.4、L11</td></tr>
+<tr class="sev-h"><td>F3</td><td>高</td><td>audit/dev 下 <code>fail_on</code> 被接受卻無效果，沒有警告。</td><td>2.2</td></tr>
+<tr class="sev-h"><td>F4</td><td>高</td><td>ci 不掃 bundle，service_role 外洩（最嚴重的 Supabase 失誤之一）在 CI 中看不到；audit 看得到但 exit 0。</td><td>L08</td></tr>
+<tr class="sev-m"><td>F5</td><td>中</td><td><code>init</code> 的錯誤訊息叫你「pass a TARGET」但 init 沒有 TARGET 參數；init 需要 anon_key_env 而 scan 不用。</td><td>2.1 #5–6</td></tr>
+<tr class="sev-m"><td>F6</td><td>中</td><td>草稿不含 test_users／authorized／supabase_url／profile／fail_on，CLI help 也沒有設定檔欄位說明；只能靠錯誤訊息猜。</td><td>2.1 #7–8</td></tr>
+<tr class="sev-m"><td>F7</td><td>中</td><td>確認的 CROSS_TENANT_READ 只有 medium，ci 預設不失敗（L04 exit 0）。多租戶 SaaS 中讀到他人資料通常是最高等級事件。</td><td>L04</td></tr>
+<tr class="sev-m"><td>F8</td><td>中</td><td>Storage bucket 與 OpenAPI 外的表完全沒涵蓋或沒報告「未涵蓋」。</td><td>L11、L12</td></tr>
+<tr class="sev-m"><td>F9</td><td>中</td><td>lab：<code>env</code> 不給測試帳號 email；<code>sql</code> 不印查詢結果。</td><td>2.1 #9</td></tr>
+<tr class="sev-l"><td>F10</td><td>低</td><td>沒有 <code>--version</code>；<code>tool_version</code> 為 0.0.0；<code>confirmed_by: unknown</code>。</td><td>報告 JSON</td></tr>
+<tr class="sev-l"><td>F11</td><td>低</td><td>重複 finding（L09 CLEANUP_FAILED 兩兩重複；L07 SECURITY_DEFINER role=None 與 anon 各一）；RPC 產生無意義 insert/update/delete 格。</td><td>L07、L09 JSON</td></tr>
+<tr class="sev-l"><td>F12</td><td>低</td><td>報告混用英中文（欄位英文、標題中文）；Repro curl 使用遮罩金鑰無法直接執行（合理但應說明）；ENABLE RLS 修補建議在 RLS 已開時是噪音。</td><td>HTML 報告</td></tr>
+<tr class="sev-l"><td>F13</td><td>低</td><td>登入失敗、密碼 env 缺失只寫進 matrix reason，stdout 摘要沒有提示。</td><td>2.4</td></tr>
+<tr class="sev-l"><td>F14</td><td>低</td><td>stdout 被關閉（<code>| head</code>）時報告不會寫出。</td><td>2.4</td></tr>
+</table>
+
+<h2>4. A1 要驗證的假設</h2>
+<ol>
+<li>profile「stricter wins」與「設定檔預設 audit」是刻意設計還是 bug？SPEC 對 ci 的 exit code 怎麼定義？</li>
+<li>fail_on 在 audit/dev 是否應生效？SPEC 對 fail-open 的要求？</li>
+<li>L07、L08、L11、L12 的 expected.yaml 期望什麼？benchmark 如何計分（若 L11 被算成 TN 或排除，指標可能不誠實）？</li>
+<li>CROSS_TENANT_READ 嚴重度 medium 的依據？</li>
+<li>GitHub Action（目錄 <code>action/</code>）預設用哪個 profile？</li>
+<li>寫入安全：dev/ci 對非 localhost 主機的寫入保護（<code>write_hosts</code>）如何實作？</li>
+</ol>
+</body></html>
