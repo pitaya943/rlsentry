@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPEC 修訂提案</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1d1d1f;--muted:#5f6368;--line:#dcdcd8;--card:#ffffff;--accent:#2f5d8a;
+--p0:#b3261e;--p1:#b26a00;--p2:#3d6b2f;--p3:#5f6368;--code:#f1f1ee;--warn:#fff4e5;--ok:#eef6ec;--diff:#f3eefb;--diffb:#6b4fa3}
+@media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#e8e8e6;--muted:#a0a3a8;--line:#34353a;--card:#1e1f22;
+--accent:#8db7e0;--p0:#f2867f;--p1:#f0b45a;--p2:#9ccf8c;--p3:#a0a3a8;--code:#26272b;--warn:#3a2d17;--ok:#1f2e1c;--diff:#2a2436;--diffb:#b9a3e8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.6rem;margin:.2em 0}h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;margin:1.4em 0 .4em}
+.meta{color:var(--muted);font-size:.9rem}
+code{background:var(--code);padding:.05em .35em;border-radius:4px;font-size:.88em}
+table{border-collapse:collapse;width:100%;margin:.6em 0;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+th{background:var(--code)}
+.wrap{overflow-x:auto}
+.tag{display:inline-block;font-size:.72rem;font-weight:600;padding:0 .4em;border-radius:4px;border:1px solid currentColor;white-space:nowrap}
+.p0{color:var(--p0)}.p1{color:var(--p1)}.p2{color:var(--p2)}.p3{color:var(--p3)}
+.agree{color:var(--p2)}.mod{color:var(--p1)}.dis{color:var(--p0)}.new{color:var(--diffb)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+.card h3{margin-top:.2em}
+.box{border-left:4px solid var(--accent);background:var(--card);padding:10px 14px;margin:12px 0}
+.warn{border-left-color:var(--p1);background:var(--warn)}
+.diffbox{border-left:4px solid var(--diffb);background:var(--diff);padding:10px 14px;margin:10px 0}
+dl{display:grid;grid-template-columns:7.5em 1fr;gap:4px 12px;margin:.4em 0}
+dt{color:var(--muted);font-weight:600}dd{margin:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cols>div{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+@media (max-width:700px){.cols{grid-template-columns:1fr}dl{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>SPEC 修訂提案</h1>
+<p class="meta">整合 Auditor-PM 的 A5 審閱（<code>review/spec-review.html</code>、26 條，6637149）與 architect 的建議 · 2026-11-08 · 對象 <code>docs/SPEC.md</code>（凍結檔，654 行）· 本文件只提案；SPEC 由人類修訂並重新凍結</p>
+
+<h2>1. 摘要</h2>
+<div class="box">
+<p>Auditor-PM 提出 26 條建議（P0 4、P1 8、P2 12、P3 2），architect 新增 6 條（A-01～A-06），合計 32 條。architect 對 Auditor-PM 的 26 條：</p>
+<ul>
+<li><span class="agree"><strong>同意 19 條</strong></span>：照原建議文字採用，或只做文字微調。</li>
+<li><span class="mod"><strong>同意方向、修正內容 5 條</strong></span>：S-01、S-07、S-09、S-22、S-25。</li>
+<li><span class="dis"><strong>立場不同 2 條</strong></span>：S-06、S-21，兩案並列交人類。</li>
+</ul>
+<p>另外 S-02 是 architect <strong>改採 Auditor-PM 的做法</strong>（修正自己在修正方案中的設計）。</p>
+<p><strong>建議的修訂方式</strong>：分兩次修訂。<strong>SPEC v1.1</strong> 包含 P0＋P1 與所有「與實作同步」的條文，在 MS8（上線修正）開始前凍結，作為 MS8 的依據。<strong>SPEC v1.2</strong> 處理文件結構（S-25 分離 PROCESS），在 MS8 核准後進行，因為它牽動凍結的 harness。</p>
+</div>
+
+<h3>獨立性說明</h3>
+<p>Auditor-PM 交付前未讀 architect 的修正方案（它在完成信中聲明）。architect 的立場有兩個來源：</p>
+<ul>
+<li><strong>事先獨立形成</strong>：<code>docs/reviews/pm-response-and-fix-plan.html</code>（4611f3e），比 Auditor-PM 的 A5（6637149）早提交。它的 D1–D8 已涵蓋 S-01、S-02、S-05、S-06、S-07、S-10、S-12、S-21 的立場。</li>
+<li><strong>讀過 A5 之後才寫</strong>：A-01～A-06 與其他條目的評語。這部分不是獨立意見，各處標為「事後」。</li>
+</ul>
+
+<h2>2. 總對照表</h2>
+<p>立場：<span class="agree">同意</span>／<span class="mod">修正</span>／<span class="dis">不同</span>／<span class="new">新增</span>。「建議最終」是 architect 建議人類採用的版本。</p>
+<div class="wrap"><table>
+<tr><th>#</th><th>優先</th><th>主題</th><th>SPEC 位置</th><th>architect 立場</th><th>建議最終</th><th>人類決策</th></tr>
+<tr><td>S-01</td><td><span class="tag p0">P0</span></td><td>ci 掃描完整性門檻、exit 6</td><td>:86、:131、:173、:279</td><td class="mod">修正</td><td>硬性條件為預設；比例門檻選填（§3.1）</td><td>門檻預設值</td></tr>
+<tr><td>S-02</td><td><span class="tag p0">P0</span></td><td>有效 profile 的規則與可見性</td><td>:81-89</td><td class="agree">同意（architect 改採）</td><td>Auditor-PM 原文</td><td>—</td></tr>
+<tr><td>S-03</td><td><span class="tag p0">P0</span></td><td>覆蓋率拆為獨立 FR-17</td><td>:123、:217</td><td class="agree">同意</td><td>原文，第 (3) 項加入 A-01 的 not_tested 原因</td><td>—</td></tr>
+<tr><td>S-04</td><td><span class="tag p0">P0</span></td><td>指標量測條件與使用者路徑指標</td><td>:145、:472-487</td><td class="agree">同意</td><td>原文＋A-04 的定義</td><td>—</td></tr>
+<tr><td>S-05</td><td><span class="tag p1">P1</span></td><td>profile 模組表（ci 跑 M1、audit 可跑 M4）</td><td>:85-87、:150-170</td><td class="agree">同意</td><td>原文</td><td>ci 跑 M1</td></tr>
+<tr><td>S-06</td><td><span class="tag p1">P1</span></td><td>跨租戶讀取嚴重度</td><td>:271-279</td><td class="dis">不同</td><td>兩案並列（§3.2）</td><td>是</td></tr>
+<tr><td>S-07</td><td><span class="tag p1">P1</span></td><td>寫入標記、殘留可定位、lab 代清</td><td>:231-232、:243</td><td class="mod">修正</td><td>沒有文字欄仍探測，改以主鍵追蹤（§3.3）</td><td>lab 代清做或刪</td></tr>
+<tr><td>S-08</td><td><span class="tag p1">P1</span></td><td>Finding.id 次內唯一</td><td>:317、:328</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-09</td><td><span class="tag p1">P1</span></td><td>init 產出完整設定</td><td>:133、:364</td><td class="mod">修正</td><td>TODO 不擋掃描，改計入不完整（§3.4）</td><td>TODO 是否擋</td></tr>
+<tr><td>S-10</td><td><span class="tag p1">P1</span></td><td>發佈與相容性 NFR-10～13</td><td>新增 §3.1</td><td class="agree">同意</td><td>原文</td><td>授權條款</td></tr>
+<tr><td>S-11</td><td><span class="tag p1">P1</span></td><td>NFR-01 唯讀的精確定義</td><td>:140、:190、:441、:555</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-12</td><td><span class="tag p1">P1</span></td><td>exit code 表為公開介面</td><td>:89、§5 M5</td><td class="agree">同意＋補充</td><td>原文＋A-05 的優先順序</td><td>audit 用 fail_on</td></tr>
+<tr><td>S-13</td><td><span class="tag p2">P2</span></td><td>讀取探測改為只取主鍵的 GET</td><td>:229、:142</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-14</td><td><span class="tag p2">P2</span></td><td>§6 以 contracts＋JSON Schema 為準</td><td>:281-328</td><td class="agree">同意</td><td>原文；目前沒有報告 JSON 的 schema 測試，維持 P2</td><td>—</td></tr>
+<tr><td>S-15</td><td><span class="tag p2">P2</span></td><td>設定檔範例補齊</td><td>:330-362</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-16</td><td><span class="tag p2">P2</span></td><td>RPC 以 select 表示、只用 GET</td><td>:287、:300、:397</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-17</td><td><span class="tag p2">P2</span></td><td>ground truth 格式同步</td><td>:408-430</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-18</td><td><span class="tag p2">P2</span></td><td>benchmark 執行方式</td><td>:443-446</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-19</td><td><span class="tag p2">P2</span></td><td>M1／Safety 的安全邊界（同源、S4）</td><td>:187-207</td><td class="agree">同意，建議升 P1</td><td>原文；與 A-06 合併為「工具自身的威脅模型」</td><td>—</td></tr>
+<tr><td>S-20</td><td><span class="tag p2">P2</span></td><td>M2 取聯集與 ci 的限制</td><td>:209-217</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-21</td><td><span class="tag p2">P2</span></td><td>授權紀錄的確認者</td><td>:141、§7</td><td class="dis">不同</td><td>兩案並列（§3.5）</td><td>是</td></tr>
+<tr><td>S-22</td><td><span class="tag p2">P2</span></td><td>NFR-05／07／08 可重跑</td><td>:144-147</td><td class="mod">修正</td><td>NFR-05 以 CLI 牆鐘為準（§3.6）</td><td>—</td></tr>
+<tr><td>S-23</td><td><span class="tag p2">P2</span></td><td>使用者故事精確化</td><td>:103-109</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>S-24</td><td><span class="tag p3">P3</span></td><td>§12 決策狀態、Storage 定位</td><td>:60-69、:402、:620-628</td><td class="agree">同意</td><td>方案 A（Storage 列為非目標）</td><td>—</td></tr>
+<tr><td>S-25</td><td><span class="tag p2">P2</span></td><td>分離 PROCESS 文件</td><td>:493-618、:630-642</td><td class="mod">修正（時程）</td><td>移到 v1.2，MS8 核准後（§3.7）</td><td>harness 引用</td></tr>
+<tr><td>S-26</td><td><span class="tag p3">P3</span></td><td>§7 使用者端資料處理</td><td>:366-382</td><td class="agree">同意</td><td>原文</td><td>—</td></tr>
+<tr><td>A-01</td><td><span class="tag p1">P1</span></td><td>定義 not_tested，四態而非三態</td><td>:31、:234、:288</td><td class="new">新增</td><td>§4</td><td>—</td></tr>
+<tr><td>A-02</td><td><span class="tag p1">P1</span></td><td>L03 提權探測的規格（Auth 寫入與還原）</td><td>§5 M3</td><td class="new">新增</td><td>§4</td><td>—</td></tr>
+<tr><td>A-03</td><td><span class="tag p2">P2</span></td><td>probe-only 只計資料庫存取類漏洞</td><td>:479</td><td class="new">新增</td><td>§4</td><td>—</td></tr>
+<tr><td>A-04</td><td><span class="tag p2">P2</span></td><td>coverage 分母與「判定率」定義</td><td>:477</td><td class="new">新增</td><td>§4</td><td>—</td></tr>
+<tr><td>A-05</td><td><span class="tag p1">P1</span></td><td>exit code 同時成立時的優先順序</td><td>新 exit code 表</td><td class="new">新增</td><td>§4</td><td>—</td></tr>
+<tr><td>A-06</td><td><span class="tag p1">P1</span></td><td>工具自身的威脅模型（惡意目標）</td><td>§7</td><td class="new">新增</td><td>§4（含 S-19）</td><td>—</td></tr>
+</table></div>
+
+<h2>3. 分歧與修正（逐條）</h2>
+
+<div class="card">
+<h3>3.1 S-01 完整性門檻的預設值 <span class="tag mod">修正</span></h3>
+<div class="cols">
+<div><strong>Auditor-PM</strong><br>exit 6 的條件：(1) 無 OpenAPI 且沒有 policy 目標可測；(2) 任一測試帳號登入失敗或密碼變數未設；(3) not_tested 比例 &gt; <code>fail_on.max_not_tested</code>，<strong>預設 0</strong>（不含 profile 本來就不測的格子）。</div>
+<div><strong>architect</strong>（事先：修正方案 D1）<br>(1)(2) 同意，另加「API 不可達」「anon key 被拒」兩個硬性條件。(3) <strong>改為選填、預設不設</strong>。</div>
+</div>
+<div class="diffbox"><strong>理由與證據</strong>：not_tested 不只來自 profile。沒有單欄主鍵或 owner_column 的表，dev／ci 的寫入格一律是 not_tested（ADR-029 #1）；RPC 的寫入格也是 not_tested（ADR-029 T-139，S-16 修正前）。這些都不是「profile 本來就不測的」，預設 0 會讓含任何此類表的專案在 ci 永遠 exit 6。使用者最後只會關掉整個門檻，反而失去 (1)(2) 的保護。
+<br><strong>建議最終條文</strong>：在 Auditor-PM 原文的 (3) 改為「(3) 使用者設定 <code>fail_on.max_not_tested</code> 時，應測格中 not_tested 的比例超過該值」，並加 (4)「Supabase API 不可達或 anon key 被拒」。not_tested 的原因分類見 A-01。</div>
+</div>
+
+<div class="card">
+<h3>3.2 S-06 跨租戶讀取的嚴重度 <span class="tag dis">不同，交人類</span></h3>
+<div class="cols">
+<div><strong>方案 A（Auditor-PM）</strong>：CROSS_TENANT_READ 基準升為 <strong>High</strong>，遇敏感欄位為 Critical；改 SPEC §5 M5 嚴重度表。<br>優點：嚴重度本身反映 OWASP API1（BOLA）的風險排序，報告與 SARIF 的等級也跟著正確。<br>缺點：要改 ground truth 中相關案例的 severity 欄位、ADR-049 的改標規則、USAGE；所有既有報告的嚴重度分布改變。</div>
+<div><strong>方案 B（architect，事先：D4）</strong>：嚴重度表只加「遇敏感欄位升為 High」；ci 的預設 <code>fail_on.severity</code> 改為 <strong>medium</strong>。<br>優點：只改預設門檻，嚴重度分類不動，ground truth 不動；使用者可自行調回 high。<br>缺點：報告上的跨租戶讀取仍標為 Medium，讀者可能低估。</div>
+</div>
+<div class="diffbox"><strong>對 Auditor-PM 反對 B 的理由的回應</strong>：Auditor-PM 認為 B 會讓「其他 Medium（例如較輕微的警告）也讓 CI 失敗」。這不成立：<code>fail_on</code> 同時要求 evidence 為 Confirmed，而 Confirmed 的 Medium 規則只有 CROSS_TENANT_READ 與 SECURITY_DEFINER_RPC_DATA（使用者身分），兩者都是已證實的資料外洩（<code>rlsentry/contracts/rules.py</code>）。警告類規則是 Configuration warning 或 Suspected，不受影響。
+<br><strong>兩案都能讓 L04 在預設 ci 下 exit 1。</strong>差別只在「嚴重度的語意要不要改」。
+<br><strong>architect 的建議</strong>：若人類重視報告上的嚴重度正確（對外展示、稽核報告），選 A；若重視最小變更與 ground truth 穩定，選 B。architect 傾向 A＋B 的折衷：嚴重度依 A 修訂，ci 預設門檻維持 high。理由是 A 已讓 L04 達到 High，不需要再降門檻；這等於接受 Auditor-PM 的方案 A，並放棄 architect 原本的 B。由人類定案。</div>
+</div>
+
+<div class="card">
+<h3>3.3 S-07 沒有文字欄的表 <span class="tag mod">修正</span></h3>
+<div class="cols">
+<div><strong>Auditor-PM</strong>：沒有可寫的文字欄時，該表不做 INSERT 探測，記為 inconclusive。lab 代清改為 P2 選配，或刪除條文。</div>
+<div><strong>architect</strong>（事先：修正方案 I-06a／I-06b）：仍然探測，主鍵由掃描器產生並記錄，殘留時列入 CLEANUP_FAILED 的主鍵清單。lab 代清只限 localhost，使用獨立的 <code>cleanup_db_url_env</code>，只刪本次記錄的主鍵。</div>
+</div>
+<div class="diffbox"><strong>理由</strong>：「anon 可以寫入只有 uuid／數值欄的表」（例如計數表、關聯表）是真實的漏洞型態。不探測就會漏報，而且漏報是靜默的。可追蹤性的目的（殘留可定位）用主鍵就能達成，因為主鍵本來就由掃描器產生。
+<br>lab 代清：兩邊都同意「只限 lab、選配」。差別是 architect 要求它<strong>不得使用 M4 的連線</strong>：M4 依 ADR-032 應使用唯讀角色，把它變成寫入憑證會擴大權限。
+<br><strong>建議最終條文</strong>：「每一筆由 RLSentry 寫入的列，主鍵由 RLSentry 產生並記錄；有可寫文字欄時，至少一個文字欄含 <code>rlsentry_canary_&lt;uuid&gt;</code>。無法刪除的列記為 CLEANUP_FAILED，列出 target、主鍵與 DELETE 範本（只含本次寫入的主鍵）。（選配，P2）在本機 lab 且使用者提供專用的清理連線時，以該連線刪除本次記錄的主鍵；此連線不得與 M4 共用。」</div>
+</div>
+
+<div class="card">
+<h3>3.4 S-09 init 的 TODO 是否擋掃描 <span class="tag mod">修正</span></h3>
+<div class="cols">
+<div><strong>Auditor-PM</strong>：含 TODO 的設定檔在 scan 時以 exit 2 拒絕，迫使使用者決定。</div>
+<div><strong>architect</strong>（事後）：TODO 不擋掃描。TODO 項目依現行規則判為 Review（不判定漏洞），在覆蓋率區塊列出，在 ci 中計入完整性門檻的條件。</div>
+</div>
+<div class="diffbox"><strong>理由</strong>：一個有 80 張表的專案，init 可能產生數十個 TODO。全部擋下會讓第一次掃描完全跑不起來，而第一次掃描本身就是幫使用者決定 TODO 的最好資訊來源（看哪些表實際上 anon 可讀）。SPEC 既有的設計「無法判斷預期時給 Review，不判定為漏洞」（§5 M3 差分、§13 第一個風險的緩解）已經是誠實的處理。Auditor-PM 擔心的「默默以錯誤預期掃描」，可以用「TODO 數量出現在摘要與覆蓋率區塊、ci 中算不完整」解決，不必阻擋。
+<br><strong>建議最終條文</strong>：Auditor-PM 原文，最後一句改為「含 TODO 的表與操作判為 Review，數量列在終端摘要與覆蓋率區塊；ci 中有 TODO 時視為掃描不完整（exit 6）」。這是人類決策項。</div>
+</div>
+
+<div class="card">
+<h3>3.5 S-21 audit 是否拒絕 unknown 確認者 <span class="tag dis">不同，交人類</span></h3>
+<div class="cols">
+<div><strong>Auditor-PM</strong>：擴充確認者來源（CLI <code>--confirmed-by</code>、<code>RLSENTRY_CONFIRMED_BY</code>、<code>GITHUB_ACTOR</code>／<code>GITHUB_REPOSITORY</code>、OS 使用者）；audit 下仍為 unknown 時拒絕執行（exit 3）。</div>
+<div><strong>architect</strong>（事先：D8）：擴充來源相同；unknown 時執行，但在報告與終端加警告。</div>
+</div>
+<div class="diffbox"><strong>理由</strong>：確認者是使用者自行填寫的字串，工具無法驗證。拒絕 unknown 只會讓使用者隨手填一個名字，不會產生真正的授權證據；真正的證據是工具外的書面授權（§7 第 4 組）。拒絕的成本是 audit 在容器中多一次失敗。兩案的實際保障差異小，由人類依對「授權紀錄」的定位決定。若人類採 Auditor-PM 方案，建議同時加入 <code>--confirmed-by</code> 旗標，讓拒絕訊息可以直接照做。</div>
+</div>
+
+<div class="card">
+<h3>3.6 S-22 NFR-05 的量測範圍 <span class="tag mod">修正</span></h3>
+<p>Auditor-PM 建議「M2＋M3 &lt; 60 秒」，這正是目前 benchmark 的量測範圍：ADR-033 補記與 ADR-042 #7，量測 discover＋登入＋probe，M1 與 M4 不計時。把目前的量測方式寫進規格，等於讓規格遷就實作。現行 SPEC 的字面是「audit 掃描 &lt; 60 秒」，使用者感受到的是整次 CLI 的牆鐘時間。</p>
+<div class="diffbox"><strong>建議最終條文</strong>：「audit、rps 5、兩個測試帳號、50 張 owner-scoped 表、無 DB 連線：<code>rlsentry scan</code> 的牆鐘時間 &lt; 60 秒（3 次中位數）；報告揭露各模組耗時與每表請求數。」目前 M1 與登入的耗時尚未與 M2＋M3 合併量測，修訂前需要實測一次。Rival 的中立 runtime 協定量的正是 CLI 牆鐘，可直接使用。NFR-07、NFR-08 採用 Auditor-PM 原文；覆蓋率閘門放在新的 <code>.github/workflows/ci.yml</code>，不需改 Makefile。</div>
+</div>
+
+<div class="card">
+<h3>3.7 S-25 分離 PROCESS 文件的時程 <span class="tag mod">修正</span></h3>
+<p>內容同意。時程建議移到 SPEC v1.2（MS8 核准後）。理由：<code>harness/milestones.yaml:1</code> 與 <code>harness/acceptance.py:171</code> 引用 SPEC §11、§9 的版本，<code>harness/spec.py</code> 以章節名稱讀取 SPEC，CLAUDE.md 也引用 SPEC §7、§16。MS8 進行期間重組 SPEC 會讓 agent 讀到的章節與 harness 的引用不一致。先用 v1.1 修內容，再用 v1.2 改結構，兩次變更各自可審。</p>
+</div>
+
+<div class="card">
+<h3>3.8 S-02 architect 改採 Auditor-PM 的做法 <span class="tag agree">同意</span></h3>
+<p>architect 在修正方案中設計的是「不一致時警告，另加 <code>--require-profile</code> 旗標，Action 一律帶上」。Auditor-PM 的版本是「CLI 指定 ci 而有效 profile 不是 ci 時，一律 exit 2」，不需要旗標。後者較好：要求 ci 卻得到其他 profile，永遠不會是使用者想要的結果，不需要讓使用者選擇是否保護。修正方案的 I-02 卡片（<code>pm-response-and-fix-plan.html</code> §4）會依此更新。</p>
+</div>
+
+<h2>4. architect 新增的建議（事後）</h2>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> A-01　定義 not_tested：結果是四態，不是三態</h3>
+<dl>
+<dt>位置</dt><dd><code>docs/SPEC.md:31</code>（名詞表「三態結果」）、:234、:288（<code>Outcome.NOT_TESTED</code>）</dd>
+<dt>現行文字</dt><dd>名詞表：「三態結果：allowed／denied／inconclusive」；§6 卻有第四個值 <code>NOT_TESTED</code>，沒有定義。</dd>
+<dt>問題</dt><dd>S-01 的完整性門檻、S-03 的覆蓋率、§9 的 coverage 都依賴「not_tested 是什麼」。實作中 not_tested 至少有五種來源，語意完全不同：profile 不測（audit 的寫入）、無法植入（無單欄主鍵或 owner_column，ADR-029 #1）、RPC 寫入（ADR-029 T-139）、登入失敗、密碼變數未設。前兩種是設計，後兩種是設定錯誤。</dd>
+<dt>建議文字</dt><dd>名詞表改為「<strong>探測結果</strong>：allowed／denied／inconclusive 三種判定，加上 not_tested（未送出探測）。not_tested 必須附原因，原因分為：<code>profile</code>（profile 規定不測）、<code>not_applicable</code>（該操作對此目標無意義，例如 RPC 的寫入）、<code>unseedable</code>（無法植入已知列）、<code>identity_unavailable</code>（測試帳號登入失敗或密碼未設）。只有 <code>identity_unavailable</code> 與 <code>unseedable</code> 計入完整性門檻的比例。」</dd>
+<dt>替代方案</dt><dd>A. 加原因分類（建議）：門檻與覆蓋率可以精確計算。B. 只加定義、不分類：門檻仍會誤傷（S-01 的問題）。C. 不改：S-01 無法寫成可驗證的條文。</dd>
+<dt>解釋</dt><dd>「沒測」有兩種：本來就不該測（稽核模式不寫入），和想測卻測不了（密碼錯）。前者是設計，後者是故障。CI 應該只對故障亮紅燈。</dd>
+<dt>影響</dt><dd><code>ProbeResult</code> 加原因欄位（ADR）；S-16 落地後 RPC 寫入格消失，<code>not_applicable</code> 主要保留給未來。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> A-02　L03 提權探測寫進 §5 M3</h3>
+<dl>
+<dt>位置</dt><dd>§5 M3（目前沒有對應條文）；§8 L03（:394）</dd>
+<dt>問題</dt><dd>SPEC 只在 §8 描述 L03 情境，§5 M3 沒有規定如何探測。實作（ADR-029 #9、ADR-042 #6、ADR-042 補記、ADR-051 #3）會<strong>修改測試帳號的 Auth 資料</strong>：以 <code>PUT /auth/v1/user</code> 設定 <code>user_metadata.role = admin</code>、重新登入、比較、還原。這是一種 Auth 層的寫入，SPEC 的寫入規則（只在 dev／ci、只動 canary）沒有涵蓋它；USAGE 也記錄了已知限制：原本沒有 role 的帳號，還原後會留下 <code>role: null</code>。</dd>
+<dt>建議文字</dt><dd>§5 M3 新增「<strong>身分屬性提權</strong>（dev／ci）：只對基準讀取為 denied 的目標，修改<strong>測試帳號自己的</strong> user_metadata 中 policy 可能引用的鍵，重新登入後重測。提權前先讀出原值，結束時（含例外）還原，並以讀回確認；還原失敗必須在報告與終端明示。audit 不執行。」</dd>
+<dt>替代方案</dt><dd>A. 寫入 SPEC（建議）：Auth 寫入成為明文規則，可審查。B. 不改：一個會修改帳號資料的行為只存在於 ADR。</dd>
+<dt>解釋</dt><dd>這個探測會暫時把測試帳號「升為管理員」。規格要明寫它只在可寫入的 profile 執行、只改自己、一定還原，因為它是寫入，只是寫在 Auth 而不是資料表。</dd>
+<dt>影響</dt><dd>只改文件；「還原為原值、鍵不存在時刪除鍵」可列為實作改善（Rival 實測 GoTrue 支援以 null 刪鍵）。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p2">P2</span> A-03　probe-only 只計資料庫存取類漏洞</h3>
+<dl>
+<dt>位置</dt><dd><code>docs/SPEC.md:479</code>（§9 Probe-only）</dd>
+<dt>問題</dt><dd>§5 M4 把 probe-only 定義為「lint 沒報、實測可存取」。splinter 只檢查資料庫物件，不檢查前端 bundle，所以 key 外洩（SECRET_KEY_IN_BUNDLE）不可能有「lint 有報」的對照，不該算成 probe-only。實作已排除（BENCHMARK_REPORT「key finding 不經 M4 correlate」），但 SPEC 沒寫。architect 自己在 Rival 的計分裁示中也犯了同一個錯（<code>arena/inbox/002-answer.md</code> D1），可見條文不夠清楚。</dd>
+<dt>建議文字</dt><dd>「Probe-only 類別：splinter 有能力檢查、但未回報，而 RLSentry 以 Confirmed 證實的<strong>資料庫存取類</strong>漏洞類型（不含前端 key 類）。」</dd>
+<dt>替代方案</dt><dd>A. 明文排除（建議）。B. 不改：計數容易被灌水（L08 會被算成第 3 類）。</dd>
+<dt>解釋</dt><dd>probe-only 想證明的是「動態測試抓到了靜態檢查看不到的東西」。拿靜態檢查本來就不看的東西來比，沒有意義。</dd>
+<dt>影響</dt><dd>只改文件。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p2">P2</span> A-04　coverage 的分母與「判定率」</h3>
+<dl>
+<dt>位置</dt><dd><code>docs/SPEC.md:477</code>（§9 Coverage）</dd>
+<dt>問題</dt><dd>「應測組合」沒有定義。實作（ADR-033）用 ground truth 中 ACCESS 案例去重後的（target, op, role）作分母；Rival 為了建立中立協定也必須來信詢問（<code>arena/outbox/001</code> 問題 9）。另外，coverage 把 inconclusive 也算「測到」，系統可以把所有格子都回報 inconclusive，換到 100% coverage 與 0% FPR。實作另有 <code>safe_decided_ratio</code> 防止這件事（BENCHMARK_REPORT：69/69），但 SPEC 沒有要求。</dd>
+<dt>建議文字</dt><dd>「Coverage＝結果為 allowed／denied／inconclusive 的格子數 ÷ 適用 ground truth 中 ACCESS 案例去重後的（target, op, role）格子數。另報<strong>判定率</strong>＝ safe 案例中 expect 為 denied、且實際判為 denied 的比例，以防以 inconclusive 換取低 FPR。」</dd>
+<dt>替代方案</dt><dd>A. 定義分母並加判定率（建議）。B. 只定義分母：仍可被「全部 inconclusive」鑽漏洞。</dd>
+<dt>解釋</dt><dd>如果一個掃描器對什麼都說「不確定」，它永遠不會誤報，但也沒有用。判定率就是檢查它有沒有在逃避回答。</dd>
+<dt>影響</dt><dd>只改文件（實作已有）。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> A-05　exit code 同時成立時的優先順序</h3>
+<dl>
+<dt>位置</dt><dd>S-12 新增的 exit code 表</dd>
+<dt>問題</dt><dd>exit code 是單一數字，多個條件同時成立時（例如有 High finding、又有殘留 canary、又有測試帳號登入失敗），SPEC 必須規定回傳哪一個，否則實作各自決定。現況就是這樣出問題的：exit 1 蓋過 exit 4 從未經過討論（GI-10）。</dd>
+<dt>建議文字</dt><dd>「優先順序：2、3（無法執行）＞ 5（崩潰）＞ 1（達到 fail_on）＞ 6（掃描不完整）＞ 4（清理失敗）＞ 0。被較高優先蓋過的條件，必須出現在終端摘要與報告 notes。」</dd>
+<dt>替代方案</dt><dd>A. 固定順序並揭露被蓋過的條件（建議）：CI 系統普遍只判斷是否為 0，單一數字容易使用。B. 位元組合（例如 1|4＝5）：與既有的 5 衝突，而且多數 CI 使用者不會解碼。</dd>
+<dt>解釋</dt><dd>已證實的漏洞最需要立刻處理，所以排在「不確定」與「留下垃圾資料」之前；但後兩者也不能因此消失，所以要在摘要中列出。</dd>
+<dt>影響</dt><dd><code>report/exit_code.py</code>、<code>cli.py</code> 摘要。</dd>
+</dl>
+</div>
+
+<div class="card">
+<h3><span class="tag p1">P1</span> A-06　工具自身的威脅模型：目標可能是惡意的（併入 S-19）</h3>
+<dl>
+<dt>位置</dt><dd>§7（新增小節），併 S-19 的 Safety 條文</dd>
+<dt>問題</dt><dd>RLSentry 讀取的每一樣東西都由目標控制：HTML、JS bundle、source map、OpenAPI 的表名與欄位名、錯誤訊息。實作已有多項防護，但都只存在於 ADR：S4 端點確認，防止 bundle 把測試帳號密碼導到他處（ADR-043）；只抓同源與大小上限（ADR-036）；修補 SQL 的識別字經 <code>quote_ident</code>，含控制字元的名稱不產生 SQL（ADR-044 #2）；HTML 報告自包含且自動跳脫（ADR-044 #1）；遮罩所有輸出（NFR-03）；Typer 不印 locals（ADR-047 #3）。SPEC 沒有任何一處說明「目標是不可信輸入」。</dd>
+<dt>建議文字</dt><dd>§7 新增「<strong>工具自身的威脅模型</strong>：目標的所有回應都是不可信輸入。RLSentry 必須：(1) 只把憑證送往使用者確認的端點（S4）；(2) 只抓同源內容並設上限；(3) 由目標提供的名稱進入修補 SQL 前必須跳脫，無法安全跳脫時不產生 SQL；(4) 報告不執行任何目標內容（HTML 無 script、自動跳脫）；(5) 錯誤輸出不含憑證與連線字串。」</dd>
+<dt>替代方案</dt><dd>A. 寫進 SPEC（建議）：安全工具的安全性是產品承諾，日後修改必須正面討論。B. 不改：防護可能在重構時被無意移除。</dd>
+<dt>解釋</dt><dd>掃描器常被反過來利用：攻擊者布置一個「看起來有漏洞」的網站，等掃描器來時偷走它帶的憑證，或在報告裡注入惡意內容。資安工具必須假設被掃描的一方可能是攻擊者。</dd>
+<dt>影響</dt><dd>只改文件；ADR-036、043、044 改為引用 SPEC。建議把 S-19 由 P2 升為 P1 並與本條合併。</dd>
+</dl>
+</div>
+
+<h2>5. 修訂執行方式</h2>
+<div class="wrap"><table>
+<tr><th>步驟</th><th>誰</th><th>內容</th></tr>
+<tr><td>1</td><td>人類</td><td>決定 §6 的決策清單</td></tr>
+<tr><td>2</td><td>architect</td><td>依決策產出 SPEC v1.1 的逐段修改草稿（diff），每段附對應的 S／A 編號。草稿放在 <code>docs/reviews/</code>，不碰凍結檔</td></tr>
+<tr><td>3</td><td>人類</td><td>審閱並套用到 <code>docs/SPEC.md</code>；同時在 <code>harness/milestones.yaml</code> 新增 MS8（修正方案 D2）；重新凍結</td></tr>
+<tr><td>4</td><td>architect／implementer</td><td>依 v1.1 執行 MS8（<code>pm-response-and-fix-plan.html</code> §7）；只改文件的條目不需 ticket</td></tr>
+<tr><td>5</td><td>人類</td><td>MS8 核准後，決定是否進行 v1.2（S-25 分離 PROCESS）</td></tr>
+</table></div>
+<div class="box warn">v1.1 範圍：P0 4 條、P1 共 12 條（S-05～S-12、A-01、A-02、A-05、A-06＋S-19）、其餘 P2／P3 條目（S-25 除外）。v1.2 範圍：S-25。純文件條目可以在 MS8 之前一次完成，因為它們只是把 ADR 已核准的行為寫回 SPEC。</div>
+
+<h2>6. 人類決策清單（合併 Auditor-PM 與修正方案）</h2>
+<div class="wrap"><table>
+<tr><th>#</th><th>決策</th><th>Auditor-PM 建議</th><th>architect 建議</th><th>對應</th></tr>
+<tr><td>1</td><td>完整性門檻的預設</td><td>not_tested 比例預設 0</td><td>只用硬性條件，比例選填</td><td>S-01、D1、A-01</td></tr>
+<tr><td>2</td><td>ci 跑唯讀 M1</td><td>是</td><td>是（不可達只記 note）</td><td>S-05、D3</td></tr>
+<tr><td>3</td><td>跨租戶讀取嚴重度</td><td>基準 High、敏感 Critical</td><td>傾向同意 Auditor-PM；或只降 ci 門檻</td><td>S-06、D4</td></tr>
+<tr><td>4</td><td>init 的 TODO</td><td>擋掃描（exit 2）</td><td>不擋；判為 Review、ci 算不完整</td><td>S-09</td></tr>
+<tr><td>5</td><td>授權條款</td><td>由人類選定</td><td>由人類選定</td><td>S-10、D7</td></tr>
+<tr><td>6</td><td>audit 用 fail_on</td><td>只警告（或允許）</td><td>先只警告</td><td>S-12、D5</td></tr>
+<tr><td>7</td><td>audit 的 unknown 確認者</td><td>拒絕（exit 3）</td><td>警告</td><td>S-21、D8</td></tr>
+<tr><td>8</td><td>lab 代清</td><td>P2 選配或刪除條文</td><td>做，只限 lab、獨立連線</td><td>S-07、D6</td></tr>
+<tr><td>9</td><td>修正流程</td><td>—</td><td>新增 MS8</td><td>D2</td></tr>
+<tr><td>10</td><td>PROCESS 分離的時程</td><td>v1.1 一併處理（P2）</td><td>v1.2，MS8 核准後</td><td>S-25</td></tr>
+</table></div>
+<p class="meta">來源：<code>review/spec-review.html</code>（Auditor-PM，A5）、<code>review/spec-issues.md</code>、<code>docs/reviews/pm-response-and-fix-plan.html</code>（architect 修正方案）、<code>docs/reviews/global-issues.md</code>。Auditor-PM 的審核條件註記見修正方案 §10。</p>
+</main>
+</body>
+</html>

@@ -131,13 +131,13 @@ USAGE §5 exit code 表、HTML／JSON／SARIF 呈現。</dd>
 </div>
 
 <div class="card">
-<h3><span class="tag p0">P0</span> I-02　profile 不一致時明示，Action 要求一致</h3>
+<h3><span class="tag p0">P0</span> I-02　profile 不一致時明示，要求 ci 卻得不到 ci 即失敗</h3>
 <dl>
-<dt>目標行為</dt><dd>CLI <code>--profile</code> 與實際生效的 profile 不同時，stderr 印一行警告，報告 notes 也記一筆；新增 <code>--require-profile</code>，不一致時 exit 2。GitHub Action 一律帶 <code>--require-profile</code>。</dd>
+<dt>目標行為</dt><dd>CLI <code>--profile</code> 與實際生效的 profile 不同時，stderr 印一行警告，報告 notes 也記一筆；<strong>CLI 指定 ci 而有效 profile 不是 ci 時一律 exit 2</strong>（不需要旗標）。<br><em>修訂（2026-11-08）：原設計為新增 <code>--require-profile</code> 旗標；依 Auditor-PM A5 的 S-02 改採「要求 ci 卻得不到 ci 即失敗」，見 <code>spec-revision-proposal.html</code> §3.8。</em></dd>
 <dt>修改位置</dt><dd><code>pipeline.py:48-54</code>（<code>stricter_profile</code> 回傳是否被覆蓋）、<code>cli.py</code>（警告與新選項）、<code>action/action.yml</code>（加旗標）、USAGE §2、§6。</dd>
 <dt>設計選擇</dt><dd>保留「較嚴者勝」。替代方案「CLI 優先」會讓 <code>--profile dev</code> 把 audit 設定檔變成可寫入的掃描，破壞「audit 的唯讀不可被覆寫」（SPEC §5 Safety）。另一個替代方案是「設定檔省略 profile 時由 CLI 決定」，但它改變 ADR-010 的預設唯讀，風險較高，所以不採用。</dd>
-<dt>測試</dt><dd>單元：三種組合的警告與 exit 2。e2e：設定檔無 profile＋<code>--profile ci --require-profile</code> → exit 2，訊息指出要在設定檔寫 <code>profile: ci</code>。</dd>
-<dt>最壞影響</dt><dd>已在用 Action 而設定檔省略 profile 的使用者，升級後 CI 會以 exit 2 失敗。這正是要暴露的錯誤設定，訊息會說明修法。回滾：Action 輸入新增 <code>require-profile: "false"</code> 的逃生口。</dd>
+<dt>測試</dt><dd>單元：三種組合的警告與 exit 2。e2e：設定檔無 profile＋<code>--profile ci</code> → exit 2，訊息指出要在設定檔寫 <code>profile: ci</code>。</dd>
+<dt>最壞影響</dt><dd>已在用 Action 而設定檔省略 profile 的使用者，升級後 CI 會以 exit 2 失敗。這正是要暴露的錯誤設定，訊息會說明修法。回滾：在設定檔寫明 <code>profile</code> 即可；程式層面 revert 這張 ticket。</dd>
 </dl>
 </div>
 
@@ -239,7 +239,7 @@ USAGE §5 exit code 表、HTML／JSON／SARIF 呈現。</dd>
 <h3>7.1 流程（依 D2(b)）</h3>
 <ol>
 <li>人類：決定 D1–D8；修訂 SPEC §2、§5 M5、§8／NFR-01；在 <code>harness/milestones.yaml</code> 新增 MS8；重打凍結 tag。</li>
-<li>architect：寫 ADR（I-01 exit 6 與判準、I-02 require-profile、I-03 Coverage 模型、I-06b 代清的安全邊界、I-09 門檻、I-05 模組表）；更新合約；寫測試與 holdout；建立 ticket。</li>
+<li>architect：寫 ADR（I-01 exit 6 與判準、I-02 ci 不一致即失敗、I-03 Coverage 模型、I-06b 代清的安全邊界、I-09 門檻、I-05 模組表）；更新合約；寫測試與 holdout；建立 ticket。</li>
 <li>implementer：依 ticket 實作，經 <code>harness/tickets.py accept</code> 合併（範圍檢查、作弊檢查、回歸）。</li>
 <li>auditor 審查 MS8 → 驗證清單 <code>docs/verification/MS8-v1.md</code>（第一項為獨立驗證，並把 PM 的 18 項列為逐項結案表）→ 人類核准。</li>
 <li>重跑 benchmark 三欄與 Rival 的 conformance（中立的回歸檢查）→ fast-forward main。</li>
@@ -249,7 +249,7 @@ USAGE §5 exit code 表、HTML／JSON／SARIF 呈現。</dd>
 <div class="wrap"><table>
 <tr><th>批次</th><th>ticket</th><th>項目</th><th>主要路徑</th><th>依賴</th></tr>
 <tr><td>W1</td><td>A 掃描完整性與 exit 6</td><td>I-01、I-13</td><td>contracts/report.py、models.py、pipeline.py、report/exit_code.py、cli.py</td><td>D1</td></tr>
-<tr><td>W1</td><td>B profile 明示與 require-profile</td><td>I-02</td><td>pipeline.py、cli.py、action/action.yml</td><td>—</td></tr>
+<tr><td>W1</td><td>B profile 明示與 ci 不一致即失敗</td><td>I-02</td><td>pipeline.py、cli.py、action/action.yml</td><td>—</td></tr>
 <tr><td>W1</td><td>C 覆蓋率模型與計算</td><td>I-03</td><td>contracts/models.py、pipeline.py</td><td>—</td></tr>
 <tr><td>W1</td><td>D 覆蓋率呈現與授權說明</td><td>I-03、I-14</td><td>report/html.py、json.py、sarif.py、cli.py、USAGE.md</td><td>C</td></tr>
 <tr><td>W1</td><td>E bench 量測模式與報告</td><td>I-04</td><td>bench/run.py、BENCHMARK_REPORT.md</td><td>—（W2 後再跑一次）</td></tr>
@@ -283,7 +283,7 @@ USAGE §5 exit code 表、HTML／JSON／SARIF 呈現。</dd>
 <h2 id="s9">9. 最壞影響與回滾總表（Product 模式）</h2>
 <div class="wrap"><table>
 <tr><th>變更</th><th>會壞什麼</th><th>資料遺失風險</th><th>回滾</th></tr>
-<tr><td>exit 6、require-profile、ci 門檻 medium</td><td>既有 CI 由綠轉紅（預期行為）</td><td>無</td><td>設定 <code>fail_on.incomplete: false</code>、Action <code>require-profile: "false"</code>、<code>fail_on.severity: high</code></td></tr>
+<tr><td>exit 6、ci 不一致 exit 2、ci 門檻 medium</td><td>既有 CI 由綠轉紅（預期行為）</td><td>無</td><td>設定 <code>fail_on.incomplete: false</code>、在設定檔寫明 <code>profile</code>、<code>fail_on.severity: high</code></td></tr>
 <tr><td>Coverage 欄位、報告文字</td><td>以嚴格 schema 驗證 JSON 的下游</td><td>無</td><td>revert 該 ticket</td></tr>
 <tr><td>ci 跑 M1</td><td>ci 多一段網路請求與時間</td><td>無（只有 GET）</td><td>模組表移除 M1</td></tr>
 <tr><td>INSERT 帶 canary</td><td>文字欄有限制的表覆蓋下降（inconclusive）</td><td>無</td><td>revert</td></tr>
