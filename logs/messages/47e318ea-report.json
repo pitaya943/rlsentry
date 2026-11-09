@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a95a61c2f994c8cdd",
+  "description": "T-211 correlate per role",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-211\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-211.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/b227dfcb-caa8-5c73-a736-a08c80d6e4d5/tasks/a95a61c2f994c8cdd.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

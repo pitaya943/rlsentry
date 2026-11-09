@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "af5d191d6a1201c22",
+  "description": "T-182 recon classify",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-182\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-182.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/a4a95e9a-1b66-5bd0-bc52-f3cba4cd691e/tasks/af5d191d6a1201c22.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

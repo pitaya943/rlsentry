@@ -1,0 +1,6 @@
+{
+  "description": "MS4 audit (retry)",
+  "prompt": "Review: MS4\nBase: 24b3473\nBudget note: a previous attempt ran out of turns. Do NOT run lab/Docker tests (the architect runs acceptance separately); read code with targeted Grep/Read and write your report by turn ~20.\nScope: rlsentry/whitebox/** (read-only connection, hash pin, set_config db_schemas), rlsentry/bench/** vs ADR-011/ADR-033 and rlsentry/contracts/bench.py, rlsentry/probe/fill.py + seed/write/run changes (ADR-034 + 補記), lab/**/expected.yaml splinter_expected vs BENCHMARK_REPORT.md and tests/lab/test_splinter_expected.py.\nFocus: probe-only cases real; SECURITY DEFINER counts as vulnerability only with obtained data, else config warning; M4 never creates confirmed findings.\nReturn: traceability table (SPEC item → code → test), findings P0/P1/P2 with file:line, 3 lab scenarios to hand-check, and hand-check items for the human.",
+  "subagent_type": "auditor",
+  "run_in_background": true
+}

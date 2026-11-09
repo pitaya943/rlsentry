@@ -1,0 +1,73 @@
+{
+  "status": "completed",
+  "prompt": "Ticket: T-109\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-109.md and follow it.",
+  "agentId": "afd295a6df989d933",
+  "agentType": "probe-dev",
+  "handback": "send",
+  "handbackReport": {
+    "text": "Ticket: T-109\nBranch: worktree-agent-afd295a6df989d933\nCommit: d8338f081797cce79b95a78ab10191f1b2698023\nWorktree: /home/user/rlsentry/.claude/worktrees/agent-afd295a6df989d933\nFiles: rlsentry/probe/run.py\nTests: 8 passed, 0 failed (tests/probe/test_run.py). ruff check . and mypy rlsentry are clean. I did not run the full `make check`.\nAmbiguities: the contract doesn't give the separator between the \"no known row outside the expected scope of <role>\" note and the KnownRows notes. I joined them with \"; \"."
+  },
+  "toolsUsed": [
+    "Bash",
+    "SubagentHandback"
+  ],
+  "harnessNoteCount": 1,
+  "harnessTailCount": 0,
+  "harnessSectionHash": "8c40b66e6ee7092d",
+  "content": [
+    {
+      "type": "text",
+      "text": "This agent's report was delivered to you as a message from \"afd295a6df989d933\" (its SubagentHandback call). Read it there; it is not repeated here.\n"
+    }
+  ],
+  "resolvedModel": "claude-sonnet-5-5",
+  "totalDurationMs": 45942,
+  "totalTokens": 25834,
+  "totalToolUseCount": 7,
+  "usage": {
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 120,
+    "cache_read_input_tokens": 25436,
+    "output_tokens": 276,
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 120
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 276,
+        "cache_read_input_tokens": 25436,
+        "cache_creation_input_tokens": 120,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 120,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "toolStats": {
+    "readCount": 0,
+    "searchCount": 0,
+    "bashCount": 6,
+    "editFileCount": 0,
+    "linesAdded": 0,
+    "linesRemoved": 0,
+    "otherToolCount": 1
+  },
+  "worktreePath": "/home/user/rlsentry/.claude/worktrees/agent-afd295a6df989d933",
+  "worktreeBranch": "worktree-agent-afd295a6df989d933",
+  "canContinueAgent": false
+}

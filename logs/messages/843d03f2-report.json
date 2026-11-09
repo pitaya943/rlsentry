@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "ae63402a937e17635",
+  "description": "Audit MS3",
+  "resolvedModel": "claude-opus-4-8",
+  "prompt": "Review: MS3\nBase: bd79ce0\n\nReview only the MS3 diff (M3 write probing, FR-09; ADR-029 and its 補記). Focus: writes only in dev/ci and only to localhost/lab (audit sends no write — NFR-01); the write verdict never calls an insert-vulnerable cell \"denied\" (status classification); read-back verifies the final state (a 2xx is not a write); cleanup removes every canary or reports CLEANUP_FAILED (no silent residue); each destructive probe uses its own fresh work row; no real user data is read/stored beyond keys/canaries. Produce a traceability table (FR-09 and the ADR-029 decisions → contract → implementation → tests) and a safety review (P0/P1/P2 findings). List concrete hand-check items the human should run in Codespaces. Note the known limitations the architect already documented (L01/L05 unseedable → not_tested; L03 escalation and dev/ci read-seeding deferred to MS6; permissive-policy mutation nuance).",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/a6a09a13-8503-5249-8edd-eee75450f8b3/tasks/ae63402a937e17635.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

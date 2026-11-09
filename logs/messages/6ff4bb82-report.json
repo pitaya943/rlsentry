@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "ab4b253a215f9c79c",
+  "description": "T-218 SARIF and exit code",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-218\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-218.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/b227dfcb-caa8-5c73-a736-a08c80d6e4d5/tasks/ab4b253a215f9c79c.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

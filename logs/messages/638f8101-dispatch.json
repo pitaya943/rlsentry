@@ -1,0 +1,6 @@
+{
+  "description": "T-105 cross_tenant",
+  "prompt": "Ticket: T-105\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-105.md and follow it.",
+  "subagent_type": "probe-dev",
+  "isolation": "worktree"
+}

@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "aa8886a5c69f4ae48",
+  "description": "T-077 labctl attempt 2",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-077\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-077.md and follow it (attempt 2: see the section at the end of the ticket).",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/aa8886a5c69f4ae48.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

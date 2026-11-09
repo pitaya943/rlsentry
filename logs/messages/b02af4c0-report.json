@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a51386d1e40960f4f",
+  "description": "T-103 session",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-103\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-103.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/505ebaef-3fa1-5dce-8359-2913693d1ef6/tasks/a51386d1e40960f4f.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

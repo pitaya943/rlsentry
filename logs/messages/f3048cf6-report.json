@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a4df1e221e24bad60",
+  "description": "T-163 bench scoring",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-163\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-163.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/e06fdbe0-c428-5441-a8c2-bcd56a9af2ef/tasks/a4df1e221e24bad60.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

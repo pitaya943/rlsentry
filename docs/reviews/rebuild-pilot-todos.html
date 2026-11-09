@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>重建試點操作清單</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1d1d1f;--muted:#5f6368;--line:#dcdcd8;--card:#ffffff;--accent:#2f5d8a;
+--red:#b3261e;--amber:#b26a00;--green:#3d6b2f;--code:#f1f1ee;--warn:#fff4e5;--ok:#eef6ec}
+@media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#e8e8e6;--muted:#a0a3a8;--line:#34353a;--card:#1e1f22;
+--accent:#8db7e0;--red:#f2867f;--amber:#f0b45a;--green:#9ccf8c;--code:#26272b;--warn:#3a2d17;--ok:#1f2e1c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 -apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 72px}
+h1{font-size:1.6rem;margin:.2em 0}h2{font-size:1.25rem;margin:2.3em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--line)}
+h3{font-size:1.04rem;margin:1.4em 0 .4em}
+.meta{color:var(--muted);font-size:.9rem}
+code{background:var(--code);padding:.05em .35em;border-radius:4px;font-size:.88em}
+pre{background:var(--code);padding:10px 12px;border-radius:6px;overflow-x:auto;font-size:.83em;line-height:1.5;white-space:pre}
+table{border-collapse:collapse;width:100%;margin:.6em 0;font-size:.89rem}
+th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+th{background:var(--code)}
+.wrap{overflow-x:auto}
+.box{border-left:4px solid var(--accent);background:var(--card);padding:10px 14px;margin:12px 0}
+.warn{border-left-color:var(--amber);background:var(--warn)}
+.ok{border-left-color:var(--green);background:var(--ok)}
+.step{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin:14px 0}
+.step h3{margin-top:.3em}
+.who{display:inline-block;font-size:.75rem;font-weight:600;padding:0 .45em;border-radius:4px;border:1px solid currentColor;margin-right:.4em}
+.h{color:var(--red)}.a{color:var(--accent)}.j{color:var(--green)}
+ul.todo{list-style:none;padding-left:0}ul.todo li::before{content:"☐ ";color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<h1>重建試點操作清單</h1>
+<p class="meta">對應 <code>docs/reviews/independent-rebuild-design.html</code> · architect（Management session）· 2026-11-08 · 人類的決定：先做試點；不設美元上限，5 小時用量滿時等重置後自動繼續；agent 配置由設計決定；lab 情境可見性由 spec agent 決定</p>
+
+<div class="box">
+<p><strong>你要做的事總共 8 步</strong>，其中需要你親手操作的是 H1–H6，大約 30–45 分鐘；之後只要等最終報告。標記：<span class="who h">你</span>需要你操作；<span class="who a">architect</span>由本 session 代做；<span class="who j">Judge</span>由試點的 Judge session 自動進行。</p>
+<ol>
+<li><a href="#h0">H0 先讀：三個與設計書不同的地方</a></li>
+<li><a href="#h1">H1 建立 5 個私有 repo 並授權 Claude</a></li>
+<li><a href="#h2">H2 建立 2 個雲端環境（受限網路、setup script、試題金鑰）</a></li>
+<li><a href="#h3">H3 驗證環境（一個測試 session）</a></li>
+<li><a href="#h4">H4 讓 architect 準備素材包</a></li>
+<li><a href="#h5">H5 核定 L2 約束與 L4 介面（唯一一次審閱）</a></li>
+<li><a href="#h6">H6 啟動 Judge session（唯一需要你輸入的提示詞）</a></li>
+<li><a href="#h7">H7 之後：監看、緊急停止、結束時</a></li>
+</ol>
+</div>
+
+<h2 id="h0">H0 先讀：三個與設計書不同的地方</h2>
+<p>規劃實際操作時，我查了雲端環境的限制，發現設計書有三處需要修正：</p>
+<div class="wrap"><table>
+<tr><th>設計書寫的</th><th>實際情況</th><th>修正做法</th></tr>
+<tr><td>§5「隔離靠 repo 權限，不靠提示詞」</td><td>Claude 的 GitHub 存取是以<strong>你的帳號</strong>為單位，所有 session 共用。任何 session 都可以用 <code>add_repo</code> 或 GitHub 搜尋碰到你授權過的其他 repo。repo 層級的隔離只能靠「每個 session 掛載哪些 repo」加上提示詞，平台不會強制擋下。</td><td>(1) 隱藏試題<strong>加密</strong>後才放進 repo，金鑰只存在 Examiner／Judge 使用的雲端環境（<code>rb-exam</code>），做題方的環境（<code>rb-main</code>）沒有金鑰，即使讀到檔案也只是密文。(2) Integrity monitor 用 <code>list_events</code> 稽核每個 session 的紀錄，檢查是否有越界的 <code>add_repo</code> 或搜尋。(3) 最終報告揭露這個限制。</td></tr>
+<tr><td>§6 P0「人類確認一次後離開」，各角色由人類開 session</td><td>雲端 session 可以用 <code>create_session</code> 建立其他 session，用 <code>send_message</code> 互相傳訊。</td><td>你只開 <strong>Judge</strong> 一個 session、輸入一段提示詞；其餘 7 個角色由 Judge 建立並分派。若 Judge 無法建立 session，再改用 H6 的手動備案。</td></tr>
+<tr><td>（設計書未涵蓋）5 小時用量上限</td><td>同一帳號的所有 session 共用用量；用滿時全部停下。</td><td>Judge 啟動時建立一個<strong>每小時觸發的 Routine</strong>，喚醒自己巡檢：用量重置後，對停住的 session 傳送「繼續」。這就是你要的「等到重置再自動繼續」。</td></tr>
+</table></div>
+<div class="box warn"><strong>另一件你要知道的事</strong>：目前的環境「rlsentry」網路設定是 <strong>unrestricted（不限制）</strong>，與 CLAUDE.md 的硬規則「只連 localhost、PyPI、GitHub」不符，這也是 Rival 能連到 public.ecr.aws 的原因。試點的新環境一律使用受限網路（H2）。「rlsentry」環境要不要改，等 Rival 結束後再決定：現在改可能讓進行中的 Rival 無法拉取映像。</div>
+
+<h2 id="h1">H1 建立 5 個私有 repo 並授權 Claude <span class="who h">你</span></h2>
+<div class="step">
+<h3>1-1 建立 repo（在你的電腦，需要已登入的 GitHub CLI）</h3>
+<p>每個 repo 都要有初始 commit（<code>--add-readme</code>），雲端 session 才能 clone。</p>
+<pre>gh repo create pitaya943/rb-spec --private --add-readme --description "rebuild pilot: spec and materials (Product writes)"</pre>
+<pre>gh repo create pitaya943/rb-system --private --add-readme --description "rebuild pilot: implementation (Architect writes)"</pre>
+<pre>gh repo create pitaya943/rb-exam --private --add-readme --description "rebuild pilot: encrypted hidden tests (Examiner writes)"</pre>
+<pre>gh repo create pitaya943/rb-redteam --private --add-readme --description "rebuild pilot: attack reports (Red team writes)"</pre>
+<pre>gh repo create pitaya943/rb-judge --private --add-readme --description "rebuild pilot: orchestration, mailbox, rulings (Judge writes)"</pre>
+<p>沒有 GitHub CLI 時，在 github.com 右上角「New repository」逐一建立，勾選 Private 與「Add a README file」。</p>
+</div>
+<div class="step">
+<h3>1-2 讓 Claude GitHub App 可以存取這 5 個 repo</h3>
+<p>開啟 <code>https://github.com/apps/claude/installations/select_target</code> → 選你的帳號 → Configure → Repository access → 若是「Only select repositories」，把 5 個 <code>rb-*</code> 加進去 → Save。</p>
+<p>檢查：在 claude.ai/code 開新 session 時，repo 選單裡看得到這 5 個 repo。</p>
+</div>
+<ul class="todo"><li>5 個 repo 已建立，各有 README</li><li>Claude App 可存取這 5 個 repo</li></ul>
+
+<h2 id="h2">H2 建立 2 個雲端環境 <span class="who h">你</span>（或 <span class="who a">architect</span> 代建、你按核准）</h2>
+<p>兩個環境的網路與 setup script 相同，差別只在 <code>rb-exam</code> 多一個試題金鑰。</p>
+<div class="wrap"><table>
+<tr><th>環境</th><th>給誰用</th><th>網路</th><th>環境變數</th></tr>
+<tr><td><code>rb-main</code></td><td>Product、Spec critic、Architect、Red team、Integrity monitor、Comparator</td><td>Limited；套件來源允許；allowed hosts 見下</td><td><code>SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io</code></td></tr>
+<tr><td><code>rb-exam</code></td><td>Judge、Examiner</td><td>同上</td><td>同上，另加 <code>EXAM_KEY</code>（你在本機產生，見 2-3）</td></tr>
+</table></div>
+<div class="step">
+<h3>2-1 網路設定</h3>
+<p>選 <strong>Limited</strong>，開啟「package managers」（PyPI 等），allowed hosts 填下列主機（只能填完整主機名，不能用萬用字元）：</p>
+<pre>github.com
+api.github.com
+codeload.github.com
+objects.githubusercontent.com
+release-assets.githubusercontent.com
+ghcr.io
+pkg-containers.githubusercontent.com</pre>
+<p>這份清單是依「Supabase CLI 從 GitHub release 下載、映像從 ghcr.io 拉取」推得的，<strong>未經實測</strong>。H3 的測試若出現被網路擋下的主機，再依錯誤訊息補上，但只能補 GitHub 相關主機。</p>
+</div>
+<div class="step">
+<h3>2-2 Setup script（兩個環境相同，貼進環境設定的 Setup script 欄位）</h3>
+<p>以 rlsentry 的 <code>cloud/setup.sh</code> 為基礎，只裝工具、不抓任何 repo 的原始碼；新增映像來源固定為 ghcr.io，以及解密試題用的 <code>age</code>。</p>
+<pre>#!/usr/bin/env bash
+# rb-* rebuild pilot environment: tools only, never fetches repository source.
+# Never fails the environment (warnings only).
+set -uo pipefail
+SUPABASE_VERSION="3.0.0"
+
+pip install --quiet pytest pytest-cov pyyaml httpx ruff mypy mutmut \
+  || echo "pip: install failed"
+
+command -v age >/dev/null || (sudo apt-get update -q &amp;&amp; sudo apt-get install -y -q age) \
+  || echo "age: install failed"
+
+if [ "$(supabase --version 2>/dev/null)" != "${SUPABASE_VERSION}" ]; then
+  ARCH="$(dpkg --print-architecture)"
+  if curl -fL --retry 5 --retry-delay 5 --retry-all-errors -o /tmp/supabase.tar.gz \
+       "https://github.com/supabase/cli/releases/download/v${SUPABASE_VERSION}/supabase_linux_${ARCH}.tar.gz"; then
+    sudo tar -xzf /tmp/supabase.tar.gz -C /usr/local/bin supabase || echo "supabase: extract failed"
+    rm -f /tmp/supabase.tar.gz
+  else
+    echo "supabase: download failed"
+  fi
+fi
+supabase --version || echo "supabase: NOT installed"
+
+if ! docker info >/dev/null 2>&amp;1; then
+  (sudo -n dockerd >/tmp/dockerd.log 2>&amp;1 &amp;) || true
+  for _ in $(seq 1 20); do docker info >/dev/null 2>&amp;1 &amp;&amp; break; sleep 1; done
+fi
+docker info >/dev/null 2>&amp;1 &amp;&amp; echo "docker: running" || echo "docker: NOT running"
+exit 0</pre>
+</div>
+<div class="step">
+<h3>2-3 產生試題金鑰（只放進 <code>rb-exam</code> 環境）</h3>
+<p>在你的電腦產生一組隨機金鑰：</p>
+<pre>openssl rand -hex 32</pre>
+<p>把輸出貼到 <code>rb-exam</code> 環境的環境變數 <code>EXAM_KEY</code>。這不是真正的帳號密碼，用途只是讓做題方的 session 讀不懂試題；它以明文存在環境設定中，只有使用 <code>rb-exam</code> 的 session 拿得到。<strong>不要</strong>把它放進 <code>rb-main</code>，也不要貼進任何對話或 repo。</p>
+</div>
+<div class="step">
+<h3>2-4 在哪裡設定</h3>
+<p>在 claude.ai/code 的任一 session，點標題列的雲端環境選單 → 新增環境（或 Edit 既有環境）→ 依上面填寫名稱、網路、setup script、環境變數。</p>
+<p><strong>由 architect 代建</strong>：你也可以直接告訴我「代建 rb-main 與 rb-exam」。我會送出建立請求，你在核准卡片上確認內容後按核准。<code>EXAM_KEY</code> 仍要你自己在設定頁加入，因為我不能把金鑰寫進環境變數。</p>
+</div>
+<ul class="todo"><li><code>rb-main</code> 已建立（Limited、hosts、setup script、<code>SUPABASE_INTERNAL_IMAGE_REGISTRY</code>）</li><li><code>rb-exam</code> 已建立（同上＋<code>EXAM_KEY</code>）</li></ul>
+
+<h2 id="h3">H3 驗證環境 <span class="who h">你</span></h2>
+<p>在 <code>rb-main</code> 開一個測試 session，repo 選 <code>rb-spec</code>，貼入下面的提示詞。它會確認 Docker、Supabase CLI、映像拉取與受限網路都正常，回報後即可封存這個 session。</p>
+<pre>這是環境驗證，不做任何開發。依序執行並回報每一步的結果（成功／失敗與錯誤訊息），不要修改任何 repo：
+1. docker info 是否可用（不可用就執行 sudo dockerd 後等 10 秒再試）。
+2. supabase --version 是否為 3.0.0；age --version。
+3. 在暫存目錄 supabase init 一個空專案，然後
+   SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+   回報是否成功、花了多久；若映像拉取失敗，列出被擋下的主機名稱。
+4. curl -sS -o /dev/null -w "%{http_code}" https://example.com 應該被網路政策擋下（這是確認受限網路有效，只送這一個請求）。
+5. supabase stop。
+最後用三行總結：環境是否可用、需要補上哪些主機。</pre>
+<p>若第 3 步有被擋下的主機，回到 H2 補上後再測一次。第 4 步若<strong>沒有</strong>被擋，代表網路不是 Limited，請回 H2 檢查。</p>
+<ul class="todo"><li>測試 session 回報四項正常</li><li>測試 session 已封存</li></ul>
+
+<h2 id="h4">H4 讓 architect 準備素材包 <span class="who h">你</span>→<span class="who a">architect</span></h2>
+<p>回到本 session，輸入：</p>
+<pre>H1–H3 完成。請準備重建試點的素材包。</pre>
+<p>我會用 <code>add_repo</code> 掛上 <code>rb-spec</code> 與 <code>rb-judge</code>，推送以下內容到兩個 repo 的 <code>main</code>（依設計書 §3.3 清理）：</p>
+<div class="wrap"><table>
+<tr><th>repo</th><th>內容</th><th>來源與清理方式</th></tr>
+<tr><td><code>rb-spec</code></td><td><code>PROBLEM.md</code>（L1 草稿）、<code>CONSTRAINTS.md</code>（L2 草稿）、<code>INTERFACE.md</code>（L4 草稿）</td><td>由 SPEC §1、§7 與硬規則改寫；去除所有做法描述</td></tr>
+<tr><td><code>rb-spec</code></td><td><code>materials/outcomes.md</code></td><td>設計書 §3.2 右欄的結果需求（不含編號）</td></tr>
+<tr><td><code>rb-spec</code></td><td><code>materials/platform-notes.md</code></td><td>Supabase／PostgREST／GoTrue 的公開行為，例如 PostgREST 以 <code>WITH … SELECT</code> 送出寫入，所以只開 <code>log_statement = mod</code> 記不到；附官方文件連結</td></tr>
+<tr><td><code>rb-spec</code></td><td><code>lab/</code>：試點 8 個情境（L02、L04、L10、L12、C01–C04）的 migration、seed、frontend、expected.yaml，以及 lab 控制器</td><td>情境取自 rlsentry 的 <code>lab/</code>，刪除 expected.yaml 中引用 ADR、合約檔名、ticket 的註解；lab 控制器使用 Rival 的 <code>arena/labctl</code>（依公開 lab 事實撰寫，不含現有系統程式碼）</td></tr>
+<tr><td><code>rb-judge</code></td><td><code>roles/*.md</code>（8 個角色的完整提示詞）、<code>PROTOCOL.md</code>（信箱、證據、關卡、停止條件、隔離規則）、<code>conformance/</code>（Rival 的中立計分協定）、<code>STATUS.md</code></td><td>依設計書 §4–§9；計分協定沿用已驗證對兩邊公平的版本</td></tr>
+</table></div>
+<p>完成後我會回報 commit 與清理清單。這一步我不做任何設計取捨。</p>
+
+<h2 id="h5">H5 核定 L2 約束與 L4 介面 <span class="who h">你</span></h2>
+<p>這是你在整個試點中<strong>唯一一次審閱</strong>。只看兩個短檔案：</p>
+<ul class="todo">
+<li><code>rb-spec/CONSTRAINTS.md</code>：法律與授權、只能連線的範圍、不保存資料內容、唯讀模式不寫入、不使用找到的高權限 key、限速。檢查有沒有遺漏你要的硬規則。</li>
+<li><code>rb-spec/INTERFACE.md</code>：設定檔格式與計分需要的最小報告欄位。檢查它是否夠少（只為了能和現有系統比較）。</li>
+</ul>
+<p>同意就回到本 session 輸入「L2、L4 核定」；要修改就直接告訴我改哪裡。核定後這兩個檔案在試點期間凍結。</p>
+
+<h2 id="h6">H6 啟動 Judge session <span class="who h">你</span></h2>
+<div class="step">
+<h3>6-1 開 session 時的選項</h3>
+<div class="wrap"><table>
+<tr><th>項目</th><th>設定</th></tr>
+<tr><td>環境</td><td><code>rb-exam</code></td></tr>
+<tr><td>Repo</td><td><code>rb-judge</code>（其他 repo 由 Judge 依需要以唯讀方式加入）</td></tr>
+<tr><td>模型</td><td>Opus</td></tr>
+<tr><td>權限模式</td><td><strong>Auto</strong>（提示框旁的模式選單）。沒有 Auto 時選 Accept edits，但會有較多確認提示，無法完全自動。</td></tr>
+<tr><td>標題</td><td><code>rb-Judge</code></td></tr>
+</table></div>
+</div>
+<div class="step">
+<h3>6-2 輸入的提示詞（整段貼上）</h3>
+<pre>你是重建試點的 Judge，同時負責協調。完整角色說明在 rb-judge/roles/judge.md，流程與規則在 rb-judge/PROTOCOL.md，設計依據是 rlsentry 的 docs/reviews/independent-rebuild-design.html（你不得掛載 rlsentry；那份設計已濃縮在 PROTOCOL.md）。先讀 roles/judge.md 與 PROTOCOL.md，照做。
+
+人類的授權（只限本試點）：
+- 你可以用 create_session 建立其他角色的 session、用 send_message 傳訊、用 get_session／list_events 查看狀態、用 create_trigger 建立 Routine。
+- 各角色 session 一律直接推送到自己負責的 rb-* repo 的 main 分支（不用 claude/ 分支）；你推送到 rb-judge 的 main。這是人類對所有 rb-* repo 的明確授權。
+- 不得 force-push、不得刪除 repo、不得修改 rb-spec 的 CONSTRAINTS.md 與 INTERFACE.md（人類已凍結）。
+- 只可連線 localhost、套件來源與 GitHub；只掃描本機 lab。
+
+啟動順序：
+1. 建立一個每小時觸發、喚醒你自己的 Routine（名稱 rb-pilot-heartbeat），內容是「巡檢：讀 STATUS.md，檢查各角色 session；用量上限重置後，對停住的 session 傳送繼續；依 PROTOCOL.md 推進下一步」。這是為了在 5 小時用量上限重置後自動繼續。
+2. 依 PROTOCOL.md 的角色表建立各角色 session（環境、模型、repo、提示詞都在 roles/*.md 的開頭），把 session id 記在 STATUS.md。
+3. 依 PROTOCOL.md 的階段 P1→P5 推進。不要向人類提問；遇到 PROTOCOL.md 列為「交人類」的事項，只記錄在 STATUS.md 的「待人類」區，然後採保守選項繼續。
+4. 試點結束（PROTOCOL.md 的停止條件）時：寫 rb-judge/FINAL-REPORT.html，停用 heartbeat Routine，封存各角色 session，最後在對話中用五行告訴人類結果與報告位置。</pre>
+</div>
+<div class="step">
+<h3>6-3 手動備案（只在 Judge 無法建立 session 時）</h3>
+<p>Judge 會在 STATUS.md 寫「需要手動建立」。這時依下表逐一開 session，提示詞都只有一行：「你是 &lt;角色&gt;。讀 rb-judge/roles/&lt;檔名&gt;.md 照做。人類授權你直接推送到 &lt;你負責的 repo&gt; 的 main。」</p>
+<div class="wrap"><table>
+<tr><th>角色</th><th>環境</th><th>模型</th><th>掛載的 repo</th><th>可寫入</th><th>角色檔</th></tr>
+<tr><td>Product</td><td>rb-main</td><td>Opus</td><td>rb-spec、rb-judge</td><td>rb-spec</td><td>product.md</td></tr>
+<tr><td>Spec critic</td><td>rb-main</td><td>Sonnet</td><td>rb-spec、rb-judge</td><td>rb-judge（質疑信）</td><td>critic.md</td></tr>
+<tr><td>Examiner</td><td>rb-exam</td><td>Sonnet</td><td>rb-spec、rb-exam、rb-judge</td><td>rb-exam</td><td>examiner.md</td></tr>
+<tr><td>Architect</td><td>rb-main</td><td>Opus</td><td>rb-spec、rb-system、rb-judge</td><td>rb-system</td><td>architect.md</td></tr>
+<tr><td>Red team</td><td>rb-main</td><td>Sonnet</td><td>rb-spec、rb-system、rb-redteam、rb-judge</td><td>rb-redteam</td><td>redteam.md</td></tr>
+<tr><td>Integrity monitor</td><td>rb-main</td><td>Sonnet</td><td>rb-system、rb-judge</td><td>rb-judge（誠信報告）</td><td>integrity.md</td></tr>
+<tr><td>Comparator</td><td>rb-main</td><td>Opus</td><td>rb-judge、rb-system、rlsentry、rlsentry-arena（P6 才建立）</td><td>rb-judge（比較報告）</td><td>comparator.md</td></tr>
+</table></div>
+<p>模型分配依設計書 §4：對立的兩方使用不同模型，以降低共同盲點。</p>
+</div>
+<ul class="todo"><li>Judge session 已啟動，權限模式為 Auto</li><li>STATUS.md 出現各角色的 session id 與 heartbeat Routine</li></ul>
+
+<h2 id="h7">H7 之後：監看、緊急停止、結束時 <span class="who h">你</span></h2>
+<div class="wrap"><table>
+<tr><th>想做的事</th><th>怎麼做</th></tr>
+<tr><td>看進度</td><td>讀 <code>rb-judge/STATUS.md</code>（目前階段、各角色狀態、待人類事項、已用輪數）。不需要回覆任何 session。</td></tr>
+<tr><td>確認自動繼續有在運作</td><td>claude.ai 的 Routines 清單中應有 <code>rb-pilot-heartbeat</code>，每小時一次，last run 為 succeeded。</td></tr>
+<tr><td>暫停全部</td><td>在 Routines 停用 <code>rb-pilot-heartbeat</code>，再在 Judge session 輸入「暫停試點：所有角色停在目前的步驟，不要開始新的工作」。</td></tr>
+<tr><td>緊急停止（例如發現對外連線）</td><td>停用 Routine，然後在 claude.ai/code 逐一封存 <code>rb-*</code> 的 session。受限網路已在平台層擋下非白名單主機。</td></tr>
+<tr><td>試點結束</td><td>讀 <code>rb-judge/FINAL-REPORT.html</code>，然後回到本 session 輸入「試點結束」。我會依設計書 §11.2 判斷是否擴大到全系統，並和你進行事後四個問題。</td></tr>
+</table></div>
+<div class="box warn"><strong>不設美元上限的提醒</strong>：你選擇以 5 小時用量上限作為唯一的節流。PROTOCOL.md 仍保留設計書 §9 的停止條件：每個切片紅隊最多 3 輪、同一阻礙連續 5 次失敗即停止，避免無限循環。試點預估在數個 5 小時週期內完成；若超過 7 天仍未結束，Judge 會停止並寫最終報告。</div>
+
+<h2>總清單</h2>
+<ul class="todo">
+<li>H0 讀完三個修正與網路提醒</li>
+<li>H1 5 個 repo＋Claude App 授權</li>
+<li>H2 環境 rb-main、rb-exam（含 EXAM_KEY）</li>
+<li>H3 測試 session 回報正常</li>
+<li>H4 在本 session 輸入「H1–H3 完成。請準備重建試點的素材包。」</li>
+<li>H5 核定 CONSTRAINTS.md、INTERFACE.md</li>
+<li>H6 啟動 Judge（rb-exam、Opus、Auto、6-2 提示詞）</li>
+<li>H7 看 STATUS.md；結束時在本 session 輸入「試點結束」</li>
+</ul>
+</main>
+</body>
+</html>

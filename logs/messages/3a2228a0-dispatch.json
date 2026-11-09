@@ -1,0 +1,7 @@
+{
+  "description": "T-187 recon run",
+  "prompt": "Ticket: T-187\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-187.md and follow it.",
+  "subagent_type": "recon-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

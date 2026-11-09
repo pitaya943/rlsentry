@@ -1,0 +1,7 @@
+{
+  "description": "T-211 correlate per role",
+  "prompt": "Ticket: T-211\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-211.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

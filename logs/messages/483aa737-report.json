@@ -1,0 +1,75 @@
+{
+  "status": "completed",
+  "prompt": "Ticket: T-127\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-127.md and follow it.",
+  "agentId": "a82164d38784d2956",
+  "agentType": "probe-dev",
+  "handback": "send",
+  "handbackReport": {
+    "text": "Ticket: T-127\nBranch: worktree-agent-a82164d38784d2956\nCommit: 846ed6636f41bf137ca0a784e79a188e2b6db59d\nWorktree: /home/user/rlsentry/.claude/worktrees/agent-a82164d38784d2956\nFiles: rlsentry/probe/write.py\nTests: 6 passed, 0 failed (ruff and mypy rlsentry are clean)\nAmbiguities:\n- plan_writes does not require a token for the actor on INSERT, UPDATE value-change or DELETE plans, because the contract only requires tokens for the reader and the work_owner. run() (T-130) must still turn a tokenless actor into a NOT_TESTED cell.\n- The UPDATE transfer plan needs the actor's own token, since the actor is the work_owner. This was required by test_no_reader_token_means_no_plan.\n- send_write returns WriteAttempt(status=None, curl=\"\") without sending anything when an UPDATE or DELETE plan has no work row.\n- seed_work_row returns None for RPC targets and for targets without a single-column primary key."
+  },
+  "toolsUsed": [
+    "Bash",
+    "Edit",
+    "SubagentHandback",
+    "Write"
+  ],
+  "harnessNoteCount": 1,
+  "harnessTailCount": 0,
+  "harnessSectionHash": "0988afe413752978",
+  "content": [
+    {
+      "type": "text",
+      "text": "This agent's report was delivered to you as a message from \"a82164d38784d2956\" (its SubagentHandback call). Read it there; it is not repeated here.\n"
+    }
+  ],
+  "resolvedModel": "claude-sonnet-5-5",
+  "totalDurationMs": 82719,
+  "totalTokens": 40505,
+  "totalToolUseCount": 11,
+  "usage": {
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 123,
+    "cache_read_input_tokens": 39954,
+    "output_tokens": 426,
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 123
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 426,
+        "cache_read_input_tokens": 39954,
+        "cache_creation_input_tokens": 123,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 123,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "toolStats": {
+    "readCount": 0,
+    "searchCount": 0,
+    "bashCount": 8,
+    "editFileCount": 2,
+    "linesAdded": 198,
+    "linesRemoved": 1,
+    "otherToolCount": 1
+  },
+  "worktreePath": "/home/user/rlsentry/.claude/worktrees/agent-a82164d38784d2956",
+  "worktreeBranch": "worktree-agent-a82164d38784d2956",
+  "canContinueAgent": false
+}

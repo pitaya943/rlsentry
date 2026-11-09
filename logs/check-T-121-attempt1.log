@@ -1,0 +1,80 @@
+All checks passed!
+..................EE.                                                    [100%]
+==================================== ERRORS ====================================
+_____________ ERROR at setup of test_module_imports_without_fcntl ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f351b2fdcd0>
+
+    @pytest.fixture
+    def labctl_without_fcntl(monkeypatch: pytest.MonkeyPatch) -> Iterator[ModuleType]:
+        # sys.modules[name] = None makes `import name` raise ImportError, as on Windows.
+        monkeypatch.setitem(sys.modules, "fcntl", None)
+        try:
+>           yield importlib.reload(labctl_module)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/labctl/test_import.py:20: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/importlib/__init__.py:129: in reload
+    _bootstrap._exec(spec, module)
+<frozen importlib._bootstrap>:866: in _exec
+    ???
+<frozen importlib._bootstrap_external>:1027: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Lab controller (T-060): start, reset and inspect the one local Supabase lab (ADR-018).
+    
+    Lab code is test infrastructure and talks only to localhost (the Supabase CLI pulls images).
+    Why docker exec for SQL: no psql is required on the host, and `log_statement` can only be
+    set by supabase_admin inside the db container.
+    """
+    from __future__ import annotations
+    
+>   import fcntl
+E   ModuleNotFoundError: import of fcntl halted; None in sys.modules
+
+lab/_shared/labctl.py:9: ModuleNotFoundError
+________ ERROR at setup of test_lock_is_the_only_part_that_needs_fcntl _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f351aa01810>
+
+    @pytest.fixture
+    def labctl_without_fcntl(monkeypatch: pytest.MonkeyPatch) -> Iterator[ModuleType]:
+        # sys.modules[name] = None makes `import name` raise ImportError, as on Windows.
+        monkeypatch.setitem(sys.modules, "fcntl", None)
+        try:
+>           yield importlib.reload(labctl_module)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/labctl/test_import.py:20: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/importlib/__init__.py:129: in reload
+    _bootstrap._exec(spec, module)
+<frozen importlib._bootstrap>:866: in _exec
+    ???
+<frozen importlib._bootstrap_external>:1027: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Lab controller (T-060): start, reset and inspect the one local Supabase lab (ADR-018).
+    
+    Lab code is test infrastructure and talks only to localhost (the Supabase CLI pulls images).
+    Why docker exec for SQL: no psql is required on the host, and `log_statement` can only be
+    set by supabase_admin inside the db container.
+    """
+    from __future__ import annotations
+    
+>   import fcntl
+E   ModuleNotFoundError: import of fcntl halted; None in sys.modules
+
+lab/_shared/labctl.py:9: ModuleNotFoundError
+=========================== short test summary info ============================
+ERROR tests/labctl/test_import.py::test_module_imports_without_fcntl - Module...
+ERROR tests/labctl/test_import.py::test_lock_is_the_only_part_that_needs_fcntl
+19 passed, 2 errors in 0.39s
+make: *** [Makefile:14: check] Error 1

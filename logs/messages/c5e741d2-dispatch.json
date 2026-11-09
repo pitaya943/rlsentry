@@ -1,0 +1,6 @@
+{
+  "description": "T-130 probe run wiring",
+  "prompt": "Ticket: T-130\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-130.md and follow it. You need Docker; start it per CLAUDE.md before the lab tests.",
+  "subagent_type": "probe-dev",
+  "isolation": "worktree"
+}

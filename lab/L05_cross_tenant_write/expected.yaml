@@ -1,0 +1,42 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L05
+title: 跨租戶修改（擁有者轉移）
+plant: |
+  public.projects 啟用 RLS；created_by 由 seed 設為與 owner_id 相同的使用者。
+  SELECT：TO authenticated USING (owner_id = auth.uid() OR created_by = auth.uid())（建立者與
+  擁有者都看得到；種子資料兩者相同，所以讀取沒有漏洞）；
+  INSERT：TO authenticated WITH CHECK (owner_id = auth.uid() AND created_by = auth.uid())；
+  UPDATE：TO authenticated USING (owner_id = auth.uid()) WITH CHECK (true)  ← 漏洞；
+  DELETE：TO authenticated USING (owner_id = auth.uid())。
+  使用者可把自己的列的 owner_id 改成別人，等於把資料塞進他人帳號。
+  為什麼要 created_by：PostgREST 的 UPDATE 帶 WHERE，Postgres 會對新列套用 SELECT policy；
+  若 SELECT 只看 owner_id，轉移會以 42501 失敗，漏洞就不存在（auditor G1）。
+  讀回：以 return=minimal 更新，再以新擁有者讀回 owner_id。
+schema:
+  projects: {kind: table, columns: [id, owner_id, created_by, name], primary_key: [id]}
+rows:
+  p_a1: {target: projects, pk: 5ce01005-0000-4000-8000-000000000001, owner: user_a}
+  p_b1: {target: projects, pk: 5ce01005-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    projects:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: own_rows_only}
+      delete: {anon: deny, user: own_rows_only}
+vulnerable_cases:
+  - {id: L05-V1, target: projects, op: update, role: user_a, rows: [p_a1], new_owner: user_b, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+  - {id: L05-V2, target: projects, op: update, role: user_b, rows: [p_b1], new_owner: user_a, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+safe_cases:
+  - {id: L05-S1, target: projects, op: select, role: anon, rows: [p_a1, p_b1], expect: denied}
+  - {id: L05-S2, target: projects, op: select, role: user_a, rows: [p_b1], expect: denied}
+  - {id: L05-S3, target: projects, op: select, role: user_b, rows: [p_a1], expect: denied}
+  - {id: L05-S4, target: projects, op: insert, role: anon, expect: denied, profiles: [dev, ci]}
+  - {id: L05-S5, target: projects, op: insert, role: user_a, new_owner: user_b, expect: denied, profiles: [dev, ci]}
+  - {id: L05-S6, target: projects, op: insert, role: user_b, new_owner: user_a, expect: denied, profiles: [dev, ci]}
+  - {id: L05-S7, target: projects, op: update, role: anon, rows: [p_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L05-S8, target: projects, op: delete, role: anon, rows: [p_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L05-S9, target: projects, op: delete, role: user_a, rows: [p_b1], expect: denied, profiles: [dev, ci]}
+  - {id: L05-S10, target: projects, op: delete, role: user_b, rows: [p_a1], expect: denied, profiles: [dev, ci]}
+splinter_expected: reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

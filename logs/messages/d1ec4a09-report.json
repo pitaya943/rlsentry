@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "af14f8805ee3a4b28",
+  "description": "T-164 apply_synthetic",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-164\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-164.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/e06fdbe0-c428-5441-a8c2-bcd56a9af2ef/tasks/af14f8805ee3a4b28.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

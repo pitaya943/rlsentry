@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a01022b3b197de337",
+  "description": "T-129 probe metadata",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-129\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-129.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/a6a09a13-8503-5249-8edd-eee75450f8b3/tasks/a01022b3b197de337.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

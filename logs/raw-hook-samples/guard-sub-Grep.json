@@ -1,0 +1,22 @@
+{
+  "session_id": "924b7998-392f-5603-b371-6b3a9a16b316",
+  "transcript_path": "/root/.claude/projects/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316.jsonl",
+  "cwd": "/home/user/rlsentry/.claude/worktrees/agent-a498049101d69ba3c",
+  "scratchpad_dir": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/scratchpad",
+  "prompt_id": "903b5cdb-00be-41dc-8544-bdc9012fec52",
+  "permission_mode": "auto",
+  "agent_id": "a498049101d69ba3c",
+  "agent_type": "lab-dev",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Grep",
+  "tool_input": {
+    "pattern": "_LOG_RE|POSTGREST_ROLES =|_DB =",
+    "path": "/home/user/rlsentry/.claude/worktrees/agent-a498049101d69ba3c",
+    "glob": "*.py",
+    "output_mode": "content"
+  },
+  "tool_use_id": "toolu_01LqY4CDbYXoskM5b3fvMtHL"
+}

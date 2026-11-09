@@ -1,0 +1,6 @@
+{
+  "description": "MS4 audit",
+  "prompt": "Review: MS4\nBase: 24b3473\nFocus (harness/milestones.yaml): probe-only cases are real; SECURITY DEFINER counts as a vulnerability only when protected data was actually obtained, otherwise Configuration warning. Also check M4 read-only guarantees (whitebox/db.py, splinter.py, policies.py), bench scoring vs ADR-011/ADR-033, and that splinter_expected values in lab/**/expected.yaml were measured (tests/lab/test_splinter_expected.py, BENCHMARK_REPORT.md). Return the traceability table, findings with P0/P1/P2, and hand-check items for the human.",
+  "subagent_type": "auditor",
+  "run_in_background": true
+}

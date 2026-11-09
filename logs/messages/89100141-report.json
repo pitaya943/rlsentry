@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "ae3273c7cdb1304d8",
+  "description": "T-080 labctl storage",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-080\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-080.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/ae3273c7cdb1304d8.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

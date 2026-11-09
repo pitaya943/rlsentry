@@ -1,0 +1,44 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L07
+title: SECURITY DEFINER RPC
+plant: |
+  public.accounts 啟用 RLS，SELECT policy 正確：TO authenticated USING (owner_id = auth.uid())。
+  get_all_accounts()：RETURNS SETOF accounts，LANGUAGE sql STABLE SECURITY DEFINER，擁有者 postgres，
+  內容 SELECT * FROM accounts；GRANT EXECUTE 給 anon、authenticated → 繞過 RLS 回傳所有列。
+  ping_definer()：RETURNS integer，STABLE SECURITY DEFINER，內容 SELECT 1；同樣可被 anon 執行，但不回傳
+  任何資料列（對照組：只能是 Configuration warning，不可為 Confirmed）。
+  兩個函式都沒有參數。
+schema:
+  accounts: {kind: table, columns: [id, owner_id, balance], primary_key: [id]}
+  get_all_accounts: {kind: rpc, columns: [id, owner_id, balance], primary_key: [id], rls: n/a, base: accounts, security_definer: true}
+  ping_definer: {kind: rpc, rls: n/a, security_definer: true}
+rows:
+  acc_a1: {target: accounts, pk: 5ce01007-0000-4000-8000-000000000001, owner: user_a}
+  acc_b1: {target: accounts, pk: 5ce01007-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    accounts:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+    get_all_accounts:
+      primary_key: [id]          # RPC 回傳列的識別欄位（ADR-014，OpenAPI 不描述 RPC 回傳欄位）
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+    ping_definer:
+      select: {anon: all, user: all}
+vulnerable_cases:
+  # RPC 呼叫以 op=select 表示（ADR-007）
+  # MS6 核准意見第 1 點（ADR-049）：改標時保留較高的嚴重度；anon 讀 owner-scoped 資料為 High（無敏感欄位）
+  - {id: L07-V1, target: get_all_accounts, op: select, role: anon, rows: [acc_a1, acc_b1], expect: allowed, rule: SECURITY_DEFINER_RPC_DATA, severity: high}
+  - {id: L07-V2, target: get_all_accounts, op: select, role: user_a, rows: [acc_b1], expect: allowed, rule: SECURITY_DEFINER_RPC_DATA, severity: medium}
+  - {id: L07-V3, target: get_all_accounts, op: select, role: user_b, rows: [acc_a1], expect: allowed, rule: SECURITY_DEFINER_RPC_DATA, severity: medium}
+safe_cases:
+  - {id: L07-S1, target: accounts, op: select, role: anon, rows: [acc_a1, acc_b1], expect: denied}
+  - {id: L07-S2, target: accounts, op: select, role: user_a, rows: [acc_b1], expect: denied}
+  - {id: L07-S3, target: accounts, op: select, role: user_b, rows: [acc_a1], expect: denied}
+inconclusive_cases:
+  # 可呼叫但不回傳任何已知列：不能判定為 allowed，也不能判定為 denied
+  - {id: L07-I1, target: ping_definer, op: select, role: anon, expect: inconclusive}
+warning_cases:
+  - {id: L07-W1, target: ping_definer, op: select, role: anon, expect: inconclusive, rule: SECURITY_DEFINER_EXECUTABLE, evidence: config_warning, severity: low}
+splinter_expected: reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

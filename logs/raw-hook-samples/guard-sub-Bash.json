@@ -1,0 +1,19 @@
+{
+  "session_id": "6abee2e4-034f-59f6-a5fd-bfeefe3e337b",
+  "transcript_path": "/root/.claude/projects/-home-user-rlsentry/6abee2e4-034f-59f6-a5fd-bfeefe3e337b.jsonl",
+  "cwd": "/home/user/rlsentry/.claude/worktrees/agent-a0933dc6edc96f73d",
+  "scratchpad_dir": "/tmp/claude-0/-home-user-rlsentry/6abee2e4-034f-59f6-a5fd-bfeefe3e337b/scratchpad",
+  "prompt_id": "fcc56f2e-4afd-4099-b12f-cb8d5f813b79",
+  "permission_mode": "auto",
+  "agent_id": "a0933dc6edc96f73d",
+  "agent_type": "recon-dev",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "python3 harness/sync_worktree.py; cat docs/tickets/T-000.md"
+  },
+  "tool_use_id": "toolu_01Kd3efyyf1JRw7ZsCW6cmXZ"
+}

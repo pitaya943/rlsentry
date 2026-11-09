@@ -1,0 +1,7 @@
+{
+  "description": "T-220 Typer CLI",
+  "prompt": "Ticket: T-220\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-220.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

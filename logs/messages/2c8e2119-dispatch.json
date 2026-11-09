@@ -1,0 +1,6 @@
+{
+  "description": "Audit MS0",
+  "prompt": "Review: MS0\nBase: 3a3c611\nFocus: contracts (rlsentry/contracts/), ground truth lab/**/expected.yaml vs SPEC §6/§8/§9, ADR-005..013 in docs/DECISIONS.md, rlsentry/policy/. Look especially for ground-truth cases that would be wrong on a real Supabase/PostgREST lab (e.g. grants, RETURNING behaviour, knowability of rows) and contract choices that would make later milestones impossible.",
+  "subagent_type": "auditor",
+  "run_in_background": false
+}

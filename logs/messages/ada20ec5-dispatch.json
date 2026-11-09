@@ -1,0 +1,7 @@
+{
+  "description": "T-234 pipeline cli correlate fixes",
+  "prompt": "Ticket: T-234\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-234.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

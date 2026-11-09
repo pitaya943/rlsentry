@@ -1,0 +1,81 @@
+All checks passed!
+....                                                                     [100%]
+4 passed in 0.08s
+........................................................................ [  6%]
+........................................................................ [ 13%]
+........................................................................ [ 20%]
+........................................................................ [ 27%]
+........................................................................ [ 34%]
+........................................................................ [ 41%]
+........................................................................ [ 48%]
+........................................................................ [ 55%]
+........................................................................ [ 62%]
+........................................................................ [ 68%]
+...............................F........................................ [ 75%]
+.......................................................F................ [ 82%]
+..............................F......................................... [ 89%]
+........................................................................ [ 96%]
+.....................................                                    [100%]
+=================================== FAILURES ===================================
+___________________ test_audit_reads_match_ground_truth[L07] ___________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+sid = 'L07'
+
+    @pytest.mark.safety
+    # L11 has no PostgREST target (Storage only, P2); Storage probing is not in MS2 (ADR-023).
+    @pytest.mark.parametrize("sid", [s for s in SCENARIO_IDS if s != "L11"])
+    def test_audit_reads_match_ground_truth(lab_info: LabInfo, sid: str) -> None:
+        gt = load_gt(sid)
+        labctl.apply(sid)
+        rec = Recording()
+        marker = labctl.db_log_marker()
+        targets, matrix, findings = scan(lab_info, sid, gt, rec)
+        writes = [w for w in labctl.db_writes_since(marker) if w.role in POSTGREST_ROLES]
+        problems = judge(gt, targets, matrix, findings) + traffic_problems(gt, rec)
+        assert not writes, f"{sid}: PostgREST roles wrote during an audit scan: {writes}"
+>       assert not problems, f"{sid}: " + "; ".join(problems)
+E       AssertionError: L07: L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding; L07-V2: no confirmed SECURITY_DEFINER_RPC_DATA finding; L07-V3: no confirmed SECURITY_DEFINER_RPC_DATA finding; unexpected confirmed findings (FP): ['get_all_accounts/anon/ANON_READ_OWNER_SCOPED', 'get_all_accounts/user_a/CROSS_TENANT_READ', 'get_all_accounts/user_b/CROSS_TENANT_READ']
+E       assert not ['L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding', 'L07-V2: no confirmed SECURITY_DEFINER_RPC_DATA finding', '...on/ANON_READ_OWNER_SCOPED', 'get_all_accounts/user_a/CROSS_TENANT_READ', 'get_all_accounts/user_b/CROSS_TENANT_READ']"]
+
+tests/lab/test_scan_reads.py:157: AssertionError
+___________________ test_dev_writes_match_ground_truth[L07] ____________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+sid = 'L07'
+
+    @pytest.mark.safety
+    @pytest.mark.parametrize("sid", [s for s in SCENARIO_IDS if s != "L11"])
+    def test_dev_writes_match_ground_truth(lab_info: LabInfo, sid: str) -> None:
+        gt = load_gt(sid)
+        labctl.apply(sid)
+        try:
+            before = seed_snapshot(gt)
+            marker = labctl.db_log_marker()
+            matrix, findings = scan(lab_info, sid, gt)
+            problems = (judge(gt, matrix, findings) + cleanup_problems(gt, findings)
+                        + traffic_problems(gt, marker, before))
+>           assert not problems, f"{sid}: " + "; ".join(problems)
+E           AssertionError: L07: L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (2/2 known rows outside the expected scope are visible); L07-V2: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (1/1 known rows outside the expected scope are visible); L07-V3: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (1/1 known rows outside the expected scope are visible); unexpected confirmed findings (FP): ['get_all_accounts/anon/select/ANON_READ_OWNER_SCOPED', 'get_all_accounts/user_a/select/CROSS_TENANT_READ', 'get_all_accounts/user_b/select/CROSS_TENANT_READ']
+E           assert not ['L07-V1: no confirmed SECURITY_DEFINER_RPC_DATA finding and cell is allowed (2/2 known rows outside the expected scop...WNER_SCOPED', 'get_all_accounts/user_a/select/CROSS_TENANT_READ', 'get_all_accounts/user_b/select/CROSS_TENANT_READ']"]
+
+tests/lab/test_scan_writes.py:178: AssertionError
+________ test_l07_definer_with_data_confirmed_without_data_warning_only ________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+
+    def test_l07_definer_with_data_confirmed_without_data_warning_only(lab_info: LabInfo) -> None:
+        fs = scan_and_correlate(lab_info, "L07")
+        rpc = [f for f in proven(fs) if f.target == "get_all_accounts"]
+        assert {f.role for f in rpc} == {Role.ANON, Role.USER_A, Role.USER_B}
+>       assert all(f.rule == "SECURITY_DEFINER_RPC_DATA" and f.correlation == "confirmed" for f in rpc)
+E       assert False
+E        +  where False = all(<generator object test_l07_definer_with_data_confirmed_without_data_warning_only.<locals>.<genexpr> at 0x7fa55ed385f0>)
+
+tests/lab/test_whitebox_run_lab.py:50: AssertionError
+=========================== short test summary info ============================
+FAILED tests/lab/test_scan_reads.py::test_audit_reads_match_ground_truth[L07]
+FAILED tests/lab/test_scan_writes.py::test_dev_writes_match_ground_truth[L07]
+FAILED tests/lab/test_whitebox_run_lab.py::test_l07_definer_with_data_confirmed_without_data_warning_only
+3 failed, 1042 passed in 255.64s (0:04:15)
+make: *** [Makefile:15: check] Error 1

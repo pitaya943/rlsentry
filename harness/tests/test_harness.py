@@ -527,6 +527,16 @@ def test_spec_tool_returns_only_requested_parts(repo):
     assert "lab text" in S.section("§8") and "probe text" not in S.section("§8")
     assert S.requirement_rows(["FR-08"]).count("\n") == 0 and "cross tenant" in S.requirement_rows(["FR-08"])
 
+def test_spec_tool_ignores_hash_lines_inside_code_fences(repo):
+    r, _, _ = repo
+    import spec as S
+    importlib.reload(S)
+    (r / "docs" / "SPEC.md").write_text(
+        "# T\n## 6. 設定\n```yaml\n# a yaml comment\nkey: 1\n```\ntail text\n## 7. Next\nx\n")
+    s6 = S.section("6")
+    assert "key: 1" in s6 and "tail text" in s6 and "Next" not in s6
+    assert "a yaml comment" not in S.toc()
+
 
 def test_sync_worktree_brings_subagent_to_architect_head(repo, tmp_path):
     r, _, _ = repo

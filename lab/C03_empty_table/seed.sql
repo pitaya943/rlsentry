@@ -1,0 +1,1 @@
+-- C03: intentionally no rows (rows: {} in expected.yaml).

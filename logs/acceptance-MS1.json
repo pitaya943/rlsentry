@@ -1,0 +1,47 @@
+[
+  {
+    "check": "tickets & checklist",
+    "ok": true,
+    "detail": "tickets valid, checklist consistent"
+  },
+  {
+    "check": "provenance",
+    "ok": true,
+    "detail": "every product-code commit is a genuine accept merge (scope and cheat checks recomputed)"
+  },
+  {
+    "check": "ruff",
+    "ok": true,
+    "detail": "All checks passed!\n"
+  },
+  {
+    "check": "mypy",
+    "ok": true,
+    "detail": "Success: no issues found in 20 source files\n"
+  },
+  {
+    "check": "tests",
+    "ok": true,
+    "detail": "........................................................................ [ 11%]\n........................................................................ [ 23%]\n........................................................................ [ 35%]\n........................................................................ [ 47%]\n........................................................................ [ 59%]\n........................................................................ [ 71%]\n........................................................................ [ 83%]\n........................................................................ [ 95%]\n..........................                                               [100%]\n602 passed in 62.63s (0:01:02)\n\n(tests of blocked tickets not required: tests/lab/test_l11.py)"
+  },
+  {
+    "check": "holdout",
+    "ok": true,
+    "detail": ".................                                                        [100%]\n17 passed in 0.15s\n"
+  },
+  {
+    "check": "safety invariants",
+    "ok": true,
+    "detail": "........................................................................ [ 80%]\n..................                                                       [100%]\n90 passed, 512 deselected in 4.58s\n"
+  },
+  {
+    "check": "mutation",
+    "ok": true,
+    "detail": "mutation testing skipped (set MUTATION=1 to run)"
+  },
+  {
+    "check": "checklist sync",
+    "ok": true,
+    "detail": "CHECKLIST.md up to date"
+  }
+]

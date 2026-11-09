@@ -1,0 +1,39 @@
+All checks passed!
+.                                                                        [100%]
+1 passed in 0.05s
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 34%]
+........................................................................ [ 43%]
+........................................................................ [ 52%]
+........................................................................ [ 61%]
+........................................................................ [ 69%]
+........................................................................ [ 78%]
+........................................................................ [ 87%]
+........................................................................ [ 96%]
+..................F............                                          [100%]
+=================================== FAILURES ===================================
+________________ test_status_classification[401-True-denied-1] _________________
+
+status = 401, after = True, outcome = <Outcome.DENIED: 'denied'>, known = 1
+
+    @pytest.mark.parametrize("status,after,outcome,known", [
+        (403, False, Outcome.DENIED, 1),       # policy refused (WITH CHECK / 42501), regardless of read-back
+        (401, True, Outcome.DENIED, 1),
+        (400, None, Outcome.INCONCLUSIVE, 0),  # NOT NULL / bad canary row: our fault, NOT a denial
+        (409, None, Outcome.INCONCLUSIVE, 0),  # conflict
+        (500, None, Outcome.INCONCLUSIVE, 0),  # server error
+        (None, None, Outcome.INCONCLUSIVE, 0),  # transport error
+    ])
+    def test_status_classification(status: int | None, after: bool | None, outcome: Outcome, known: int) -> None:
+        c = write_cell(obs(Op.INSERT, attempt=WriteAttempt(status=status, curl="c"), after=rb(after, status or 400)))
+>       assert c.outcome is outcome and c.known_rows_checked == known and c.http_status == status
+E       AssertionError: assert (<Outcome.ALLOWED: 'allowed'> is <Outcome.DENIED: 'denied'>)
+E        +  where <Outcome.ALLOWED: 'allowed'> = ProbeResult(target='t', role=<Role.USER_A: 'user_a'>, op=<Op.INSERT: 'insert'>, outcome=<Outcome.ALLOWED: 'allowed'>, ...n_rows_checked=1, reason='the forbidden write took effect (verified by read-back)', http_status=401, evidence_curl='c').outcome
+
+tests/probe/test_write_verdict.py:114: AssertionError
+=========================== short test summary info ============================
+FAILED tests/probe/test_write_verdict.py::test_status_classification[401-True-denied-1]
+1 failed, 822 passed in 396.83s (0:06:36)
+make: *** [Makefile:15: check] Error 1

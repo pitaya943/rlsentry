@@ -1,0 +1,7 @@
+{
+  "description": "T-092 labctl execute (retry)",
+  "prompt": "Ticket: T-092\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-092.md and follow it.",
+  "subagent_type": "lab-dev",
+  "run_in_background": false,
+  "isolation": "worktree"
+}

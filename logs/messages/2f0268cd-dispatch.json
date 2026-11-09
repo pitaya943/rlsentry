@@ -1,0 +1,7 @@
+{
+  "description": "T-219 pipeline run_scan",
+  "prompt": "Ticket: T-219\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-219.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

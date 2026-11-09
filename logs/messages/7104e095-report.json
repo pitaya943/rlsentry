@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a6fc6e08e9b1ef121",
+  "description": "T-053 safety ratelimit",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-053\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-053.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/tasks/a6fc6e08e9b1ef121.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

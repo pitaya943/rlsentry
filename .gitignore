@@ -3,3 +3,6 @@
 __pycache__/
 *.pyc
 .mutmut-cache
+.claude/worktrees/
+build/
+*.egg-info/

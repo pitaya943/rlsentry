@@ -1,0 +1,7 @@
+{
+  "description": "T-174 bench audit M4",
+  "prompt": "Ticket: T-174\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-174.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

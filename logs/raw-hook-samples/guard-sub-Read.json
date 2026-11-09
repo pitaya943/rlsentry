@@ -1,0 +1,21 @@
+{
+  "session_id": "924b7998-392f-5603-b371-6b3a9a16b316",
+  "transcript_path": "/root/.claude/projects/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316.jsonl",
+  "cwd": "/home/user/rlsentry/.claude/worktrees/agent-aa8886a5c69f4ae48",
+  "scratchpad_dir": "/tmp/claude-0/-home-user-rlsentry/924b7998-392f-5603-b371-6b3a9a16b316/scratchpad",
+  "prompt_id": "903b5cdb-00be-41dc-8544-bdc9012fec52",
+  "permission_mode": "auto",
+  "agent_id": "aa8886a5c69f4ae48",
+  "agent_type": "lab-dev",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/home/user/rlsentry/.claude/worktrees/agent-aa8886a5c69f4ae48/lab/_shared/labctl.py",
+    "offset": 1,
+    "limit": 250
+  },
+  "tool_use_id": "toolu_01Jky9QMWuGss9HXWVogGNta"
+}

@@ -1,0 +1,7 @@
+{
+  "description": "T-130 probe run wiring",
+  "prompt": "Ticket: T-130\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-130.md and the updated rlsentry/contracts/probe.py probe() write-path docstring (ADR-029 + 補記).\n\nYour previous run was almost complete; the only remaining bug: the write path must run ONLY for targets with kind == \"table\". An RPC or view target must get NOT_TESTED write cells (reason WRITE_NO_OWNER_REASON) and send NO write request — posting to an RPC path is refused by the safety gate (this broke L07). Guard the write loop on target.kind == \"table\".\n\nAlso keep everything the contract says: MS3 does NOT call seed_known_rows (reads = collect_known_rows); seed a fresh work row per UPDATE/DELETE plan; collect every created canary (work rows + each 2xx INSERT's new_pk) and pass them all to cleanup_seeded; write_cell classifies by status.\n\nDocker and the local Supabase lab are ALREADY running (do NOT run `supabase start`). Iterate on the fast tests only: `python3 -m pytest -q tests/probe/test_run_writes.py tests/probe/test_write_requests.py`. As soon as they pass, commit immediately and report Branch+Commit; do not run the slow lab suite. Edits to rlsentry/probe/run.py only.",
+  "subagent_type": "probe-dev",
+  "run_in_background": false,
+  "isolation": "worktree"
+}

@@ -1,0 +1,27 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: C03
+title: 安全對照：空表
+plant: |
+  public.announcements 啟用 RLS，SELECT：TO authenticated USING (owner_id = auth.uid())；
+  沒有 INSERT／UPDATE／DELETE policy（只由後端寫入）。表中沒有任何資料列，且任何測試身分都
+  無法植入，所以讀取格子在所有 profile 都只能是 inconclusive，絕不可回報 denied。
+schema:
+  announcements: {kind: table, columns: [id, owner_id, body], primary_key: [id]}
+rows: {}
+policy:
+  tables:
+    announcements:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: deny}
+      update: {anon: deny, user: deny}
+      delete: {anon: deny, user: deny}
+vulnerable_cases: []
+safe_cases:
+  - {id: C03-S1, target: announcements, op: insert, role: anon, expect: denied, profiles: [dev, ci]}
+  - {id: C03-S2, target: announcements, op: insert, role: user_a, new_owner: user_a, expect: denied, profiles: [dev, ci]}
+inconclusive_cases:
+  - {id: C03-I1, target: announcements, op: select, role: anon, expect: inconclusive}
+  - {id: C03-I2, target: announcements, op: select, role: user_a, expect: inconclusive}
+  - {id: C03-I3, target: announcements, op: select, role: user_b, expect: inconclusive}
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

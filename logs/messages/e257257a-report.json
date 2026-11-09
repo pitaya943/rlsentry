@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "abc55fc1151e2e2fa",
+  "description": "T-172 text column pick",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-172\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-172.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/e06fdbe0-c428-5441-a8c2-bcd56a9af2ef/tasks/abc55fc1151e2e2fa.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

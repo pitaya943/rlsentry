@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "ab7fa572f31cac331",
+  "description": "T-130 probe run wiring",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-130\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-130.md and follow it. You need Docker; start it per CLAUDE.md before the lab tests.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/a6a09a13-8503-5249-8edd-eee75450f8b3/tasks/ab7fa572f31cac331.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

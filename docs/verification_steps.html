@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RLSentry：每個 milestone 的固定審查流程</title>
+<style>
+  :root { --ink:#1f2933; --muted:#616e7c; --line:#d9e2ec; --bg:#f8fafc; --ok:#2f9e44; --warn:#f08c00; --bad:#c92a2a; --info:#1c7ed6; }
+  body { font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif; color:var(--ink); background:var(--bg); margin:0; line-height:1.7; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { font-size: 1.7rem; margin-bottom: 4px; }
+  h2 { margin-top: 40px; border-bottom: 2px solid var(--line); padding-bottom: 4px; }
+  h3 { margin-top: 24px; }
+  .sub { color: var(--muted); margin-top: 0; }
+  code, pre { font-family: Consolas, "SFMono-Regular", monospace; }
+  code { background:#eef2f6; padding: 1px 5px; border-radius: 4px; font-size: .92em; }
+  pre { background:#102a43; color:#f0f4f8; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: .9em; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; background: #fff; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f4f8; }
+  .step { background:#fff; border:1px solid var(--line); border-left: 6px solid var(--info); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  .step.sign { border-left-color: var(--ok); }
+  .step.stop { border-left-color: var(--bad); }
+  .note { background:#fff8e1; border:1px solid #ffe08a; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+  .bad { background:#fff0f0; border:1px solid #ffc9c9; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+  .tag { display:inline-block; font-size:.8em; padding: 0 8px; border-radius: 10px; color:#fff; margin-right: 6px; }
+  .t-you { background: var(--ok); } .t-gh { background: var(--info); } .t-never { background: var(--bad); } .t-cs { background: #7048e8; }
+  ul.check { list-style: none; padding-left: 0; } ul.check li::before { content: "☐ "; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>每個 milestone 的固定審查流程</h1>
+<p class="sub">適用於 MS2 之後的每個 milestone（以下以 <code>MSx</code> 表示）。依據 ADR-022（三段信任鏈）、ADR-025（清單標籤與 Codespaces）、ADR-026（必做變異）、ADR-028（本文件的維護）、ADR-030（指令品質）、ADR-031（文件同步）、ADR-005 補記（審查分級）、ADR-021。本文件由 architect 撰寫，只說明「怎麼做」；判斷仍以你自己的執行結果為準。</p>
+
+<h2>0. 為什麼是這個流程（一張圖）</h2>
+<svg viewBox="0 0 960 250" width="100%" role="img" aria-label="三段信任鏈">
+  <g font-size="13">
+    <rect x="10" y="40" width="270" height="120" rx="10" fill="#e3f9e5" stroke="#2f9e44"/>
+    <text x="145" y="68" text-anchor="middle" font-weight="bold">(a) 你的電腦</text>
+    <text x="145" y="92" text-anchor="middle">review.sh 第 1、2 步</text>
+    <text x="145" y="114" text-anchor="middle">同步＋與你本機的 harness-frozen 比對</text>
+    <text x="145" y="136" text-anchor="middle">→ 得到「本機 sha」</text>
+    <rect x="345" y="40" width="270" height="120" rx="10" fill="#e7f5ff" stroke="#1c7ed6"/>
+    <text x="480" y="68" text-anchor="middle" font-weight="bold">(b) GitHub Actions</text>
+    <text x="480" y="92" text-anchor="middle">workflow 只放在你控制的 main</text>
+    <text x="480" y="114" text-anchor="middle">make verify-milestone MS=MSx</text>
+    <text x="480" y="136" text-anchor="middle">→ 得到「Actions sha」與 ALL PASSED</text>
+    <rect x="680" y="40" width="270" height="120" rx="10" fill="#fff3bf" stroke="#f08c00"/>
+    <text x="815" y="68" text-anchor="middle" font-weight="bold">(c) 比對</text>
+    <text x="815" y="92" text-anchor="middle">git diff 本機 sha 與 Actions sha</text>
+    <text x="815" y="114" text-anchor="middle">排除 logs/ 後必須沒有輸出</text>
+    <text x="815" y="136" text-anchor="middle">→ 兩邊驗證的是同一份程式碼</text>
+    <line x1="280" y1="100" x2="345" y2="100" stroke="#486581" stroke-width="2"/>
+    <line x1="615" y1="100" x2="680" y2="100" stroke="#486581" stroke-width="2"/>
+    <text x="10" y="200" fill="#616e7c">每一段都不經過 agent 轉述：(a) 只需要 git、(b) agent 改不到 workflow、(c) 是你自己執行的 diff。</text>
+    <text x="10" y="222" fill="#616e7c">最後的簽章需要你的金鑰密碼，所以 agent 不可能代簽。</text>
+  </g>
+</svg>
+<table>
+  <tr><th>這個流程防的錯</th><th>由哪一段擋下</th></tr>
+  <tr><td>agent 改了 harness、hook、SPEC 或 Makefile，讓驗收變寬鬆</td><td>(a) 與你本機的 <code>harness-frozen</code> tag 比對</td></tr>
+  <tr><td>agent 回報「ALL PASSED」但其實沒跑，或跑的是別的東西</td><td>(b) Actions 由你觸發，log 由 GitHub 產生</td></tr>
+  <tr><td>驗證的是過期或不同的 clone（MS1 曾發生）</td><td>(c) sha 比對</td></tr>
+  <tr><td>自動檢查都過了，但設計本身有問題</td><td>驗證清單第 3 段與審查分支（你的判斷）</td></tr>
+</table>
+
+<h2>1. 一次性準備（已完成者可略過）</h2>
+<ul>
+  <li>本機有 git 與 Python 3.10 以上；不需要 Docker。</li>
+  <li>已執行過 <code>bash host/bootstrap.sh</code>：建立本機的 <code>harness-frozen</code> tag 與簽章金鑰 <code>~/.ssh/rlsentry_approval_ed25519</code>（有密碼）。</li>
+  <li>GitHub repo 的 <code>main</code> 上有 <code>.github/workflows/verify-milestone.yml</code>（輸入 <code>ms</code>、<code>ref</code>）。</li>
+  <li>Windows：請在 Git Bash 中執行；審查期間關閉會開著 repo 的程式（VS Code、檔案總管、OneDrive 同步），避免第 2 節提到的 gc 提示。</li>
+</ul>
+
+<h2>2. 每個 milestone 的步驟</h2>
+
+<div class="step">
+<h3>步驟 1　確認 agent 已交付 <span class="tag t-you">你</span></h3>
+<ul>
+  <li>雲端 session 回報「MSx 完成、等待審查」。</li>
+  <li>分支上有 <code>docs/verification/MSx-vN.md</code>（取最大的 N），標題寫著 <code>main @ &lt;9 碼 sha&gt;</code>；這是該 milestone 最後一個 ticket 驗收 commit。</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>步驟 2　同步與防竄改檢查 <span class="tag t-you">你的電腦</span></h3>
+<pre>rlsentry/host/review.sh MSx claude/busy-darwin-asvox3</pre>
+<ul>
+  <li><b>[1] Sync</b>：最後一行 <code>at &lt;7 碼 sha&gt; on claude/busy-darwin-asvox3</code> ← 這就是<b>本機 sha</b>，請記下來（完整 40 碼可用 <code>git -C rlsentry rev-parse HEAD</code>）。</li>
+  <li><b>[2] Tamper check</b>：必須出現 <code>✓ no changes to frozen files</code>。</li>
+  <li><b>[3] Independent verification</b>：本機沒有 Docker 時，會印出「Open a NEW session at claude.ai/code …」。<b>這是 ADR-022 之前的舊做法，請忽略</b>，改做本文件的步驟 3。</li>
+  <li><b>[4] Your checklist</b>：只印出清單路徑與 ticket 狀態。</li>
+  <li><b>[5] Sign</b>：在互動式終端機中會立刻開始簽章流程。<b>此時 Actions 還沒跑，請按 Ctrl+C 結束</b>，簽章留到步驟 7。</li>
+</ul>
+<div class="note">Windows 上若出現 <code>Deletion of directory '.git/objects/00' failed. Should I try again? (y/n)</code>：這是 git fetch 後的自動整理（auto gc）刪不掉空資料夾，回答 <code>n</code> 即可，不會遺失資料。不想再被問：<code>git -C rlsentry config gc.auto 0</code>（之後 <code>--unset gc.auto</code> 復原）。</div>
+</div>
+
+<div class="step">
+<h3>步驟 3　在 GitHub Actions 獨立驗證 <span class="tag t-gh">GitHub</span></h3>
+<ol>
+  <li>repo → Actions → <code>verify-milestone</code> → Run workflow。</li>
+  <li>填入 <code>ms = MSx</code>、<code>ref = claude/busy-darwin-asvox3</code>（ref 不是 main）。</li>
+  <li>跑完後（第一次約數分鐘，要拉 Supabase 映像）看兩個地方：
+    <ul>
+      <li>步驟 <b>「Show exact commit under test」</b>：印出 <code>&lt;40 碼 sha&gt; rlsentry: …</code> ← 這是 <b>Actions sha</b>。</li>
+      <li>步驟 <b>「make verify-milestone」</b>：最後一行必須是 <code>MSx: ALL PASSED</code>。</li>
+    </ul>
+  </li>
+</ol>
+<div class="note"><b>不要拿錯 sha。</b>「Set up job」裡的 <code>Download action repository 'actions/checkout@v4' (SHA:…)</code> 是工具本身的版本，與 RLSentry 程式碼無關。</div>
+</div>
+
+<div class="step">
+<h3>步驟 4　比對兩個 sha <span class="tag t-you">你的電腦</span></h3>
+<pre>git -C rlsentry fetch origin claude/busy-darwin-asvox3
+git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'</pre>
+<ul>
+  <li><b>沒有任何輸出 = 通過</b>：兩邊除了 <code>logs/</code> 之外完全相同。</li>
+  <li>兩個 sha 不同是<b>正常的</b>：agent 每回覆一次，harness 就推送一個只改 <code>logs/</code> 的紀錄 commit（訊息為 <code>rlsentry: MSx awaiting human review</code>）。因此不必刻意在驗證期間不與 agent 互動，真正的保證是這個 diff。</li>
+  <li>一定要先 <code>fetch</code>：否則會出現 <code>fatal: bad object</code>（你本機還沒有 Actions 測的那個較新的 commit）。</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>步驟 4.5　Codespaces 準備 <span class="tag t-cs">Codespaces</span></h3>
+<p>以下指令除了 Supabase CLI 的安裝方式（第 3 點，固定 v3.0.0）之外，與 <code>.github/workflows/verify-milestone.yml</code>（Actions 用的、你控制的安裝步驟）一致。每份清單第 3 段開頭的「Codespaces 準備」只會補充該 milestone 的特例，其餘照這裡做。</p>
+<ol>
+  <li>GitHub repo → Code → Codespaces → 在 <code>claude/busy-darwin-asvox3</code> 建立一個新的 Codespace（它本身就是一個含 Docker 的 Linux 容器）。</li>
+  <li><b>安裝 Python 專案與開發相依套件</b>（含 pytest、ruff、mypy、httpx 等；定義在 <code>pyproject.toml</code> 的 <code>[dev]</code>）：
+<pre>cd /workspaces/rlsentry          # Codespace 內的 repo 路徑
+pip install -e ".[dev]"</pre></li>
+  <li><b>安裝 Supabase CLI</b>（固定版本 v3.0.0，與 lab 實測相同；lab 以它啟動本機 Supabase；MS7 核准意見第 3 點）。先下載到檔案（Codespace 內建已登入的 <code>gh</code>）：
+<pre>gh release download v3.0.0 -R supabase/cli -p "supabase_linux_amd64.tar.gz" -D /tmp --clobber</pre>
+    再解壓並確認版本（預期印出 <code>3.0.0</code>）：
+<pre>sudo tar -xzf /tmp/supabase_linux_amd64.tar.gz -C /usr/local/bin supabase &amp;&amp; supabase --version</pre>
+    不再用 <code>latest</code> 直接 pipe 給 tar：GitHub 回 504 時那種寫法只會留下難懂的 gzip 錯誤，而且 <code>latest</code> 之後可能不是 3.0.0。第一步若回 504，是 GitHub 的檔案伺服器暫時故障，等幾分鐘重跑即可。<code>uname -m</code> 為 <code>aarch64</code> 時把兩處 <code>amd64</code> 換成 <code>arm64</code>。注意：<code>.github/workflows/verify-milestone.yml</code> 仍以 <code>latest</code> 安裝（本次只依核准意見改這份文件）；Actions 的版本以其 log 的 <code>supabase --version</code> 為準。</li>
+  <li><b>確認 Docker 可用</b>（Codespaces 通常已內建；若 <code>docker info</code> 失敗，依 CLAUDE.md 啟動）：
+<pre>docker info &gt;/dev/null 2>&amp;1 || (sudo dockerd &gt;/tmp/dockerd.log 2>&amp;1 &amp;); sleep 5; docker info &gt;/dev/null 2>&amp;1 &amp;&amp; echo DOCKER_OK</pre></li>
+  <li><b>啟動本機 Supabase lab</b>（第一次會拉映像，約數分鐘；需要 Docker 的測試都靠它）：
+<pre>python3 -c "from lab._shared import labctl; print(labctl.ensure_up().api_url)"
+# 預期印出 http://127.0.0.1:54321</pre></li>
+  <li><b>確認驗的是同一份程式碼</b>：<code>git rev-parse HEAD</code> 必須等於步驟 2 的本機 sha；不一致時（中間多了只改 logs/ 的紀錄 commit），下面這個必須沒有輸出：
+<pre>git rev-parse HEAD
+git diff --stat &lt;本機 sha&gt; HEAD -- . ':!logs'</pre></li>
+  <li>依清單第 3 段逐項執行【Codespaces 必做】與【Codespaces 必做變異】。清單每一項都附完整指令與預期輸出；變異項做完一定要依該項指示 <code>git restore &lt;檔案&gt;</code> 還原。整套可用的參考指令：
+<pre># 不需 Docker 的快速單元測試（以 MS3 為例）
+python3 -m pytest -q tests/probe/test_write_status.py tests/probe/test_write_verdict.py tests/probe/test_run_writes.py
+# 需要 Docker 的 lab 測試（標記 safety）
+python3 -m pytest -q -m safety tests/lab/test_scan_writes.py tests/lab/test_write_mutations.py
+# 一次跑完該 milestone 的所有自動檢查（與 Actions 相同）
+make verify-milestone MS=MSx</pre></li>
+  <li><b>不要從 Codespaces 提交或推送</b>，也不要把簽章金鑰放進去。測完先 <code>git restore .</code>（還原任何變異），再刪除這個 Codespace。</li>
+</ol>
+</div>
+
+<div class="step">
+<h3>步驟 5　逐項看驗證清單 <span class="tag t-you">你</span></h3>
+<ul>
+  <li>打開 <code>docs/verification/MSx-vN.md</code>：
+    <ul>
+      <li>第 1 段：做了什麼、新增哪些 ADR。</li>
+      <li>第 2 段：自動驗收摘要（僅供參考）。</li>
+      <li><b>第 3 段：逐項勾選</b>。第一項就是本文件的步驟 2–4；其餘每一項都有指令或 file:line 與「預期觀察」。</li>
+      <li>第 4 段：與 SPEC 的偏差；第 5 段：已知限制與 blocked ticket。</li>
+    </ul>
+  </li>
+  <li>第 3 段每一項都有一個標籤（ADR-025），標籤決定在哪裡做：
+    <table>
+      <tr><th>標籤</th><th>在哪裡做</th><th>內容</th></tr>
+      <tr><td>【Actions 涵蓋】</td><td>不必再做</td><td>寫明涵蓋它的測試檔或檢查名稱。Actions 只證明通過，不顯示細節。</td></tr>
+      <tr><td>【Codespaces 必做】</td><td>Codespaces</td><td>Actions 會略過或看不到的項目（docker logs、需要看輸出原文的測試）。附完整指令、預期輸出與還原方式。</td></tr>
+      <tr><td>【Codespaces 必做變異】</td><td>Codespaces</td><td>故意弄壞一行、確認指定的測試以指定的訊息失敗、再還原（ADR-026）。<b>簽章前提</b>。</td></tr>
+      <tr><td>【本機】</td><td>你的電腦</td><td>只有防竄改檢查、sha 比對、閱讀程式碼、做出決定與簽章。</td></tr>
+    </table>
+  </li>
+  <li>選做變異只影響呈現或便利性，可以不做。每份清單至少一項必做變異；沒有時清單會說明原因。</li>
+  <li><b>指令品質保證（ADR-030，MS4 起）</b>：清單中每一條指令都由 architect 先在 lab 以清單標頭的 sha 實跑過，附的是真實輸出；沒有佔位指令、可直接複製貼上、以單行為主、不使用 heredoc；變異的還原與資料刪除都寫出完整指令。若你照貼卻得到不同結果，這本身就是要回報的發現。</li>
+  <li><b>每條指令都是獨立的 code block（ADR-030 補記）</b>：清單第 3 段的指令一律放在自己的 code block，按 Copy 直接貼上執行；變異與還原分成兩個 block。唯一要你填值的是本機 sha 與 Actions sha（以 <code>LOCAL=</code>、<code>ACTIONS=</code> 變數放在指令開頭）。</li>
+  <li><b>文件同步自檢（ADR-031）</b>：每份清單都保留 <code>python3 docs/tools/progress.py &amp;&amp; git diff --stat docs/progress.html docs/branch-log.md</code>，預期沒有輸出。</li>
+  <li>開啟 <code>docs/system_overview.html</code>：確認「本 milestone」一節與架構圖的狀態色和實際一致（ADR-021）。</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>步驟 6　看高風險 ticket 的 diff <span class="tag t-you">你</span></h3>
+<p>打開 <code>docs/reviews/MSx-high-risk.md</code>，開頭有「逐張審查」與「抽查」兩份清單與預估閱讀時間（ADR-005 補記）。</p>
+<table>
+  <tr><th>類別</th><th>審查方式</th></tr>
+  <tr><td>1 safety、2 非 GET 請求／DB 連線／寫入</td><td>逐張：每張一個 <code>review/T-xxx</code> 分支</td></tr>
+  <tr><td>3 key／JWT／遮罩、4 「什麼算漏洞」、6 修改既有合約</td><td>建議抽查；同類合併為 <code>review/MSx-&lt;類別&gt;</code></td></tr>
+  <tr><td>5 ground truth、植入漏洞的 lab</td><td>抽查 2–3 個情境，其餘由 oracle 與變異測試把關</td></tr>
+</table>
+<p>連結格式：<code>https://github.com/pitaya943/rlsentry/compare/&lt;base&gt;...&lt;branch&gt;</code>（只供看 diff，不需合併）。</p>
+</div>
+
+<div class="step sign">
+<h3>步驟 6.5　<code>/final-question</code>：整理待決事項與核准意見 <span class="tag t-you">你</span></h3>
+<ul>
+  <li>在雲端 session 輸入 <code>/final-question</code>。agent 列出所有待你決定的事（來源、選項、建議）；沒有就回「沒有待決事項。」</li>
+  <li>逐題回答後，agent 產生一段標準格式的核准意見（不含空行），步驟 7 被問到「Notes」時直接貼上，再按一次 Enter（空行）結束。</li>
+</ul>
+
+<h3>步驟 7　簽章 <span class="tag t-you">只有你</span></h3>
+<pre>cd rlsentry
+python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519</pre>
+<ul>
+  <li>它會問：是否親自看到 ALL PASSED → 核准（y）或要求修改（n）→ 審查者名字 → 核准意見（多行，空行結束）→ 金鑰密碼。</li>
+  <li>簽好的 <code>MSx.yaml</code> 會推送到 <code>rlsentry-approvals</code> 分支；agent 永遠不能寫入這個分支。</li>
+</ul>
+<p><b>簽章前必須全部成立：</b></p>
+<ul class="check">
+  <li>步驟 2 出現 <code>✓ no changes to frozen files</code></li>
+  <li>步驟 3 最後一行為 <code>MSx: ALL PASSED</code></li>
+  <li>步驟 4 的 diff 沒有任何輸出</li>
+  <li>每一項【Codespaces 必做變異】都已在 Codespaces 實際做過，結果符合預期（ADR-026）</li>
+  <li>驗證清單第 3 段已逐項勾選，需要你決定的項目已寫進核准意見</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>步驟 8　回到雲端 session <span class="tag t-you">你</span></h3>
+<ul>
+  <li>簽完先輸入 <code>/approved MSx</code>：agent 檢查 approvals 分支（<code>decision: approve</code>、<code>.sig</code> 存在、清單 sha256 一致、harness 狀態），全部通過才重跑 <code>progress.py</code>、把 <code>system_overview.html</code> 的該列改為已核准並 push（ADR-048）；任一項不符只回報、不修改。</li>
+  <li>核准：傳送「繼續」。下一個 session 會在第 0 步讀取你的核准意見，意見就是給 agent 的指示。</li>
+  <li>要求修改（changes_requested）：同樣傳送「繼續」。agent 會把每一條意見變成 <code>origin: human-review</code> 的 ticket，完成後交出 <code>MSx-v(N+1).md</code>，第一節是「與 vN 的差異」，然後重新走一次本流程。</li>
+</ul>
+</div>
+
+<h3>MS7（交付）的額外步驟 <span class="tag t-cs">Codespaces</span></h3>
+<ul>
+  <li><b>步驟 5 之中</b>：除了 <code>make verify-milestone MS=MS7</code>，再在 Codespaces 執行一次 <code>make acceptance</code>（含完整 benchmark、三種 profile 端到端、USAGE.md 的 doctest、所有 milestone 的 holdout；約 40 分鐘，需要 lab）。最後一行應為 <code>final: ALL PASSED</code>。</li>
+  <li><b>照 <code>USAGE.md</code> 親手跑一次</b>（SPEC §11 MS7 審查重點）：清單會列出 dev、ci、audit 與展示情境各一條單行指令，它們執行的就是 USAGE.md 中同一個 doctest 區塊。</li>
+  <li><b>步驟 8 之後</b>：MS7 核准後由你自己把 <code>main</code> fast-forward 到 session 分支（ADR-027）；agent 不會合併或推送 <code>main</code>。</li>
+</ul>
+
+<h2>3. 核准意見怎麼寫</h2>
+<ul>
+  <li>每一條意見寫成一個可執行的指示（「把 X 改成 Y」「下一個 milestone 開始前先做 Z」），agent 會逐條轉成 ticket 或 ADR。</li>
+  <li>驗證清單中標示<b>「做出決定」</b>的項目，請明確寫出你的決定（例如 MS2 的 ADR-024：接受在 MS2 修改 MS1 的 labctl，或要求改走 reopen）。</li>
+  <li>流程規則（例如 ADR-021 的 overview）請在意見中重述：CLAUDE.md 是凍結檔，核准意見是下一個 session 一定會讀到的地方。</li>
+  <li>自 MS6 起可用 <code>/final-question</code> 產生標準格式（步驟 6.5；ADR-048）。</li>
+</ul>
+
+<h2>4. 異常狀況對照表</h2>
+<table>
+  <tr><th>你看到</th><th>意思</th><th>怎麼做</th></tr>
+  <tr><td><code>Deletion of directory '.git/objects/xx' failed</code></td><td>Windows 上 auto gc 刪不掉空資料夾</td><td>回答 <code>n</code>；或暫時 <code>gc.auto 0</code></td></tr>
+  <tr><td><code>fatal: bad object &lt;sha&gt;</code></td><td>本機還沒有那個 commit</td><td>先 <code>git -C rlsentry fetch origin claude/busy-darwin-asvox3</code></td></tr>
+  <tr><td>本機 sha 與 Actions sha 不同</td><td>中間多了只改 logs/ 的紀錄 commit</td><td>正常；以排除 logs/ 的 diff 為準</td></tr>
+  <tr><td>步驟 4 的 diff 有輸出</td><td>兩邊驗證的不是同一份程式碼</td><td class="bad">不要簽。重新 fetch、重跑 Actions；仍有差異就把輸出貼給 agent 追查</td></tr>
+  <tr><td><code>✗ frozen files changed in the session branch</code></td><td>harness／SPEC 等凍結檔被改</td><td class="bad">不要簽。保留 diff 輸出，交給 agent 解釋並以 changes_requested 處理</td></tr>
+  <tr><td><code>✗ working tree has uncommitted changes</code></td><td>你本機 repo 有未提交的修改（常見：親手變異後忘了還原）</td><td><code>git -C rlsentry restore .</code> 或 <code>git stash</code></td></tr>
+  <tr><td><code>✗ no local harness-frozen tag</code></td><td>本機尚未初始化</td><td>執行 <code>bash host/bootstrap.sh</code></td></tr>
+  <tr><td>Actions 最後一行是 <code>FAILED: …</code></td><td>某項自動檢查沒過</td><td>不要簽。把失敗的那一項名稱與摘要貼給 agent</td></tr>
+  <tr><td>「Show exact commit under test」的訊息不是 <code>rlsentry: …</code></td><td>ref 填錯（例如 main）</td><td>重跑 Actions，<code>ref = claude/busy-darwin-asvox3</code></td></tr>
+  <tr><td>review.sh 第 3 步要你另開雲端 session</td><td>舊流程的提示（ADR-022 前）</td><td>忽略，改用 Actions</td></tr>
+  <tr><td>review.sh 第 5 步立刻要求簽章</td><td>腳本不會在第 3 步停下</td><td>Ctrl+C；步驟 3–6 完成後再單獨執行 <code>host/approve.py</code></td></tr>
+</table>
+
+<h2>5. 一頁摘要</h2>
+<pre>1. review.sh MSx claude/busy-darwin-asvox3   → 記下 at &lt;sha&gt;；確認 ✓ no changes to frozen files；第 5 步 Ctrl+C
+2. Actions：verify-milestone，ms=MSx，ref=claude/busy-darwin-asvox3
+   → 「Show exact commit under test」的 sha；最後一行 MSx: ALL PASSED
+3. git -C rlsentry fetch origin claude/busy-darwin-asvox3
+   git -C rlsentry diff --stat &lt;本機 sha&gt; &lt;Actions sha&gt; -- . ':!logs'   → 沒有輸出
+4. Codespaces（ref=claude/busy-darwin-asvox3）：確認 HEAD 與本機 sha 一致
+   → 做完【Codespaces 必做】與【Codespaces 必做變異】；git restore .；不提交、不推送；刪除 Codespace
+5. 驗證清單 docs/verification/MSx-vN.md 第 3 段逐項；docs/reviews/MSx-high-risk.md 看 diff
+6. python host/approve.py --ms MSx --key ~/.ssh/rlsentry_approval_ed25519
+7. 雲端 session 傳「繼續」</pre>
+
+</main>
+</body>
+</html>

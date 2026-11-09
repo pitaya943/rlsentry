@@ -1,0 +1,7 @@
+{
+  "description": "T-235 report recon URL",
+  "prompt": "Ticket: T-235\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-235.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

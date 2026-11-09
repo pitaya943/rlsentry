@@ -1,0 +1,7 @@
+{
+  "description": "T-216 fix SQL and enrich",
+  "prompt": "Ticket: T-216\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-216.md and follow it.",
+  "subagent_type": "whitebox-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

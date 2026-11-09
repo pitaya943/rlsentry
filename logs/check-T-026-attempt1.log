@@ -1,0 +1,101 @@
+All checks passed!
+............                                                             [100%]
+12 passed in 0.10s
+........................................................................ [ 23%]
+...........FFF.......................................................... [ 47%]
+........................................................................ [ 71%]
+........................................................................ [ 95%]
+.............                                                            [100%]
+=================================== FAILURES ===================================
+_ test_yaml_errors_never_echo_file_content[target: http://x\ntest_users: [{name: user_a, password: hunter2SECRET\n] _
+
+text = 'target: http://x\ntest_users: [{name: user_a, password: hunter2SECRET\n'
+
+    @pytest.mark.safety
+    @pytest.mark.parametrize("text", [
+        "target: http://x\ntest_users: [{name: user_a, password: hunter2SECRET\n",
+        "target: http://x\nnote: 'hunter2SECRET\n",
+        "target: http://x\n\tkey: hunter2SECRET\n",
+    ])
+    def test_yaml_errors_never_echo_file_content(text: str) -> None:
+        # NFR-03 / ConfigError contract: report where (line, column) and what kind of error,
+        # never a snippet of the file (it may hold a pasted secret).
+        with pytest.raises(ConfigError) as ei:
+            load_config(text)
+        msg = str(ei.value)
+>       assert "hunter2SECRET" not in msg and "hunter2" not in msg
+E       assert ('hunter2SECRET' not in 'invalid YAM...n    \n    ^'
+E         
+E         'hunter2SECRET' is contained here:
+E           
+E               
+E               ^ and 'hunter2' not in 'invalid YAM...n    \n    ^'
+E         
+E         'hunter2' is contained here:
+E           password: hunter2 ... 
+E         ?           +++++++
+E                            ^
+E           expected ',' or '}', but got '<stream end>'
+E             in "<unicode string>", line 3, column 1:
+E               
+E               ^)
+
+tests/policy/test_load.py:67: AssertionError
+_ test_yaml_errors_never_echo_file_content[target: http://x\nnote: 'hunter2SECRET\n] _
+
+text = "target: http://x\nnote: 'hunter2SECRET\n"
+
+    @pytest.mark.safety
+    @pytest.mark.parametrize("text", [
+        "target: http://x\ntest_users: [{name: user_a, password: hunter2SECRET\n",
+        "target: http://x\nnote: 'hunter2SECRET\n",
+        "target: http://x\n\tkey: hunter2SECRET\n",
+    ])
+    def test_yaml_errors_never_echo_file_content(text: str) -> None:
+        # NFR-03 / ConfigError contract: report where (line, column) and what kind of error,
+        # never a snippet of the file (it may hold a pasted secret).
+        with pytest.raises(ConfigError) as ei:
+            load_config(text)
+        msg = str(ei.value)
+>       assert "hunter2SECRET" not in msg and "hunter2" not in msg
+E       assert ('hunter2SECRET' not in 'invalid YAM...n    \n    ^'
+E         
+E         'hunter2SECRET' is contained here:
+E              note: 'hunter2SECRET
+E                     ^
+E           found unexpected end of stream
+E             in "<unicode string>", line 3, column 1:
+E               
+E               ^)
+
+tests/policy/test_load.py:67: AssertionError
+_ test_yaml_errors_never_echo_file_content[target: http://x\n\tkey: hunter2SECRET\n] _
+
+text = 'target: http://x\n\tkey: hunter2SECRET\n'
+
+    @pytest.mark.safety
+    @pytest.mark.parametrize("text", [
+        "target: http://x\ntest_users: [{name: user_a, password: hunter2SECRET\n",
+        "target: http://x\nnote: 'hunter2SECRET\n",
+        "target: http://x\n\tkey: hunter2SECRET\n",
+    ])
+    def test_yaml_errors_never_echo_file_content(text: str) -> None:
+        # NFR-03 / ConfigError contract: report where (line, column) and what kind of error,
+        # never a snippet of the file (it may hold a pasted secret).
+        with pytest.raises(ConfigError) as ei:
+            load_config(text)
+        msg = str(ei.value)
+>       assert "hunter2SECRET" not in msg and "hunter2" not in msg
+E       AssertionError: assert ('hunter2SECRET' not in 'invalid YAM...ECRET\n    ^'
+E         
+E         'hunter2SECRET' is contained here:
+E               	key: hunter2SECRET
+E               ^)
+
+tests/policy/test_load.py:67: AssertionError
+=========================== short test summary info ============================
+FAILED tests/policy/test_load.py::test_yaml_errors_never_echo_file_content[target: http://x\ntest_users: [{name: user_a, password: hunter2SECRET\n]
+FAILED tests/policy/test_load.py::test_yaml_errors_never_echo_file_content[target: http://x\nnote: 'hunter2SECRET\n]
+FAILED tests/policy/test_load.py::test_yaml_errors_never_echo_file_content[target: http://x\n\tkey: hunter2SECRET\n]
+3 failed, 298 passed in 0.88s
+make: *** [Makefile:15: check] Error 1

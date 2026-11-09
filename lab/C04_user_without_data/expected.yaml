@@ -1,0 +1,26 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: C04
+title: 安全對照：無資料的使用者
+plant: |
+  public.subscriptions 啟用 RLS，SELECT：TO authenticated USING (owner_id = auth.uid())；沒有
+  INSERT／UPDATE／DELETE policy（只由後端寫入）。只有 user_a 有資料，user_b 沒有任何列。
+  因此「A 能否讀 B 的列」無從判定（inconclusive）；「B 與 anon 能否讀 A 的列」可以判定（denied）。
+schema:
+  subscriptions: {kind: table, columns: [id, owner_id, plan], primary_key: [id]}
+rows:
+  sub_a1: {target: subscriptions, pk: 5ce0c004-0000-4000-8000-000000000001, owner: user_a}
+policy:
+  tables:
+    subscriptions:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: deny}
+      update: {anon: deny, user: deny}
+      delete: {anon: deny, user: deny}
+vulnerable_cases: []
+safe_cases:
+  - {id: C04-S1, target: subscriptions, op: select, role: anon, rows: [sub_a1], expect: denied}
+  - {id: C04-S2, target: subscriptions, op: select, role: user_b, rows: [sub_a1], expect: denied}
+inconclusive_cases:
+  - {id: C04-I1, target: subscriptions, op: select, role: user_a, expect: inconclusive}
+splinter_expected: not_reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

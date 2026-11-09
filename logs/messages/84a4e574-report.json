@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a288c1cdf956ff751",
+  "description": "T-215 S4 endpoint",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-215\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-215.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/b227dfcb-caa8-5c73-a736-a08c80d6e4d5/tasks/a288c1cdf956ff751.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

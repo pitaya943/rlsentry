@@ -1,0 +1,35 @@
+# Ground truth（architect 撰寫並凍結；格式見 rlsentry/contracts/ground_truth.py、ADR-009）
+scenario: L09
+title: INSERT 寬鬆
+plant: |
+  public.feedback 啟用 RLS；owner_id 可為 NULL。SELECT：TO authenticated USING (owner_id = auth.uid())
+  （正確）；INSERT：TO anon, authenticated WITH CHECK (true)  ← 漏洞；沒有 UPDATE／DELETE policy
+  （本表設計為只可新增）。
+  探測：INSERT 必須用 Prefer: return=minimal（否則新列要過 SELECT policy，會以 42501 失敗）；
+  anon 新增時把 owner_id 設為 user_a，再由 user_a 讀回（auditor G2、ADR-014）。
+schema:
+  feedback: {kind: table, columns: [id, owner_id, body], primary_key: [id]}
+rows:
+  fb_a1: {target: feedback, pk: 5ce01009-0000-4000-8000-000000000001, owner: user_a}
+  fb_b1: {target: feedback, pk: 5ce01009-0000-4000-8000-000000000002, owner: user_b}
+policy:
+  tables:
+    feedback:
+      owner_column: owner_id
+      select: {anon: deny, user: own_rows_only}
+      insert: {anon: deny, user: own_rows_only}
+      update: {anon: deny, user: deny}
+      delete: {anon: deny, user: deny}
+vulnerable_cases:
+  - {id: L09-V1, target: feedback, op: insert, role: anon, new_owner: user_a, expect: allowed, rule: ANON_WRITE, severity: critical, profiles: [dev, ci]}
+  - {id: L09-V2, target: feedback, op: insert, role: user_a, new_owner: user_b, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+  - {id: L09-V3, target: feedback, op: insert, role: user_b, new_owner: user_a, expect: allowed, rule: CROSS_TENANT_WRITE, severity: high, profiles: [dev, ci]}
+safe_cases:
+  - {id: L09-S1, target: feedback, op: select, role: anon, rows: [fb_a1, fb_b1], expect: denied}
+  - {id: L09-S2, target: feedback, op: select, role: user_a, rows: [fb_b1], expect: denied}
+  - {id: L09-S3, target: feedback, op: select, role: user_b, rows: [fb_a1], expect: denied}
+  - {id: L09-S4, target: feedback, op: update, role: anon, rows: [fb_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L09-S5, target: feedback, op: update, role: user_b, rows: [fb_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L09-S6, target: feedback, op: delete, role: anon, rows: [fb_a1], expect: denied, profiles: [dev, ci]}
+  - {id: L09-S7, target: feedback, op: delete, role: user_a, rows: [fb_b1], expect: denied, profiles: [dev, ci]}
+splinter_expected: reported   # MS4 實測（splinter 2026.09.1，T-170；ADR-035）

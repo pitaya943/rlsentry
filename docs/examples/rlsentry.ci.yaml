@@ -1,0 +1,20 @@
+# ci profile：本機 lab 情境 L05（跨租戶寫入）。USAGE.md 的 ci doctest 使用此檔。
+target: http://127.0.0.1:8740/          # ci 不掃前端（不跑 M1），但仍需寫明目標
+authorized: true
+profile: ci                             # M2–M5；只在 localhost 或 write_hosts 寫入
+supabase_url: http://127.0.0.1:54321
+anon_key_env: RLSENTRY_ANON_KEY         # ci 不跑 M1，anon key 必須由環境變數提供
+db_url_env: RLSENTRY_DB_URL
+db_schemas: [public]                    # PostgREST 曝露的 schema（傳給 M4）
+write_hosts: []                         # 遠端 preview DB 的主機（例如 abcd.supabase.co）；localhost 不需列出
+fail_on: {evidence: confirmed, severity: high}   # 預設值：Confirmed 且 ≥ high 才 exit 1
+test_users:
+  - {name: user_a, email: a@test.dev, password_env: RLS_A_PW}
+  - {name: user_b, email: b@test.dev, password_env: RLS_B_PW}
+tables:
+  projects:
+    owner_column: owner_id
+    select: {anon: deny, user: own_rows_only}
+    insert: {anon: deny, user: own_rows_only}
+    update: {anon: deny, user: own_rows_only}
+    delete: {anon: deny, user: own_rows_only}

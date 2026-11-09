@@ -1,0 +1,35 @@
+All checks passed!
+....                                                                     [100%]
+4 passed in 2.77s
+........................................................................ [  7%]
+........................................................................ [ 14%]
+........................................................................ [ 21%]
+........................................................................ [ 29%]
+........................................................................ [ 36%]
+........................................................................ [ 43%]
+........................................................................ [ 51%]
+........................................................................ [ 58%]
+........................................................................ [ 65%]
+........................................................................ [ 73%]
+........................................................................ [ 80%]
+........................................................................ [ 87%]
+..............F......................................................... [ 95%]
+.................................................                        [100%]
+=================================== FAILURES ===================================
+______________________ test_l01_rls_disabled_is_reported _______________________
+
+lab_info = LabInfo(api_url='http://127.0.0.1:54321', db_url='postgresql://postgres:postgres@127.0.0.1:54322/postgres', anon_key='...JzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+
+    def test_l01_rls_disabled_is_reported(lab_info: LabInfo) -> None:
+        labctl.apply("L01")
+        lints = run_splinter(lab_info.db_url)
+        assert ("rls_disabled_in_public", "customers") in security(lints)
+>       assert all(x.object_schema in (None, "public") for x in lints if x.object_name)
+E       assert False
+E        +  where False = all(<generator object test_l01_rls_disabled_is_reported.<locals>.<genexpr> at 0x7f8956d329b0>)
+
+tests/lab/test_whitebox_lab.py:25: AssertionError
+=========================== short test summary info ============================
+FAILED tests/lab/test_whitebox_lab.py::test_l01_rls_disabled_is_reported - as...
+1 failed, 984 passed in 368.86s (0:06:08)
+make: *** [Makefile:15: check] Error 1

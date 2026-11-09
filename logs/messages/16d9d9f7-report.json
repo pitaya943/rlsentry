@@ -1,0 +1,73 @@
+{
+  "status": "completed",
+  "prompt": "Ticket: T-092\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-092.md and follow it.",
+  "agentId": "afce3aaa17fbc36ff",
+  "agentType": "lab-dev",
+  "handback": "send",
+  "handbackReport": {
+    "text": "Ticket: T-092\nBranch: agent-afce3aaa17fbc36ff (confirm with git rev-parse --abbrev-ref HEAD)\nCommit: d461d509203c82ca107facab610e163081ff7146\nWorktree: /home/user/rlsentry/.claude/worktrees/agent-afce3aaa17fbc36ff\nFiles: lab/_shared/labctl.py\nTests: 12 passed, 0 failed (ruff and mypy rlsentry clean)\nAmbiguities: none. Two implementation choices:\n- query() sets PGOPTIONS=-c default_transaction_read_only=on through docker exec -e.\n- execute() uses `-1 -f -` because psql's -1 flag only works together with -f or -c, not bare stdin."
+  },
+  "toolsUsed": [
+    "Bash",
+    "SubagentHandback"
+  ],
+  "harnessNoteCount": 1,
+  "harnessTailCount": 0,
+  "harnessSectionHash": "073aa872923e98c6",
+  "content": [
+    {
+      "type": "text",
+      "text": "This agent's report was delivered to you as a message from \"afce3aaa17fbc36ff\" (its SubagentHandback call). Read it there; it is not repeated here.\n"
+    }
+  ],
+  "resolvedModel": "claude-sonnet-5-5",
+  "totalDurationMs": 67473,
+  "totalTokens": 22630,
+  "totalToolUseCount": 5,
+  "usage": {
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 248,
+    "cache_read_input_tokens": 22067,
+    "output_tokens": 313,
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 248
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 313,
+        "cache_read_input_tokens": 22067,
+        "cache_creation_input_tokens": 248,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 248,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "toolStats": {
+    "readCount": 0,
+    "searchCount": 0,
+    "bashCount": 4,
+    "editFileCount": 0,
+    "linesAdded": 0,
+    "linesRemoved": 0,
+    "otherToolCount": 1
+  },
+  "worktreePath": "/home/user/rlsentry/.claude/worktrees/agent-afce3aaa17fbc36ff",
+  "worktreeBranch": "worktree-agent-afce3aaa17fbc36ff",
+  "canContinueAgent": false
+}

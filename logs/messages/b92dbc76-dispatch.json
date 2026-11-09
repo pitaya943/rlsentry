@@ -1,0 +1,6 @@
+{
+  "description": "T-130 probe run wiring",
+  "prompt": "Ticket: T-130\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-130.md and follow it.\n\nNotes to save time (the lab is slow): Docker and the local Supabase lab are ALREADY running and healthy (shared host Docker; `python3 -c \"from lab._shared import labctl; labctl.ensure_up()\"` returns immediately — do NOT run `supabase start`). Implement rlsentry/probe/run.py first, then validate in this order, committing once green:\n1. `pytest -q tests/probe/test_write_requests.py` (fast, no Docker) — the seed/write/cleanup fake-client tests.\n2. `pytest -q tests/lab/test_scan_writes.py -k C01` then one vulnerable scenario like `-k L01`, to iterate cheaply.\n3. the full ticket test set.\nKeep edits to rlsentry/probe/run.py only. Commit your work before you run out of turns, then report the branch and commit even if not all lab scenarios pass.",
+  "subagent_type": "probe-dev",
+  "isolation": "worktree"
+}

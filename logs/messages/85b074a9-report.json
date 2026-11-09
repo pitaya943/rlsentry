@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a393a2e7f5e7caf88",
+  "description": "T-108 severity diff",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-108\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-108.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/505ebaef-3fa1-5dce-8359-2913693d1ef6/tasks/a393a2e7f5e7caf88.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

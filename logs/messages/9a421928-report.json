@@ -1,0 +1,11 @@
+{
+  "isAsync": true,
+  "status": "async_launched",
+  "agentId": "a09d72a7212b39223",
+  "description": "T-166 OpenAPI types",
+  "resolvedModel": "claude-sonnet-5-5",
+  "prompt": "Ticket: T-166\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-166.md and follow it.",
+  "outputFile": "/tmp/claude-0/-home-user-rlsentry/e06fdbe0-c428-5441-a8c2-bcd56a9af2ef/tasks/a09d72a7212b39223.output",
+  "canReadOutputFile": true,
+  "canContinueAgent": false
+}

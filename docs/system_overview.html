@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RLSentry 系統總覽（ADR-021）</title>
+<style>
+  :root { --ink:#1f2933; --mute:#616e7c; --line:#cbd2d9; --bg:#f7f9fb;
+          --done:#2f9e44; --wip:#f08c00; --todo:#adb5bd; --risk:#c92a2a; --acc:#1c7ed6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Segoe UI", "Noto Sans TC", "PingFang TC", sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.6; }
+  header { background:#102a43; color:#fff; padding:28px 40px; }
+  header h1 { margin:0 0 6px; font-size:26px; }
+  header p { margin:0; color:#bcccdc; }
+  nav { position:sticky; top:0; background:#fff; border-bottom:1px solid var(--line); padding:8px 40px;
+        font-size:14px; z-index:5; overflow-x:auto; white-space:nowrap; }
+  nav a { color:var(--acc); text-decoration:none; margin-right:16px; }
+  main { max-width:1180px; margin:0 auto; padding:24px 40px 80px; }
+  section { background:#fff; border:1px solid var(--line); border-radius:10px; padding:22px 28px; margin:22px 0; }
+  h2 { margin-top:0; font-size:21px; border-left:5px solid var(--acc); padding-left:10px; }
+  h3 { font-size:16px; margin:18px 0 6px; }
+  .lead { font-size:18px; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:14px; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#fbfcfd; }
+  .card b { display:block; margin-bottom:4px; }
+  .card .why { color:var(--mute); font-size:14px; }
+  .legend span { display:inline-block; margin-right:16px; font-size:14px; }
+  .dot { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-1px; margin-right:5px; }
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:#eef2f6; }
+  code { background:#eef2f6; padding:1px 5px; border-radius:4px; font-size:13px; }
+  .note { color:var(--mute); font-size:13px; }
+  svg text { font-family: inherit; }
+  .bar { height:18px; border-radius:3px; display:inline-block; vertical-align:middle; }
+  details { margin:8px 0; }
+  summary { cursor:pointer; color:var(--acc); }
+</style>
+</head>
+<body>
+<header>
+  <h1>RLSentry 系統總覽</h1>
+  <p>給審查者的設計地圖（ADR-021）。只講「為什麼」與「怎麼互動」；細節請走第 10 節的閱讀路線。最後更新：MS7 收尾（main @ 7b857e2f1）。</p>
+</header>
+<nav>
+  <a href="#s1">1 定位</a><a href="#s2">2 架構</a><a href="#s3">3 設計理念</a><a href="#s4">4 請求的旅程</a>
+  <a href="#s5">5 Lab 與驗證</a><a href="#s6">6 開發流程</a><a href="#s7">7 進度地圖</a>
+  <a href="#s8">8 MS1 過程</a><a href="#s9">9 最大風險</a><a href="#s10">10 閱讀路線</a>
+</nav>
+<main>
+
+<!-- 1 ------------------------------------------------------------------>
+<section id="s1">
+  <h2>1. 一句話定位</h2>
+  <p class="lead">RLSentry 以<b>攻擊者的視角</b>對 Supabase 專案做<b>差分測試</b>：先問「依你的意圖，誰<i>應該</i>能做什麼」（expected policy），再實際以 anon、user_a、user_b 三個身分去試「誰<i>真的</i>能做什麼」，兩者的差就是漏洞。</p>
+  <svg viewBox="0 0 1000 150" width="100%" role="img" aria-label="差分概念">
+    <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 z" fill="#486581"/></marker></defs>
+    <rect x="10" y="20" width="250" height="100" rx="10" fill="#e7f5ff" stroke="#1c7ed6"/>
+    <text x="135" y="55" text-anchor="middle" font-size="16" font-weight="bold">expected（意圖）</text>
+    <text x="135" y="80" text-anchor="middle" font-size="13">rlsentry.yaml 的 policy</text>
+    <text x="135" y="100" text-anchor="middle" font-size="13">表 × 操作 × 角色 → 列範圍</text>
+    <rect x="370" y="20" width="250" height="100" rx="10" fill="#fff4e6" stroke="#f08c00"/>
+    <text x="495" y="55" text-anchor="middle" font-size="16" font-weight="bold">actual（實測）</text>
+    <text x="495" y="80" text-anchor="middle" font-size="13">以三個身分實際打 PostgREST</text>
+    <text x="495" y="100" text-anchor="middle" font-size="13">allowed / denied / inconclusive</text>
+    <rect x="730" y="20" width="260" height="100" rx="10" fill="#fff5f5" stroke="#c92a2a"/>
+    <text x="860" y="55" text-anchor="middle" font-size="16" font-weight="bold">actual − expected</text>
+    <text x="860" y="80" text-anchor="middle" font-size="13">= finding（附證據等級、嚴重度、</text>
+    <text x="860" y="100" text-anchor="middle" font-size="13">修補 SQL、curl 重現指令）</text>
+    <line x1="260" y1="70" x2="365" y2="70" stroke="#486581" stroke-width="2" marker-end="url(#ar)"/>
+    <line x1="620" y1="70" x2="725" y2="70" stroke="#486581" stroke-width="2" marker-end="url(#ar)"/>
+  </svg>
+  <p class="note">為什麼不只用 splinter（Supabase 的靜態 lint）？lint 只看 policy 文字，看不到「view 以建立者權限執行」「RPC 繞過 RLS」這類只有實際存取才會發生的洩漏；反過來，實測看不到「可呼叫但沒回傳資料」的設定問題。所以 M4 把兩者交叉比對（SPEC §5）。</p>
+</section>
+
+<!-- 2 ------------------------------------------------------------------>
+<section id="s2">
+  <h2>2. 系統架構（模組與完成狀態）</h2>
+  <div class="legend"><span><i class="dot" style="background:var(--done)"></i>已完成並通過驗收</span><span><i class="dot" style="background:var(--wip)"></i>只有合約（介面已定）</span><span><i class="dot" style="background:var(--todo)"></i>尚未開始</span></div>
+  <svg viewBox="0 0 1100 470" width="100%" role="img" aria-label="系統架構">
+    <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 z" fill="#334e68"/></marker></defs>
+    <!-- inputs -->
+    <rect x="10" y="30" width="170" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+    <text x="95" y="58" text-anchor="middle" font-size="14" font-weight="bold">rlsentry.yaml</text>
+    <text x="95" y="80" text-anchor="middle" font-size="12">policy/load·resolve·visibility</text>
+    <rect x="10" y="130" width="170" height="60" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+    <text x="95" y="157" text-anchor="middle" font-size="14" font-weight="bold">授權閘門 gate</text>
+    <text x="95" y="177" text-anchor="middle" font-size="12">NFR-02</text>
+    <!-- pipeline -->
+    <rect x="230" y="30" width="120" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+    <text x="290" y="60" text-anchor="middle" font-size="14" font-weight="bold">M1 Recon</text>
+    <text x="290" y="80" text-anchor="middle" font-size="12">bundle → URL、key ✓</text>
+    <rect x="380" y="30" width="130" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+    <text x="445" y="60" text-anchor="middle" font-size="14" font-weight="bold">M2 Discovery</text>
+    <text x="445" y="80" text-anchor="middle" font-size="12">OpenAPI＋推測 ✓</text>
+    <rect x="540" y="30" width="150" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+    <text x="615" y="60" text-anchor="middle" font-size="14" font-weight="bold">M3 Probe（核心）</text>
+    <text x="615" y="80" text-anchor="middle" font-size="12">讀取 ✓、寫入 ✓（dev／ci）</text>
+    <rect x="720" y="30" width="140" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44" stroke-dasharray="5,4"/>
+    <text x="790" y="60" text-anchor="middle" font-size="14" font-weight="bold">M4 Whitebox</text>
+    <text x="790" y="80" text-anchor="middle" font-size="12">splinter 交叉 ✓（選配）</text>
+    <rect x="890" y="30" width="190" height="70" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+    <text x="985" y="60" text-anchor="middle" font-size="14" font-weight="bold">M5 Report</text>
+    <text x="985" y="80" text-anchor="middle" font-size="12">JSON／HTML／SARIF ✓</text>
+    <line x1="180" y1="65" x2="226" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
+    <line x1="350" y1="65" x2="376" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
+    <line x1="510" y1="65" x2="536" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
+    <line x1="690" y1="65" x2="716" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
+    <line x1="860" y1="65" x2="886" y2="65" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
+    <!-- contracts band -->
+    <rect x="230" y="120" width="850" height="44" rx="6" fill="#fff4e6" stroke="#f08c00"/>
+    <text x="655" y="147" text-anchor="middle" font-size="13">contracts/：模組之間只交換這裡定義的 Pydantic 模型 — 已定案（MS0–MS1）</text>
+    <!-- safety layer -->
+    <rect x="230" y="190" width="850" height="120" rx="10" fill="#e3f9e5" stroke="#2f9e44" stroke-width="2"/>
+    <text x="250" y="214" font-size="15" font-weight="bold">Safety 層（MS1 完成）：所有對外請求唯一的出口</text>
+    <rect x="250" y="228" width="180" height="62" rx="6" fill="#fff" stroke="#2f9e44"/>
+    <text x="340" y="254" text-anchor="middle" font-size="13" font-weight="bold">mode：寫入閘門</text>
+    <text x="340" y="274" text-anchor="middle" font-size="12">NFR-01、ADR-014/017/020</text>
+    <rect x="450" y="228" width="180" height="62" rx="6" fill="#fff" stroke="#2f9e44"/>
+    <text x="540" y="254" text-anchor="middle" font-size="13" font-weight="bold">ratelimit</text>
+    <text x="540" y="274" text-anchor="middle" font-size="12">semaphore＋token bucket</text>
+    <rect x="650" y="228" width="180" height="62" rx="6" fill="#fff" stroke="#2f9e44"/>
+    <text x="740" y="254" text-anchor="middle" font-size="13" font-weight="bold">http：SafeClient</text>
+    <text x="740" y="274" text-anchor="middle" font-size="12">UA、不跟 redirect、無 cookie</text>
+    <rect x="850" y="228" width="210" height="62" rx="6" fill="#fff" stroke="#2f9e44"/>
+    <text x="955" y="254" text-anchor="middle" font-size="13" font-weight="bold">mask</text>
+    <text x="955" y="274" text-anchor="middle" font-size="12">key／JWT 只留前 6 後 4</text>
+    <!-- target -->
+    <rect x="430" y="370" width="440" height="80" rx="10" fill="#f8f0fc" stroke="#9c36b5"/>
+    <text x="650" y="400" text-anchor="middle" font-size="15" font-weight="bold">目標 Supabase（Kong → PostgREST／GoTrue／Storage → Postgres RLS）</text>
+    <text x="650" y="425" text-anchor="middle" font-size="12">開發期間只有本機 lab（lab/_shared，16 個情境，MS1 完成）</text>
+    <line x1="650" y1="310" x2="650" y2="366" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
+    <line x1="615" y1="100" x2="615" y2="186" stroke="#334e68" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#a2)"/>
+    <line x1="445" y1="100" x2="445" y2="186" stroke="#334e68" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#a2)"/>
+    <line x1="95" y1="190" x2="95" y2="250" stroke="#334e68" stroke-width="2"/>
+    <line x1="95" y1="250" x2="246" y2="250" stroke="#334e68" stroke-width="2" marker-end="url(#a2)"/>
+    <text x="100" y="240" font-size="12" fill="#334e68">沒授權就不建立 client</text>
+    <text x="20" y="330" font-size="11" fill="#c92a2a">唯一的 SafeClient 只在 pipeline 授權後建立（ADR-020 #6 ✓）</text>
+  </svg>
+  <p class="note">虛線箭頭＝模組透過 SafeClient 發請求。只有 bench（MS4）可以看 ground truth；掃描器本身永遠看不到答案（ADR-014 #10，有測試把關）。</p>
+</section>
+
+<!-- 3 ------------------------------------------------------------------>
+<section id="s3">
+  <h2>3. 核心設計理念（每一條都有一個「它防的是什麼錯」）</h2>
+  <div class="cards">
+    <div class="card"><b>三態，而且 count = 0 ≠ denied</b>看不到列可能是「被擋」，也可能是「本來就沒有列」。只有在某個已知存在的列上，才能說 denied。<div class="why">防：空表被誤判為安全。寫進型別：ProbeResult 驗證器（ADR-006）。</div></div>
+    <div class="card"><b>差分，而不是規則清單</b>漏洞＝「實際可以」減去「應該可以」。同一個 USING (true) 在公開表是正確設計，在私人表是漏洞。<div class="why">防：把合法公開誤報為漏洞（C02 對照組）。</div></div>
+    <div class="card"><b>預設唯讀，audit 永遠不寫</b>profile 省略時為 audit；audit 不能被設定檔放寬；唯一例外是登入。<div class="why">防：掃描本身破壞資料（NFR-01、ADR-010、ADR-014）。</div></div>
+    <div class="card"><b>不相信工具的自述</b>「0 次寫入」要由資料庫 log 獨立驗證，而且這個驗證方法本身也被測過（ADR-019 發現 SPEC 原方法是盲的）。<div class="why">防：工具說沒寫、其實寫了。</div></div>
+    <div class="card"><b>答案先於實作</b>ground truth（expected.yaml）在 lab 與掃描器之前寫好並凍結；lab 照答案建、oracle 驗證 lab、掃描器最後才拿來考。<div class="why">防：依結果改答案（overfitting）。</div></div>
+    <div class="card"><b>證據分級</b>Confirmed（實際拿到資料）／Configuration warning／Review。CI 預設只在 Confirmed 且 ≥ High 時失敗。<div class="why">防：CI 被雜訊淹沒而被關掉。</div></div>
+    <div class="card"><b>寫入的範圍封閉</b>dev 只寫 localhost；ci 只寫明列的 host（你的 MS0 決定）；只寫 canary 與植入列並讀回、清理。<div class="why">防：誤寫正式環境（ADR-017）。</div></div>
+    <div class="card"><b>fail-closed</b>不認得的 profile、壞掉的 URL、編碼過的 RPC 路徑，一律拒絕。<div class="why">防：例外輸入落到「允許」分支（ADR-020）。</div></div>
+  </div>
+</section>
+
+<!-- 4 ------------------------------------------------------------------>
+<section id="s4">
+  <h2>4. 一個請求的旅程（Safety 層的判斷順序）</h2>
+  <p>任何模組要送出 HTTP 請求，都只能呼叫 <code>SafeClient.request()</code>。寫入閘門的順序本身就是安全性質：越前面的規則越不能被後面的例外繞過。</p>
+  <svg viewBox="0 0 1100 520" width="100%" role="img" aria-label="寫入閘門流程">
+    <defs><marker id="a4" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 z" fill="#334e68"/></marker></defs>
+    <g font-size="13">
+      <rect x="20" y="20" width="200" height="44" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/><text x="120" y="47" text-anchor="middle">模組呼叫 request(method, url)</text>
+      <line x1="120" y1="64" x2="120" y2="84" stroke="#334e68" stroke-width="2" marker-end="url(#a4)"/>
+      <rect x="20" y="86" width="200" height="40" rx="6" fill="#fff" stroke="#334e68"/><text x="120" y="111" text-anchor="middle">組出含 params 的最終 URL</text>
+      <line x1="120" y1="126" x2="120" y2="146" stroke="#334e68" stroke-width="2" marker-end="url(#a4)"/>
+    </g>
+    <!-- ladder -->
+    <g font-size="13">
+      <rect x="20" y="148" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="171">0 profile 是合法的 Profile？</text>
+      <rect x="20" y="192" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="215">1 URL 是 http(s) 且有 host？</text>
+      <rect x="20" y="236" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="259">2 GET／HEAD？</text>
+      <rect x="20" y="280" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="303">3 正規化路徑是 /rest/v1/rpc/…？</text>
+      <rect x="20" y="324" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="347">4 POST /auth/v1/token?grant_type=password？</text>
+      <rect x="20" y="368" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="391">5 profile 是 audit？</text>
+      <rect x="20" y="412" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="435">6 host 是 localhost／127.0.0.1／::1？</text>
+      <rect x="20" y="456" width="330" height="36" rx="6" fill="#fff" stroke="#334e68"/><text x="30" y="479">7 ci 且 host 完全符合 write_hosts？</text>
+    </g>
+    <g font-size="12">
+      <text x="360" y="171" fill="#c92a2a">否 → 拒絕（fail-closed）</text>
+      <text x="360" y="215" fill="#c92a2a">否 → 拒絕</text>
+      <text x="360" y="259" fill="#2f9e44">是 → 放行（讀取）</text>
+      <text x="360" y="303" fill="#c92a2a">是 → 拒絕（RPC 只能 GET，ADR-014 #3）</text>
+      <text x="360" y="347" fill="#2f9e44">是 → 放行（唯一的寫入例外：登入）</text>
+      <text x="360" y="391" fill="#c92a2a">是 → 拒絕（audit 永不寫）</text>
+      <text x="360" y="435" fill="#2f9e44">是 → 放行（dev／ci 的 lab）</text>
+      <text x="360" y="479" fill="#2f9e44">是 → 放行；否 → 拒絕</text>
+    </g>
+    <!-- after gate -->
+    <g font-size="13">
+      <rect x="700" y="148" width="370" height="44" rx="8" fill="#e3f9e5" stroke="#2f9e44"/><text x="885" y="175" text-anchor="middle">放行 → 進入限速（每秒 ≤ 5，並行上限）</text>
+      <line x1="885" y1="192" x2="885" y2="216" stroke="#334e68" stroke-width="2" marker-end="url(#a4)"/>
+      <rect x="700" y="218" width="370" height="44" rx="8" fill="#e3f9e5" stroke="#2f9e44"/><text x="885" y="245" text-anchor="middle">覆寫 User-Agent = RLSentry/版本</text>
+      <line x1="885" y1="262" x2="885" y2="286" stroke="#334e68" stroke-width="2" marker-end="url(#a4)"/>
+      <rect x="700" y="288" width="370" height="58" rx="8" fill="#e3f9e5" stroke="#2f9e44"/><text x="885" y="312" text-anchor="middle">送出：不跟隨 redirect、不讀 proxy 環境變數、</text><text x="885" y="332" text-anchor="middle">不保留 cookie（身分之間不共享狀態）</text>
+      <rect x="700" y="390" width="370" height="70" rx="8" fill="#fff5f5" stroke="#c92a2a"/><text x="885" y="418" text-anchor="middle">拒絕 → WriteRefused（請求從未送出、</text><text x="885" y="440" text-anchor="middle">也沒消耗限速額度；訊息不含 query string）</text>
+    </g>
+  </svg>
+  <p class="note">為什麼「RPC 拒絕」排在「登入例外」與「profile」之前？這樣任何 profile、任何例外都無法讓 RPC 以 POST 執行；而 PostgREST 以 GET 呼叫 RPC 時會用唯讀交易，函式內的寫入會失敗（ADR-019 補記實測）。</p>
+</section>
+
+<!-- 5 ------------------------------------------------------------------>
+<section id="s5">
+  <h2>5. Lab 與驗證：答案怎麼被證明是對的</h2>
+  <svg viewBox="0 0 1100 330" width="100%" role="img" aria-label="lab 驗證架構">
+    <defs><marker id="a5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 z" fill="#334e68"/></marker></defs>
+    <g font-size="13">
+      <rect x="20" y="30" width="230" height="110" rx="10" fill="#fff4e6" stroke="#f08c00"/>
+      <text x="135" y="58" text-anchor="middle" font-weight="bold">expected.yaml（architect）</text>
+      <text x="135" y="80" text-anchor="middle">plant：怎麼埋漏洞</text>
+      <text x="135" y="100" text-anchor="middle">schema／rows：要建什麼</text>
+      <text x="135" y="120" text-anchor="middle">cases：每格的正確答案</text>
+      <rect x="320" y="30" width="230" height="110" rx="10" fill="#e3f9e5" stroke="#2f9e44"/>
+      <text x="435" y="58" text-anchor="middle" font-weight="bold">lab/&lt;id&gt;/（lab-dev）</text>
+      <text x="435" y="80" text-anchor="middle">migration.sql：表、RLS、policy</text>
+      <text x="435" y="100" text-anchor="middle">seed.sql：固定主鍵的植入列</text>
+      <text x="435" y="120" text-anchor="middle">frontend：模擬 bundle</text>
+      <rect x="620" y="30" width="230" height="110" rx="10" fill="#e3f9e5" stroke="#2f9e44"/>
+      <text x="735" y="58" text-anchor="middle" font-weight="bold">labctl.apply(id)</text>
+      <text x="735" y="80" text-anchor="middle">清空 public、storage、users</text>
+      <text x="735" y="100" text-anchor="middle">載入情境（約 1–2 秒）</text>
+      <text x="735" y="120" text-anchor="middle">一個常駐的本機 Supabase</text>
+      <rect x="880" y="30" width="200" height="110" rx="10" fill="#f8f0fc" stroke="#9c36b5"/>
+      <text x="980" y="58" text-anchor="middle" font-weight="bold">本機 Supabase</text>
+      <text x="980" y="80" text-anchor="middle">PostgREST＋GoTrue</text>
+      <text x="980" y="100" text-anchor="middle">Storage＋Postgres</text>
+      <text x="980" y="120" text-anchor="middle">log：寫入可歸屬角色</text>
+      <line x1="250" y1="85" x2="316" y2="85" stroke="#334e68" stroke-width="2" marker-end="url(#a5)"/>
+      <line x1="550" y1="85" x2="616" y2="85" stroke="#334e68" stroke-width="2" marker-end="url(#a5)"/>
+      <line x1="850" y1="85" x2="876" y2="85" stroke="#334e68" stroke-width="2" marker-end="url(#a5)"/>
+      <rect x="320" y="200" width="530" height="110" rx="10" fill="#e7f5ff" stroke="#1c7ed6" stroke-width="2"/>
+      <text x="585" y="226" text-anchor="middle" font-weight="bold">oracle（architect 的測試，tests/lab/）— 獨立於掃描器</text>
+      <text x="585" y="250" text-anchor="middle">schema、植入列、OpenAPI／bundle 曝光、每個 case 的答案</text>
+      <text x="585" y="272" text-anchor="middle">denied 必須是 RLS 拒絕（401／403／42501），錯誤不能冒充 denied</text>
+      <text x="585" y="294" text-anchor="middle">正向對照：policy 允許的人一定看得到（防「全部拒絕」的壞 lab）</text>
+      <line x1="135" y1="140" x2="330" y2="205" stroke="#1c7ed6" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#a5)"/>
+      <line x1="980" y1="140" x2="845" y2="205" stroke="#1c7ed6" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#a5)"/>
+      <text x="170" y="190" fill="#1c7ed6" font-size="12">讀答案</text>
+      <text x="930" y="190" fill="#1c7ed6" font-size="12">以原始 HTTP 實測</text>
+    </g>
+  </svg>
+  <div class="cards">
+    <div class="card"><b>12 個漏洞情境＋4 個對照組</b>漏洞（L01–L12）證明掃描器抓得到；對照組（C01–C04）證明它不會亂報，以及「空表、沒資料的使用者」必須回報 inconclusive。</div>
+    <div class="card"><b>oracle 怎麼證明自己有效</b>故意弄壞 lab：C04 改成 USING (false) → 正向對照失敗；L05 關掉 RLS → 10 個 denied 案例全部失敗。驗證器本身也要被驗證。</div>
+    <div class="card"><b>MS4 已接上掃描器</b><code>python -m rlsentry.bench</code> 讓掃描器只拿到 policy、對 lab 以 dev（計分）與 audit（唯讀檢查）各掃一次，再以 cases 計分；結果見 BENCHMARK_REPORT.md。</div>
+  </div>
+</section>
+
+<!-- 6 ------------------------------------------------------------------>
+<section id="s6">
+  <h2>6. 開發流程：誰做什麼、錯誤在哪一層被攔下</h2>
+  <svg viewBox="0 0 1100 260" width="100%" role="img" aria-label="開發流程">
+    <defs><marker id="a6" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 z" fill="#334e68"/></marker></defs>
+    <g font-size="13">
+      <rect x="10" y="40" width="170" height="80" rx="8" fill="#fff4e6" stroke="#f08c00"/><text x="95" y="68" text-anchor="middle" font-weight="bold">architect</text><text x="95" y="88" text-anchor="middle">合約、可見測試</text><text x="95" y="106" text-anchor="middle">holdout（藏起來）</text>
+      <rect x="210" y="40" width="150" height="80" rx="8" fill="#fff" stroke="#334e68"/><text x="285" y="74" text-anchor="middle" font-weight="bold">ticket</text><text x="285" y="96" text-anchor="middle">允許的檔案、測試</text>
+      <rect x="390" y="40" width="170" height="80" rx="8" fill="#e3f9e5" stroke="#2f9e44"/><text x="475" y="68" text-anchor="middle" font-weight="bold">subagent</text><text x="475" y="88" text-anchor="middle">在隔離 worktree 實作</text><text x="475" y="106" text-anchor="middle">做不到就停下回報</text>
+      <rect x="590" y="40" width="170" height="80" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/><text x="675" y="68" text-anchor="middle" font-weight="bold">accept 閘門</text><text x="675" y="88" text-anchor="middle">路徑、禁用 pattern</text><text x="675" y="106" text-anchor="middle">全部回歸測試</text>
+      <rect x="790" y="40" width="130" height="80" rx="8" fill="#f8f0fc" stroke="#9c36b5"/><text x="855" y="74" text-anchor="middle" font-weight="bold">auditor</text><text x="855" y="96" text-anchor="middle">唯讀審查</text>
+      <rect x="950" y="40" width="140" height="80" rx="8" fill="#fff5f5" stroke="#c92a2a"/><text x="1020" y="68" text-anchor="middle" font-weight="bold">你</text><text x="1020" y="88" text-anchor="middle">驗證清單、holdout</text><text x="1020" y="106" text-anchor="middle">簽署核准</text>
+      <line x1="180" y1="80" x2="206" y2="80" stroke="#334e68" stroke-width="2" marker-end="url(#a6)"/>
+      <line x1="360" y1="80" x2="386" y2="80" stroke="#334e68" stroke-width="2" marker-end="url(#a6)"/>
+      <line x1="560" y1="80" x2="586" y2="80" stroke="#334e68" stroke-width="2" marker-end="url(#a6)"/>
+      <line x1="760" y1="80" x2="786" y2="80" stroke="#334e68" stroke-width="2" marker-end="url(#a6)"/>
+      <line x1="920" y1="80" x2="946" y2="80" stroke="#334e68" stroke-width="2" marker-end="url(#a6)"/>
+    </g>
+    <g font-size="12" fill="#c92a2a">
+      <text x="390" y="150">MS1 在這層攔下：</text><text x="390" y="168">ADR-019 log 盲點（2 個 lab-dev 獨立回報）</text>
+      <text x="590" y="200">攔下：type: ignore、未實作的測試</text><text x="590" y="218">放進回歸檔、L11 二次載入失敗</text>
+      <text x="790" y="150">攔下：oracle 太弱（P1×4）</text><text x="790" y="168">safety fail-open（P2）</text>
+    </g>
+  </svg>
+  <p class="note">審查政策（ADR-005 補記，你的 A＋B 決定）：safety 與寫入類逐張審查；lab 類每個 milestone 合成一個 review 分支抽查。review 分支只看不 merge；核准後只 merge session 分支 → main（用 merge commit）。</p>
+</section>
+
+<!-- 7 ------------------------------------------------------------------>
+<section id="s7">
+  <h2>7. Milestone 進度地圖</h2>
+  <table>
+    <tr><th>Milestone</th><th>狀態</th><th>交付的模組</th><th>它讓系統多了什麼能力</th></tr>
+    <tr><td>STAGE0</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>harness 護欄測試</td><td>確認 hook、隔離、暫停機制有效</td></tr>
+    <tr><td>MS0</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>contracts、policy/*、16 份 ground truth</td><td>「正確答案」與模組之間的語言定案</td></tr>
+    <tr><td>MS1</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>safety/*、lab/_shared、16 個情境、oracle</td><td>安全地送出請求；有一個答案已被證明的靶場</td></tr>
+    <tr><td>MS2</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>discovery/*、probe 讀取、diff、severity、init</td><td>第一次能說出「這裡有讀取漏洞」</td></tr>
+    <tr><td>MS3</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>probe 寫入（seed work row／write／read-back／verdict／cleanup）</td><td>寫入類漏洞（L01／L09 的 INSERT；安全表誤報為 0）</td></tr>
+    <tr><td>MS4</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>whitebox（splinter、pg_policies、correlate）、bench、OpenAPI 型別植入</td><td>第一次完整計分：recall 29/32、precision 29/29、FPR 0/72；probe-only 2 類</td></tr>
+    <tr><td>MS5</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>recon/*（fetch、links、sourcemap、extract、classify、run）、labctl.serve_frontend、bench 接上 M1</td><td>從網址出發找到 Supabase URL 與 key；service_role → Critical、anon 不報；recall 30/32</td></tr>
+    <tr><td>MS6</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>pipeline.run_scan、safety/endpoint（S4）、report/*（JSON、HTML、SARIF、修補 SQL、exit code）、CLI、GitHub Action、L03 提權與 dev／ci 讀取植入</td><td>一個指令跑完全部；recall 32/32、precision 32/32、FPR 0/72；50 張表 50.8 s（達標）</td></tr>
+    <tr><td>MS7</td><td><i class="dot" style="background:var(--done)"></i>已核准</td><td>整合與交付：USAGE.md（dev／ci／audit／demo／init／Python API 共 6 個 doctest）、lab 命令列入口、MS6 核准意見第 1 點（改標保留較高嚴重度）、ADR-047 三項修正</td><td>recall 32/32、precision 32/32、FPR 0/72、coverage 109/109；50 張表 50.8 s；6 個 doctest 在 lab 實跑</td></tr>
+  </table>
+</section>
+
+<!-- 8 ------------------------------------------------------------------>
+<section id="s8">
+  <h2>8. 本 milestone 的過程（overview）</h2>
+  <h3>MS7：整合與交付（ADR-049–052）</h3>
+  <p><b>使用者路徑</b>：<code>USAGE.md</code> 的每個 <code>&lt;!-- doctest --&gt;</code> 區塊都由 <code>make acceptance</code> 在本機 lab 執行：dev（L04 跨租戶讀取，probe_only 證明 splinter 沒報）、ci（L05 跨租戶寫入 → exit 1、SARIF）、audit（L08 service_role key，示範 S4 拒絕後以 <code>--supabase-url</code> 確認）、展示情境（修補前 Confirmed → 修補 SQL → 重掃無漏洞）、<code>rlsentry init</code> 與 Python API。lab 的 shell 入口為 <code>python -m lab._shared up|apply|env|sql|serve</code>（ADR-052）。</p>
+  <p><b>嚴重度</b>（MS6 核准意見第 1 點，ADR-049）：M4 改標 SECURITY_DEFINER_RPC_DATA 時取 max(原嚴重度, Medium)，提供 DB 連線不會讓 ci 結果改變。以合約常數分段上線，每次合併的回歸測試都是綠的。偏離 SPEC §5 M5 表的字面。</p>
+  <p><b>已知限制的處理</b>（ADR-051）：修正 DROP POLICY 依 roles、policy 名稱 63 bytes、提權還原為原值；維持 db_schemas[0]、函式簽章等五項。benchmark 以最終程式碼重跑，計分與 MS6 完全相同。</p>
+  <h3>MS6：M5 Report、pipeline、CLI、Action、profiles（ADR-038–047）</h3>
+  <p><b>一次掃描怎麼跑</b>（<code>pipeline.run_scan</code>，CLI、Python API、GitHub Action 共用）：先授權（不送任何請求）→ 建立唯一的 SafeClient → M1 掃前端 → <b>S4：Supabase URL 必須由設定檔或 <code>--supabase-url</code> 指名</b>，bundle 中的 URL 只出現在拒絕訊息 → M2 → 登入、dev／ci 讀取植入、M3、dev／ci L03 提權（提權前重測基準、一定還原）、清理（例外時也清理）→ M4（有 DB 連線時）→ M1 的 key finding 附在 correlate 之後 → M5 依「證據等級 → 嚴重度」排序並補上標題、遮罩後的 curl、修補 SQL、參考連結。<b>audit 三道防線</b>：不呼叫植入與提權、寫入 cell 一律 not_tested、SafeClient 閘門拒絕非 GET。<b>CI 只在 Confirmed 且 ≥ high 時失敗</b>（exit 1）；清理失敗 4；崩潰 5。</p>
+  <p><b>判定的改變</b>：M3 不再自稱 SECURITY_DEFINER_RPC_DATA，由 M4 依 splinter lint 改標，警告依（物件, 角色）抑制（ADR-039）；明確的高權限 JWT（supabase_admin、postgres…）判為 Critical（ADR-038）；同一身分的已知主鍵合併為一個只取主鍵的 GET（ADR-040）。<b>benchmark</b>：recall 32/32、precision 32/32、FPR 0/72、50 張表 50.8 s。<b>auditor</b>（兩部分）找到 4 類 P1（例外時不清理、還原可能失敗、CLI 崩潰的 exit code 與 traceback、一個測試零請求也會過）→ T-232–T-235 修正；「limit 削弱過濾檢查」不成立（ADR-047）。</p>
+  <h3>MS5：M1 Recon（ADR-036、037＋補記）</h3>
+  <p><b>M1 怎麼運作</b>：對目標網址送 GET（不帶任何 header）→ 解析 HTML 的 <code>&lt;script src&gt;</code>／<code>modulepreload</code> → 逐一抓同源 JS，從字串常值找 chunk 路徑（Vite 的 <code>import(`./x.js`)</code>、Next.js 的 <code>_buildManifest.js</code>）、依 <code>sourceMappingURL</code> 抓 source map；佇列清空後再由 webpack 的 chunk map（CRA）或 <code>.e(43)</code>（Next.js）補抓延遲 chunk。跨源（CDN）、帶 userinfo、超過上限的 URL 只列入 <code>chunks_skipped</code>，一個請求都不送。擷取：JWT（不驗簽解碼，只留 role／ref／exp）、<code>sb_publishable_</code>／<code>sb_secret_</code>、以及在 key 語境中的高 entropy 字串。分類：<b>service_role／sb_secret → SECRET_KEY_IN_BUNDLE（Critical）</b>；<b>anon／publishable → 不產生 finding</b>；其他 → UNVERIFIED_KEY（Configuration warning）。報告只有前 6 後 4 的遮罩值，所有 URL 經 <code>report_url</code>（省略 query string）。</p>
+  <p><b>D2（ADR-037）</b>：不支援無頭瀏覽器。瀏覽器會執行目標的 JS、自行對任意主機發請求，繞過 SafeClient 的寫入閘門、限速與 User-Agent，audit 的「0 次寫入」就無法保證；而三個真實框架 fixture 的延遲 chunk 全部能靜態找到。</p>
+  <p><b>派工前參考實測</b>：architect 以 Next.js 15、Vite 8、CRA 5 實際建置 supabase-js 專案作為 fixture，發現壓縮後看不到 <code>createClient(</code>、Vite 用反引號、source map 內含 supabase-js 文件範例 URL——全部寫進合約。草稿參考實作跑全部測試＋holdout，派工前就抓到 2 個問題（測試的 SPA 頁缺 doctype、key 語境漏了 <code>supabaseKey</code>）。</p>
+  <p><b>benchmark</b>：recall 30/32（L08-V1 轉為 TP；剩 L03 ×2 延後 MS6）、precision 30/30、FPR 0/72；L08 的 anon key 為 TN；key finding 不經 M4 correlate，所以 probe-only 仍是 2 類。<b>auditor P1</b>：同源、回 200 的 URL 原樣進入報告（query string 可能帶 key）→ T-192／T-193 以 <code>report_url</code> 修正。過程中容器重啟一次，詳見 PRODUCTION_LOG。</p>
+  <h3 style="margin-top:28px">MS4：Whitebox 交叉比對與第一次完整 benchmark（ADR-032–035）</h3>
+  <p><b>M4 怎麼運作</b>：以唯讀連線（伺服器預設＋BEGIN READ ONLY，兩層）執行 sha256 鎖定的 splinter 2026.09.1，交易內先以參數化 <code>set_config('pgrst.db_schemas', …, true)</code> 設定曝露的 schema，結束一律 rollback。只取 SECURITY 類 lint，以「物件名」與 M3 finding 對照：兩邊都有＝<b>confirmed</b>；只有實測＝<b>probe_only</b>；只有 lint＝<b>lint_only</b>（LINT_ONLY 警告）。<b>SECURITY DEFINER</b>：實測拿到他人資料才保留 M3 的 confirmed（L07 <code>get_all_accounts</code>）；可執行但沒拿到資料只給 SECURITY_DEFINER_EXECUTABLE（config_warning，L07 <code>ping_definer</code>）。M4 永遠不產生 confirmed，所以它無法改變 recall／precision／FPR。</p>
+  <p><b>benchmark（第一次完整執行）</b>：recall 29/32、precision 29/29、FPR 0/72、coverage 1.0、safe_decided 1.0；probe-only 2 類（L02 SELECT <code>USING (true)</code>、L04 跨租戶讀取；L12 是與 L02 同類的另一個案例）；audit 16 個情境的 DB 寫入全為 0。3 個 FN 是已核准的延後項（L03 提權→MS6、L08 key→MS5）。runtime 50 張表 70.7 s（rps 5）未達 60 s 目標，誠實列出。</p>
+  <p><b>實測抓到的問題</b>：第一次 benchmark L05 仍是 FN，原因是寫入探測把 uuid 欄位 <code>created_by</code> 當成文字欄位（T-171／T-172 依 OpenAPI 型別挑選）；L11 沒有任何 lint 被記成「沒跑」、audit 沒跑 M4（T-173／T-174）。auditor P1：INSERT 的其他 uuid 欄位應填攻擊者自己的 id，否則可能把漏洞說成 denied（T-175／T-176）。MS3 核准意見的 L01／L05 寫入覆蓋已由 OpenAPI 必填欄位與型別完成（ADR-034）。</p>
+  <h3 style="margin-top:28px">MS3：寫入探測（ADR-029＋補記）</h3>
+  <p>一個禁止的寫入怎麼判定：<b>為該探測新植入一筆專屬 canary（work row）→ 以被測身分送出 INSERT／UPDATE／DELETE（<code>Prefer: return=minimal</code>）→ 以應看得到最終狀態的身分讀回（HEAD count）→ write_cell 依 HTTP 狀態分類</b>：401／403＝政策拒絕（denied）；2xx＝依讀回（無效果→denied，有效果→allowed＝漏洞）；其餘（400 NOT NULL／5xx／無回應）＝inconclusive，<b>絕不把送不出的寫入當成安全</b>。最後所有 canary 由各自擁有者清理，刪不掉回報 CLEANUP_FAILED。寫入只對 <code>kind=="table"</code>、只在 dev／ci；audit 整段跳過（NFR-01）。最容易出錯處：把 2xx 當成寫入、把自己送不出的 INSERT 當成 denied、留下未回報的 canary——三者都有測試與必做變異把關。已知限制：L01／L05 因 NOT NULL／uuid 欄位不可植入（記為 not_tested）；L03 提權與 dev／ci 讀取植入延到 MS6（probe() 無密碼）。過程中有 11 張自我修訂／稽核修正 ticket（T-131–T-140），詳見 PRODUCTION_LOG。</p>
+  <h3 style="margin-top:28px">MS2：讀取判定</h3>
+  <h3>一個讀取 cell 怎麼被判定（ADR-023 #3）</h3>
+  <svg viewBox="0 0 1100 230" width="100%" role="img" aria-label="讀取判定流程">
+    <g font-size="12">
+      <rect x="10" y="20" width="200" height="70" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/>
+      <text x="110" y="45" text-anchor="middle" font-weight="bold">已知列</text>
+      <text x="110" y="65" text-anchor="middle">A、B 各用自己的 JWT 列出</text>
+      <text x="110" y="80" text-anchor="middle">自己的主鍵（只取主鍵）</text>
+      <rect x="250" y="20" width="200" height="70" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/>
+      <text x="350" y="45" text-anchor="middle" font-weight="bold">split_known</text>
+      <text x="350" y="65" text-anchor="middle">依預期 policy 分成</text>
+      <text x="350" y="80" text-anchor="middle">forbidden／permitted</text>
+      <rect x="490" y="20" width="220" height="70" rx="8" fill="#e7f5ff" stroke="#1c7ed6"/>
+      <text x="600" y="45" text-anchor="middle" font-weight="bold">HEAD ＋ count=exact</text>
+      <text x="600" y="65" text-anchor="middle">pk=in.(forbidden)</text>
+      <text x="600" y="80" text-anchor="middle">不下載任何列</text>
+      <rect x="750" y="5" width="330" height="40" rx="8" fill="#ffe3e3" stroke="#c92a2a"/>
+      <text x="915" y="30" text-anchor="middle">可見數 &gt; 0 → allowed（漏洞，confirmed）</text>
+      <rect x="750" y="55" width="330" height="40" rx="8" fill="#e3f9e5" stroke="#2f9e44"/>
+      <text x="915" y="80" text-anchor="middle">可見數 = 0 且狀態 200／206 → denied</text>
+      <rect x="750" y="105" width="330" height="55" rx="8" fill="#fff3bf" stroke="#f08c00"/>
+      <text x="915" y="128" text-anchor="middle">沒有 forbidden 已知列、或 401／403／404／400</text>
+      <text x="915" y="146" text-anchor="middle">→ inconclusive（永遠不寫成安全）</text>
+      <line x1="210" y1="55" x2="250" y2="55" stroke="#486581" stroke-width="2"/>
+      <line x1="450" y1="55" x2="490" y2="55" stroke="#486581" stroke-width="2"/>
+      <line x1="710" y1="55" x2="750" y2="25" stroke="#486581" stroke-width="2"/>
+      <line x1="710" y1="55" x2="750" y2="75" stroke="#486581" stroke-width="2"/>
+      <line x1="710" y1="55" x2="750" y2="132" stroke="#486581" stroke-width="2"/>
+      <text x="10" y="200" fill="#616e7c">為什麼不能只看 count：RLS 擋住的列與空表的回應完全相同（*/0），test_design_assumptions 在真實 lab 上固定了這一點。</text>
+    </g>
+  </svg>
+  <h3>工作量與分工（18 張 ticket，全部 done）</h3>
+  <table>
+    <tr><th>角色</th><th>張數</th><th></th><th>內容</th></tr>
+    <tr><td>architect</td><td>5</td><td><span class="bar" style="width:50px;background:#f08c00"></span></td><td>合約、可見測試、變異／前提測試、lab 整合測試、稽核修正</td></tr>
+    <tr><td>probe-dev</td><td>11</td><td><span class="bar" style="width:110px;background:#2f9e44"></span></td><td>discovery 3 張、probe 7 張（session、evidence、cross_tenant、read、verdict、diff、run）、init 1 張</td></tr>
+    <tr><td>lab-dev</td><td>2</td><td><span class="bar" style="width:20px;background:#1c7ed6"></span></td><td>labctl.execute、唯讀 query、寫入分類（ADR-024）</td></tr>
+  </table>
+  <h3>問題在哪一層被攔下</h3>
+  <ul>
+    <li><b>architect 的參考實作</b>：派工前就在真實 lab 跑完 15 個情境，發現讀取 OpenAPI 會被誤記為 TRUNCATE（ADR-024）。</li>
+    <li><b>工作樹同步</b>：subagent 的 worktree 從 main 建立，而 main 有你新增的 workflow commit，同步腳本拒絕覆蓋；改設本機 origin/HEAD 後重派。</li>
+    <li><b>auditor</b>：ADR-024 的回歸測試其實沒測到字串移除（P1）；識別字中的單引號可能吞掉寫入關鍵字；變異測試只比對 case id。以上全部在 T-112、T-113 修正。</li>
+  </ul>
+</section>
+
+<!-- 9 ------------------------------------------------------------------>
+<section id="s9">
+  <h2>9. 目前最大的風險（依後果排序）</h2>
+  <table>
+    <tr><th>#</th><th>風險</th><th>最壞情況</th><th>目前的防線</th><th>何時補上</th></tr>
+    <tr><td>1</td><td>使用者把正式環境 host 列進 write_hosts</td><td>ci 在正式 DB 植入／修改／刪除測試列</td><td>只有 ci 會寫、必須完全比對、報告列出可寫入的 host</td><td>MS3 清理失敗即 exit≠0；MS6 報告</td></tr>
+    <tr><td>2</td><td>有模組繞過授權直接建立 SafeClient</td><td>未經授權就發出請求</td><td>目前沒有任何呼叫端</td><td>MS6 靜態測試＋計數測試（ADR-020 #6）</td></tr>
+    <tr><td>3</td><td>oracle 與 lab 共用同一個錯誤假設</td><td>ground truth 錯了而沒人發現，指標失真</td><td>變異測試、auditor 抽查、你的抽查</td><td>每個 milestone 至少一項變異測試（ADR-005 補記）</td></tr>
+    <tr><td>4</td><td>主鍵值本身是個資（如以 email 當主鍵）</td><td>報告的 curl 帶出他人的主鍵</td><td>只記錄主鍵（CLAUDE.md 允許的唯一值）</td><td>MS6：維持只記主鍵、不遮罩（重現指令需要主鍵；已知限制，ADR-044）</td></tr>
+    <tr><td>5</td><td>沒有擁有者欄位的表</td><td>anon 讀得到全部也只報 inconclusive</td><td>NO_OWNER_COLUMN／INCONCLUSIVE_CELL 提示，不寫成安全</td><td>MS3 植入資料後可判定</td></tr>
+    <tr><td>6</td><td>目標 bundle 指定 supabase_url（MS5 稽核 S4）</td><td>惡意前端讓 M2／M3 把 anon key 與探測送往別的主機</td><td>MS6：URL 必須由設定檔或 <code>--supabase-url</code> 指名，否則 API 主機收不到任何請求（ADR-043）</td><td>已處理</td></tr>
+    <tr><td>7</td><td>lab 清除不完整（role 層級設定）</td><td>情境之間互相汙染</td><td>目前沒有情境建立 role</td><td>出現時補上</td></tr>
+  </table>
+</section>
+
+<!-- 10 ----------------------------------------------------------------->
+<section id="s10">
+  <h2>10. 閱讀路線（要看細節時從這裡進去）</h2>
+  <table>
+    <tr><th>想知道</th><th>去看</th></tr>
+    <tr><td>某個決定為什麼這樣做</td><td><code>docs/DECISIONS.md</code>（ADR，依編號）</td></tr>
+    <tr><td>某個函式在做什麼、哪張 ticket 加的</td><td><code>docs/progress.html</code>（程式自動產生）</td></tr>
+    <tr><td>每個 milestone 發生了什麼、哪裡失敗</td><td><code>PRODUCTION_LOG.md</code></td></tr>
+    <tr><td>SPEC 需求對到哪個檔案、哪個測試</td><td><code>docs/verification/traceability.md</code></td></tr>
+    <tr><td>這次要親手驗證什麼</td><td><code>docs/verification/MS7-v1.md</code></td></tr>
+    <tr><td>高風險 ticket 的 diff</td><td><code>docs/reviews/MS7-high-risk.md</code></td></tr>
+    <tr><td>每個 milestone 固定的審查步驟（同步、Actions、sha 比對、簽章）與異常狀況對照</td><td><code>docs/verification_steps.html</code></td></tr>
+    <tr><td>模組之間交換什麼資料</td><td><code>rlsentry/contracts/</code>（每個檔案開頭的 docstring）</td></tr>
+  </table>
+</section>
+
+</main>
+</body>
+</html>

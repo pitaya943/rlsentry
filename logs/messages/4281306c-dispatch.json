@@ -1,0 +1,5 @@
+{
+  "description": "Audit MS1 lab",
+  "prompt": "Review: MS1\nBase: c01d68c611a21587cc6b2057f8c150832d14e969\nScope (part 2 of 2): ONLY the lab: tests/lab/oracle.py, tests/lab/oracle_cases.py (is the verifier strong enough to catch a wrong lab?), lab/_shared/labctl.py, rlsentry/contracts/lab.py, ADR-018/019, and spot-check 3 scenarios (L05, L07, C04) migration.sql against expected.yaml plant. Do not run the full lab suite (it passes: 175). Budget: ≤15 tool calls, then report. Output: traceability table, findings P0/P1/P2 with file:line, ≤5 hand-check items with command + expected result.",
+  "subagent_type": "auditor"
+}

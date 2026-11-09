@@ -1,0 +1,7 @@
+{
+  "description": "T-215 S4 endpoint",
+  "prompt": "Ticket: T-215\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-215.md and follow it.",
+  "subagent_type": "recon-dev",
+  "run_in_background": true,
+  "isolation": "worktree"
+}

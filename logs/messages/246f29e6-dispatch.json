@@ -1,0 +1,6 @@
+{
+  "description": "T-063 lab L03",
+  "prompt": "Ticket: T-063\nRun `python3 harness/sync_worktree.py`, then read docs/tickets/T-063.md and follow it.",
+  "subagent_type": "lab-dev",
+  "isolation": "worktree"
+}
